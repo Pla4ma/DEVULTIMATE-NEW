@@ -1,4 +1,4 @@
-import { supabase as _supabase } from "@/integrations/supabase/client";
+import { supabase as _supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { isDemoMode, getDemoUser, DEMO_USER_FALLBACK_ID } from "@/lib/demo-mode";
 import { demoStore } from "@/lib/demo-store";
 
@@ -34,6 +34,7 @@ const EMPTY: MemoryContext = {
 };
 
 async function getCurrentUserId(): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null;
   try {
     const { data } = await (supabase.auth.getUser() as Promise<{ data: { user: { id: string } | null } }>);
     return data?.user?.id ?? null;
