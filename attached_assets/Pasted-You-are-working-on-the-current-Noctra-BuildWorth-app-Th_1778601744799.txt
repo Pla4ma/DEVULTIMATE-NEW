@@ -1,0 +1,229 @@
+You are working on the current Noctra / BuildWorth app.
+
+This is a tool completion pass.
+
+Do NOT add brand-new tools.
+Do NOT redesign the UI.
+Do NOT create new feature categories.
+Do NOT add new pages unless a route already exists and is broken.
+
+Goal:
+Make the existing tools work deeply and reliably:
+- Proof Engine
+- Market Swarm
+- Reality Compiler
+- MVP Planner
+- Project Doctor
+- Product Twin
+- Launch Room
+
+============================================================
+TASK 1 — PROOF ENGINE COMPLETION
+============================================================
+
+Fix the existing Proof page.
+
+It should have the existing tabs/sections working correctly.
+
+If current tabs are:
+- AI Analysis
+- Signal Tracker
+- Proof Score
+
+Make those fully reliable.
+
+If Objection Miner or Experiments sections already exist, fix them. Do not add brand-new major tabs unless partially present.
+
+Signal Tracker:
+- use repository methods, not direct Supabase
+- create proof signal
+- delete proof signal
+- filter/group if existing UI supports it
+- support project_id if project selector exists
+- validate required fields
+
+Signal kinds should be consistent across the app:
+- interview
+- waitlist
+- signup
+- pricing_click
+- payment_intent
+- dm_reply
+- demo_request
+- objection
+- churn_risk
+- manual
+
+Proof Score:
+- calculate locally
+- use safe numeric parsing
+- objection/churn-risk subtract
+- payment_intent adds bonus
+- source diversity adds bonus
+- clamp 0–100
+- show explanation of score
+
+AI Analysis:
+- call structured AI
+- save report
+- show clean result
+- show save errors visibly
+
+============================================================
+TASK 2 — MARKET SWARM COMPLETION
+============================================================
+
+Fix existing Market Swarm.
+
+It should not just show generic persona paragraphs if structured fields exist.
+
+If AI returns:
+- simulated_user_count
+- would_try_free_percent
+- would_pay_percent
+- understood_value_percent
+- chatgpt_objection_percent
+- churn_risk_percent
+- segment_clusters
+- feature_demand
+- objection_heatmap
+- next_experiments
+
+Render those fields cleanly.
+
+If AI returns older persona format, gracefully render fallback.
+
+Update backend structured prompt/schema only if needed to consistently request aggregate Market Swarm output.
+
+Do not add a new Swarm page. Fix the current one.
+
+============================================================
+TASK 3 — REALITY COMPILER COMPLETION
+============================================================
+
+Fix existing Reality Compiler.
+
+It should render:
+- compile status if available
+- score
+- errors/red flags
+- warnings
+- product patch or patch plan
+- patched idea if available
+- decisive move or recommendation
+
+If Apply Patch already exists or is partially present, make it work:
+- create new idea report
+- include source reality report id
+- open/link new report
+
+If Apply Patch is not present anywhere, do not build a giant new system, but add a simple working button only when patched_idea exists.
+
+============================================================
+TASK 4 — MVP PLANNER COMPLETION
+============================================================
+
+Fix existing MVP Planner.
+
+It should render existing structured fields cleanly:
+- ruthless scope
+- feature ROI
+- architecture
+- database blueprint
+- API contract
+- weekly plan or milestones
+- testing plan
+- deployment plan
+- next actions
+
+Actions that already exist should work:
+- save report
+- generate tasks
+- generate prompt pack
+- export markdown/PRD
+- export GitHub issues if utility exists
+
+Hide or disable actions that do not work.
+
+============================================================
+TASK 5 — PROJECT DOCTOR COMPLETION
+============================================================
+
+Fix current Project Doctor flow.
+
+It should:
+- accept ZIP upload
+- reject non-ZIP
+- reject >50MB
+- call backend scan first
+- fallback to client scan only if backend fails
+- show fallback warning
+- save scan
+- generate doctor report
+- save report
+- generate fix tasks if task generator exists
+- show launch gates
+- show evidence/index if available
+- show scan history if repository supports it
+
+Make the UX one clear flow:
+“Run Deep Diagnostic”
+
+Do not require unnecessary separate manual steps.
+
+============================================================
+TASK 6 — PRODUCT TWIN COMPLETION
+============================================================
+
+Fix Product Twin.
+
+It should:
+- load real memory
+- show memory panel
+- include reports/tasks/proof/scans/project context
+- use project-scoped context when a project is selected
+- render structured response fields if available:
+  - answer
+  - evidence_used
+  - recommended_actions
+  - related_tasks
+  - suggested_prompt
+- gracefully render plain text fallback
+
+Do not let it feel like a generic empty chatbot.
+
+============================================================
+TASK 7 — LAUNCH ROOM COMPLETION
+============================================================
+
+Fix Launch Room.
+
+It should:
+- use latest context if existing context helper exists
+- show warning if Doctor gates are red
+- render launch readiness
+- render launch checklist
+- render risks
+- render copy/scripts if returned
+- save report
+- show save errors
+
+============================================================
+FINAL CHECK
+============================================================
+
+Test each tool route manually if possible.
+
+Run:
+pnpm run typecheck
+pnpm run build
+
+Final response:
+1. Proof fixes
+2. Swarm fixes
+3. Reality fixes
+4. MVP fixes
+5. Doctor fixes
+6. Twin fixes
+7. Launch fixes
+8. Build/typecheck result

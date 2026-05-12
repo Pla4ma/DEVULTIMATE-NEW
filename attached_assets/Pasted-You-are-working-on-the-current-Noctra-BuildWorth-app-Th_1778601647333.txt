@@ -1,0 +1,234 @@
+You are working on the current Noctra / BuildWorth app.
+
+This is a stabilization pass only.
+
+Do NOT add new features.
+Do NOT redesign the UI.
+Do NOT rewrite the app.
+Do NOT remove existing features.
+Do NOT add placeholder buttons.
+Do NOT claim complete until typecheck/build are run.
+
+Goal:
+Make the current app stable, buildable, and correctly configured.
+
+============================================================
+TASK 1 — INSTALL, TYPECHECK, BUILD
+============================================================
+
+Run:
+
+pnpm install
+pnpm run typecheck
+pnpm run build
+
+If pnpm is unavailable, enable it:
+
+corepack enable
+corepack prepare pnpm@latest --activate
+pnpm install
+
+If scripts are missing, add them.
+
+Root package.json should support:
+- typecheck
+- build
+
+Frontend package should support:
+- typecheck
+- build
+
+API server package should support:
+- typecheck
+- build
+
+Fix all TypeScript and build errors.
+
+Do not skip this.
+
+============================================================
+TASK 2 — RESTORE / FIX SUPABASE SCHEMA FILE
+============================================================
+
+The app must include a complete Supabase schema file in the repository.
+
+Create or fix:
+
+supabase/schema.sql
+supabase/README.md
+
+The schema must match the repository methods exactly.
+
+Tables required:
+- profiles
+- projects
+- reports
+- tasks
+- proof_signals
+- scans
+- prompt_packs
+- sprints
+- score_events
+
+Make sure the scans table includes:
+- id
+- user_id
+- project_id
+- report_id
+- kind
+- file_name
+- summary
+- score
+- payload
+- created_at
+
+Make sure reports include:
+- id
+- user_id
+- project_id
+- tool
+- title
+- summary
+- score
+- payload
+- created_at
+- updated_at
+
+Make sure tasks include:
+- id
+- user_id
+- project_id
+- source_report_id
+- title
+- detail
+- priority
+- status
+- category
+- acceptance_criteria
+- created_at
+- updated_at
+
+Add RLS policies:
+- users can select their own rows
+- users can insert their own rows
+- users can update their own rows
+- users can delete their own rows
+
+Add indexes:
+- reports(user_id, tool, created_at)
+- reports(user_id, project_id)
+- tasks(user_id, status, priority)
+- tasks(user_id, project_id)
+- proof_signals(user_id, project_id)
+- scans(user_id, project_id, kind)
+- projects(user_id, created_at)
+
+If the app calculates Passport dynamically, do not add a passport table unless current code requires it.
+
+Update supabase/README.md with exact instructions:
+1. Open Supabase SQL Editor.
+2. Run schema.sql.
+3. Add Replit secrets.
+4. Restart app.
+
+============================================================
+TASK 3 — MAKE REPOSITORY MATCH SCHEMA
+============================================================
+
+Inspect:
+
+artifacts/noctra/src/lib/repository.ts
+supabase/schema.sql
+
+Fix mismatches.
+
+Repository must only insert/update columns that exist in schema.
+
+Repository methods must filter by user_id for user-owned data.
+
+Verify:
+- saveReport
+- getReport
+- getReports
+- deleteReport
+- createProject
+- getProjects
+- getProject
+- updateProject
+- deleteProject
+- createTask
+- saveTasks
+- getTasks
+- updateTaskStatus
+- deleteTask
+- createProofSignal
+- getProofSignals
+- deleteProofSignal
+- saveScan
+- getScans
+- getDashboardData
+
+All should behave safely when user is not logged in.
+
+============================================================
+TASK 4 — FIX ENV CONFIG
+============================================================
+
+Remove hardcoded Supabase fallbacks.
+
+Frontend must use:
+- VITE_SUPABASE_URL
+- VITE_SUPABASE_ANON_KEY
+- VITE_API_BASE_URL optional
+
+If Supabase config is missing, show clear user-facing error:
+“Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.”
+
+API server must use:
+- PORT default 8080
+- OPENAI_API_KEY optional
+- GROQ_API_KEY optional
+- AI_INTEGRATIONS_OPENAI_API_KEY optional
+- AI_INTEGRATIONS_OPENAI_BASE_URL optional
+- LOVABLE_API_KEY optional
+
+If AI is missing, show:
+“AI is not configured. Add OPENAI_API_KEY or GROQ_API_KEY.”
+
+Do not mention only Groq.
+
+============================================================
+TASK 5 — VERIFY API ROUTES
+============================================================
+
+Verify these work or return clean errors:
+
+GET /api/healthz
+POST /api/ai/chat
+POST /api/ai/stream
+POST /api/ai/structured
+POST /api/projects/scan-upload
+
+Health route must report:
+- ok
+- aiConfigured
+- configuredProviders
+- primaryProvider
+- fallbackAvailable
+
+============================================================
+FINAL CHECK
+============================================================
+
+Run:
+
+pnpm run typecheck
+pnpm run build
+
+Final response must include:
+1. Whether install passed
+2. Whether typecheck passed
+3. Whether build passed
+4. Supabase schema file status
+5. Repository/schema mismatch fixes
+6. Remaining blockers, if any

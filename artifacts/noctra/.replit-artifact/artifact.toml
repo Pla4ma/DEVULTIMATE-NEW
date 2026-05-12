@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Noctra — Developer Intelligence OS"
+version = "1.0.0"
+id = "artifacts/noctra"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18565
+
+[services.development]
+run = "pnpm --filter @workspace/noctra run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/noctra", "run", "build" ]
+publicDir = "artifacts/noctra/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18565"
+BASE_PATH = "/"

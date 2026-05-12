@@ -1,0 +1,221 @@
+You are working on the current Noctra / BuildWorth app.
+
+This is a workflow repair pass only.
+
+Do NOT add new features.
+Do NOT redesign the UI.
+Do NOT create new tools.
+Do NOT add placeholder buttons.
+
+Goal:
+Make existing reports, project workspaces, and actions work correctly.
+
+============================================================
+TASK 1 — REPORT DETAIL MUST WORK CLEANLY
+============================================================
+
+Inspect the existing report detail route:
+
+/app/reports/:id
+
+Fix it so it reliably:
+- loads report by id
+- handles loading state
+- handles not found state
+- handles unauthorized/missing session state
+- handles malformed payload safely
+- renders the correct type-specific renderer
+- never crashes on missing fields
+- does not show raw JSON unless fallback is necessary
+
+Report detail should support existing actions only if they actually work.
+
+Keep working actions:
+- Copy Summary
+- Download Markdown
+- Download JSON
+- Delete Report
+- Generate Tasks if task generator exists
+- Generate Prompt Pack if prompt pack utility exists
+- Link to Project if repository supports it
+- Create Project from Report if repository supports it
+
+Tool-specific existing actions should either work or be hidden.
+
+Do not leave fake buttons.
+
+If an action only navigates to another tool and does not pass context, make the label honest:
+Example:
+“Open MVP Planner”
+not
+“Generate MVP Plan”
+unless it actually generates the report.
+
+============================================================
+TASK 2 — MAKE REPORT ACTIONS RELIABLE
+============================================================
+
+For each report action:
+- show loading state
+- show success state
+- show error state
+- update/invalidate data after mutation
+- show created report/task/project link when relevant
+
+Generate Tasks:
+- use existing task-generator utility
+- create tasks with source_report_id
+- show number created
+- avoid duplicates where reasonable
+
+Generate Prompt Pack:
+- use existing prompt-pack utility
+- either save as prompt-pack report if already supported
+- or offer copy/download only
+- do not pretend it saved if it did not
+
+Link to Project:
+- load projects
+- select project
+- call linkReportToProject
+- show success/error
+- update report detail
+
+Create Project from Report:
+- create project using report title/summary/input
+- link report to project
+- show new project link
+
+Delete Report:
+- confirm before delete
+- navigate back to reports after delete
+
+============================================================
+TASK 3 — PROJECT DETAIL MUST WORK CLEANLY
+============================================================
+
+Inspect:
+
+/app/projects/:id
+
+Fix current project workspace tabs without adding new ones.
+
+Existing project workspace should:
+- load project by id
+- handle loading/not found/error
+- load project reports
+- load project tasks
+- load project proof signals
+- load project scans if tab exists
+- show project-scoped data only
+- avoid loading all projects and filtering manually if getProject exists
+
+Project Overview should show:
+- project name
+- idea/description
+- stage/status
+- latest scores if available
+- next best action if available
+- top risks if available
+- open high-priority tasks
+- recent reports
+
+Project Reports tab:
+- show linked reports
+- open report detail
+- group/filter if existing UI supports it
+
+Project Tasks tab:
+- show linked tasks
+- allow status update
+- allow delete
+- show source report link if available
+
+Project Proof tab:
+- show linked proof signals
+- allow adding/deleting proof signal if currently supported
+- show proof score if currently supported
+
+Project Scans tab if present:
+- show linked scans
+- show latest scan summary
+- show linked doctor report if available
+
+Project Twin tab if present:
+- pass project-scoped context
+- do not answer from unrelated projects
+
+Project Passport tab if present:
+- calculate from project data, not fake global data
+
+============================================================
+TASK 4 — FIX ROUTING AND LINKS
+============================================================
+
+Verify all navigation links work:
+
+- /app
+- /app/idea
+- /app/reality
+- /app/proof
+- /app/swarm
+- /app/mvp
+- /app/doctor
+- /app/launch
+- /app/twin
+- /app/passport
+- /app/reports
+- /app/reports/:id
+- /app/tasks
+- /app/projects
+- /app/projects/:id
+
+Fix broken links.
+
+Report cards should link to report detail.
+
+Project cards should link to project detail.
+
+Source report links in tasks should link to report detail.
+
+============================================================
+TASK 5 — DEAD BUTTON AUDIT
+============================================================
+
+Audit:
+- Dashboard
+- Reports
+- Report Detail
+- Projects
+- Project Detail
+- Tasks
+- Proof
+- Doctor
+- Twin
+- Launch
+- MVP
+- Reality
+- Swarm
+
+For every button:
+- make it work
+- hide it
+- or disable it with a clear explanation
+
+No fake buttons.
+
+============================================================
+FINAL CHECK
+============================================================
+
+Run:
+
+pnpm run typecheck
+pnpm run build
+
+Final response:
+1. Routes fixed
+2. Report actions fixed
+3. Project workspace fixes
+4. Dead buttons removed/fixed
+5. Build/typecheck result

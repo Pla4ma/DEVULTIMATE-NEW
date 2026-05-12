@@ -1,0 +1,233 @@
+You are working on the current Noctra / BuildWorth app.
+
+This is the final QA and polish pass.
+
+Do NOT add new features.
+Do NOT redesign the UI.
+Do NOT rewrite the app.
+Do NOT change the architecture.
+
+Goal:
+Make the existing app feel finished, trustworthy, and 10/10.
+
+============================================================
+TASK 1 — CONSISTENT NAMING
+============================================================
+
+Use clear main tool names across navigation, headers, empty states, and buttons:
+
+- Command Center
+- Idea Checker
+- Reality Compiler
+- Proof Engine
+- Market Swarm
+- MVP Planner
+- Project Doctor
+- Product Twin
+- Launch Room
+- Passport
+- Reports
+- Tasks
+- Projects
+
+No confusing main labels like:
+- Quantum
+- Matrix
+- Reactor
+- Constellation
+unless they are only subtitles or decorative copy.
+
+Main navigation labels must be clear.
+
+============================================================
+TASK 2 — PAGE CLARITY PASS
+============================================================
+
+Every major page should clearly answer:
+
+1. What is this page/tool for?
+2. What should the user paste/upload/do?
+3. What result will they get?
+4. What should they do next?
+
+Apply to:
+- Dashboard
+- Idea Checker
+- Reality Compiler
+- Proof Engine
+- Market Swarm
+- MVP Planner
+- Project Doctor
+- Product Twin
+- Launch Room
+- Passport
+- Reports
+- Report Detail
+- Tasks
+- Projects
+- Project Detail
+
+Add concise helper copy where needed.
+
+Do not make pages wordy.
+
+============================================================
+TASK 3 — EMPTY / LOADING / ERROR STATES
+============================================================
+
+Fix empty states:
+- no reports
+- no projects
+- no tasks
+- no proof signals
+- no scans
+- no AI result yet
+- no linked project
+- no passport progress
+
+Fix loading states:
+- AI generating
+- report saving
+- ZIP scanning
+- project loading
+- tasks loading
+- proof signal saving
+- export/copy
+
+Fix error states:
+- AI failed
+- Supabase missing
+- unauthorized
+- save failed
+- route not found
+- invalid ZIP
+- build/runtime config missing
+
+Every important async action should show feedback.
+
+============================================================
+TASK 4 — OUTPUT CLEANLINESS
+============================================================
+
+AI outputs should not show messy raw artifacts.
+
+Fix:
+- raw JSON shown to normal users
+- markdown fences
+- random #### headings if not rendered properly
+- undefined/null fields visible
+- empty sections
+- arrays rendered poorly
+- overly cramped report layouts
+
+Use existing report renderers and fallback markdown renderer.
+
+If structured data is missing, show clean fallback:
+“Some structured fields were missing, so this report is shown in summary mode.”
+
+============================================================
+TASK 5 — EXPORT / COPY CONSISTENCY
+============================================================
+
+Verify copy/download actions work consistently.
+
+Check:
+- Copy Summary
+- Download Markdown
+- Download JSON
+- Export Tasks
+- Export GitHub Issues if available
+- Download Prompt Pack if available
+- Download Sprint if available
+- Download Doctor Fix Plan if available
+- Download Launch Pack if available
+
+If any export action does not work, fix or hide it.
+
+Show success toast after copy/download.
+
+Show error toast if export fails.
+
+============================================================
+TASK 6 — PASSPORT AND DASHBOARD FINAL REAL-DATA CHECK
+============================================================
+
+Dashboard should not show fake metrics if real data exists.
+
+Passport should calculate from real:
+- reports
+- tasks
+- proof signals
+- scans
+- project state
+
+If data is missing, show honest empty state and next action.
+
+Do not show fake earned stamps unless clearly demo/empty state.
+
+============================================================
+TASK 7 — RESPONSIVENESS CHECK
+============================================================
+
+Do a basic mobile/tablet responsiveness check.
+
+Fix obvious layout problems:
+- horizontal overflow
+- unreadable cards
+- sidebar issues
+- buttons wrapping badly
+- report cards too cramped
+- tabs overflowing
+- upload area broken on mobile
+
+Do not redesign, just make it usable.
+
+============================================================
+TASK 8 — FINAL ROUTE QA
+============================================================
+
+Verify these routes render without crashing:
+
+- /app
+- /app/idea
+- /app/reality
+- /app/proof
+- /app/swarm
+- /app/mvp
+- /app/doctor
+- /app/launch
+- /app/twin
+- /app/passport
+- /app/reports
+- /app/reports/:id
+- /app/tasks
+- /app/projects
+- /app/projects/:id
+
+Fix broken imports, broken links, and route crashes.
+
+============================================================
+TASK 9 — FINAL BUILD
+============================================================
+
+Run:
+
+pnpm run typecheck
+pnpm run build
+
+Fix all errors.
+
+Do not claim done if build fails.
+
+============================================================
+FINAL RESPONSE
+============================================================
+
+Report:
+1. What pages were polished
+2. What empty/loading/error states were fixed
+3. What exports were verified
+4. What routes were verified
+5. Whether typecheck passed
+6. Whether build passed
+7. Remaining issues, if any
