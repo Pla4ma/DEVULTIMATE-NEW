@@ -101,8 +101,8 @@ ${schema}`;
 }
 
 export function buildRepairPrompt(tool: string, original: string, parseError: string): string {
-  return `The previous response for tool "${tool}" was not valid JSON.
-Error: ${parseError}
+  return `The previous response for tool "${tool}" was invalid or missing required fields.
+Reason: ${parseError}
 
 Original response (first 2000 chars):
 ${original.slice(0, 2000)}

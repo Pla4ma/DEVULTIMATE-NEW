@@ -48,6 +48,10 @@ const TOOL_SCHEMAS: Record<string, ToolSchema> = {
   },
 };
 
+export function getRequiredFields(tool: string): string[] {
+  return TOOL_SCHEMAS[tool]?.required ?? [];
+}
+
 export function validateReportQuality(
   tool: string,
   data: Record<string, unknown>,

@@ -1,4 +1,4 @@
-import { supabase as _supabase } from "@/integrations/supabase/client";
+import { supabase as _supabase, isSupabaseConfigured, supabaseConfigError } from "@/integrations/supabase/client";
 import { isDemoMode, getDemoUser, DEMO_USER_FALLBACK_ID } from "@/lib/demo-mode";
 import { demoStore } from "@/lib/demo-store";
 
@@ -21,6 +21,13 @@ export class RepositoryError extends Error {
 export async function requireUserId(): Promise<string> {
   if (isDemoMode()) {
     return getDemoUser()?.id ?? DEMO_USER_FALLBACK_ID;
+  }
+  if (!isSupabaseConfigured()) {
+    throw new RepositoryError(
+      supabaseConfigError ?? "Supabase is not configured.",
+      "SUPABASE_NOT_CONFIGURED",
+      "getUser",
+    );
   }
   try {
     const { data, error } = await supabase.auth.getUser();

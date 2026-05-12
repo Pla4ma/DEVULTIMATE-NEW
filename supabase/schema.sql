@@ -233,6 +233,9 @@ create policy "prompt_packs: update own" on prompt_packs
 create policy "prompt_packs: delete own" on prompt_packs
   for delete using (auth.uid() = user_id);
 
+create index if not exists idx_prompt_packs_user_project
+  on prompt_packs(user_id, project_id);
+
 -- ─────────────────────────────────────────────────────────────
 -- TABLE: sprints
 -- ─────────────────────────────────────────────────────────────
@@ -264,6 +267,9 @@ create policy "sprints: update own" on sprints
 create policy "sprints: delete own" on sprints
   for delete using (auth.uid() = user_id);
 
+create index if not exists idx_sprints_user_project
+  on sprints(user_id, project_id);
+
 -- ─────────────────────────────────────────────────────────────
 -- TABLE: score_events
 -- ─────────────────────────────────────────────────────────────
@@ -291,3 +297,6 @@ create policy "score_events: update own" on score_events
 
 create policy "score_events: delete own" on score_events
   for delete using (auth.uid() = user_id);
+
+create index if not exists idx_score_events_user_project_created
+  on score_events(user_id, project_id, created_at desc);
