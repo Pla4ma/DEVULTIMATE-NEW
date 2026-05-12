@@ -143,13 +143,14 @@ export default function LandingPage() {
             <form onSubmit={handleSubmit} className="space-y-3">
               <input
                 type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email" required
+                placeholder="Email" required autoComplete="email"
                 className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-colors"
                 style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
               />
               <input
                 type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password" required minLength={6}
+                autoComplete={tab === "login" ? "current-password" : "new-password"}
                 className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-colors"
                 style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
               />
