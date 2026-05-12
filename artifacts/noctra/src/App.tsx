@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth";
 import { AuthGuard } from "@/components/AuthGuard";
-import { CommandPalette } from "@/components/CommandPalette";
 
 import LandingPage from "@/pages/landing";
 import DashboardPage from "@/pages/dashboard";
@@ -96,7 +95,6 @@ function App() {
         <TooltipProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <AppRoutes />
-            <CommandPalette />
           </WouterRouter>
           <Toaster />
         </TooltipProvider>

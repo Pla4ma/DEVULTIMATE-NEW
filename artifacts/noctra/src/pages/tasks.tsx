@@ -20,7 +20,7 @@ const STATUS_TABS = ["all", "todo", "in-progress", "completed"] as const;
 type StatusTab = typeof STATUS_TABS[number];
 
 const PRIORITY_COLOR: Record<string, string> = {
-  high: "var(--noctra-rose)", medium: "var(--noctra-amber)", low: "var(--noctra-emerald)",
+  critical: "var(--noctra-rose)", high: "var(--noctra-rose)", medium: "var(--noctra-amber)", low: "var(--noctra-emerald)",
 };
 const STATUS_COLOR: Record<string, string> = {
   todo: "var(--noctra-text-muted)", "in-progress": "var(--noctra-cyan)", completed: "var(--noctra-emerald)",
