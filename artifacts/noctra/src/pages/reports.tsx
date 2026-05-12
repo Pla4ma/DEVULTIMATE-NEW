@@ -28,11 +28,13 @@ export default function ReportsPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     getReports()
-      .then((r) => setReports((r as Report[]) ?? []))
-      .catch((err) => toast({ title: "Failed to load reports", description: err?.message ?? "Unknown error", variant: "destructive" }))
-      .finally(() => setLoading(false));
-  }, []);
+      .then((r) => { if (!cancelled) setReports((r as Report[]) ?? []); })
+      .catch((err) => { if (!cancelled) toast({ title: "Failed to load reports", description: err?.message ?? "Unknown error", variant: "destructive" }); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const tools = useMemo(() => [...new Set(reports.map((r) => r.tool))], [reports]);
 

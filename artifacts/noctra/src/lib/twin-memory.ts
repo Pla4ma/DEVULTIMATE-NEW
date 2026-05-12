@@ -1,5 +1,6 @@
 import { supabase as _supabase } from "@/integrations/supabase/client";
-import { isDemoMode } from "@/lib/demo-mode";
+import { isDemoMode, getDemoUser, DEMO_USER_FALLBACK_ID } from "@/lib/demo-mode";
+import { demoStore } from "@/lib/demo-store";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase: any = _supabase;
@@ -57,14 +58,91 @@ function extractPayload(report: Record<string, unknown>): Record<string, unknown
   return {};
 }
 
+function processReports(reports: Array<Record<string, unknown>>): {
+  failedGates: Array<Record<string, unknown>>;
+  latestScores: Record<string, number>;
+} {
+  const failedGates: Array<Record<string, unknown>> = [];
+  const latestScores: Record<string, number> = {};
+
+  reports.forEach((report) => {
+    const payload = extractPayload(report);
+    const data = (payload.data ?? payload) as Record<string, unknown>;
+    const tool = String(report.tool ?? "unknown");
+
+    const scoreKeys = [`${tool}_score`, "signal_score", "health_score", "proof_score", "mvp_score", "swarm_score", "launch_score", "reality_score", "score"];
+    if (typeof report.score === "number") {
+      latestScores[tool] = report.score;
+    } else {
+      for (const key of scoreKeys) {
+        const val = data[key];
+        if (typeof val === "number" && !isNaN(val)) {
+          latestScores[tool] = Math.round(val);
+          break;
+        }
+      }
+    }
+
+    if (typeof data.health_score === "number") latestScores.health = data.health_score;
+    if (typeof data.proof_score === "number") latestScores.proof = data.proof_score;
+
+    if (report.tool === "doctor") {
+      const gates = Array.isArray(data.gates) ? data.gates : Array.isArray(data.launch_gates) ? data.launch_gates : [];
+      gates.forEach((g) => {
+        if (g && typeof g === "object" && (g as Record<string, unknown>).status === "RED") {
+          failedGates.push(g as Record<string, unknown>);
+        }
+      });
+    }
+  });
+
+  return { failedGates, latestScores };
+}
+
+async function loadDemoMemoryContext(projectId?: string): Promise<MemoryContext> {
+  const userId = getDemoUser()?.id ?? DEMO_USER_FALLBACK_ID;
+
+  const allReports = demoStore.getReports(userId) as unknown as Array<Record<string, unknown>>;
+  const reports = allReports.slice(0, 15);
+
+  const allTasks = demoStore.getTasks(userId);
+  const openTasks = allTasks
+    .filter((t) => t.status === "todo")
+    .slice(0, 25) as unknown as Array<Record<string, unknown>>;
+
+  const proofSignals = demoStore.getProofSignals(userId)
+    .slice(0, 50) as unknown as Array<Record<string, unknown>>;
+
+  const scans = demoStore.getScans(userId)
+    .slice(0, 5) as unknown as Array<Record<string, unknown>>;
+
+  let selectedProject: Record<string, unknown> | null = null;
+  if (projectId) {
+    const proj = demoStore.getProject(userId, projectId);
+    selectedProject = proj as unknown as Record<string, unknown> | null;
+  }
+
+  const { failedGates, latestScores } = processReports(reports);
+
+  const scoreVals = Object.values(latestScores);
+  const passport = {
+    totalReports: reports.length,
+    openTasks: openTasks.length,
+    proofSignals: proofSignals.length,
+    completedScans: scans.length,
+    averageScore: scoreVals.length ? Math.round(scoreVals.reduce((a, b) => a + b, 0) / scoreVals.length) : 0,
+  };
+
+  return { selectedProject, latestReports: reports, openTasks, proofSignals, scans, failedGates, latestScores, passport };
+}
+
 export class TwinMemory {
   static async loadMemoryContext(projectId?: string): Promise<MemoryContext> {
-    if (isDemoMode()) return EMPTY;
+    if (isDemoMode()) return loadDemoMemoryContext(projectId);
     try {
       const userId = await getCurrentUserId();
       if (!userId) return EMPTY;
 
-      // Run all queries in parallel with explicit user_id filters for defense in depth
       const [selectedProject, reports, tasks, proofSignals, scans] = await Promise.all([
         projectId
           ? safeQuery<Record<string, unknown>>(
@@ -90,41 +168,7 @@ export class TwinMemory {
       const safeProofSignals = proofSignals ?? [];
       const safeScans = scans ?? [];
 
-      const failedGates: Array<Record<string, unknown>> = [];
-      const latestScores: Record<string, number> = {};
-
-      safeReports.forEach((report) => {
-        const payload = extractPayload(report);
-        const data = (payload.data ?? payload) as Record<string, unknown>;
-        const tool = String(report.tool ?? "unknown");
-
-        // Extract score — try tool-specific key first, then generic score
-        const scoreKeys = [`${tool}_score`, "signal_score", "health_score", "proof_score", "mvp_score", "swarm_score", "launch_score", "reality_score", "score"];
-        if (typeof report.score === "number") {
-          latestScores[tool] = report.score;
-        } else {
-          for (const key of scoreKeys) {
-            const val = data[key];
-            if (typeof val === "number" && !isNaN(val)) {
-              latestScores[tool] = Math.round(val);
-              break;
-            }
-          }
-        }
-
-        if (typeof data.health_score === "number") latestScores.health = data.health_score;
-        if (typeof data.proof_score === "number") latestScores.proof = data.proof_score;
-
-        // Collect failed gates from doctor reports for context
-        if (report.tool === "doctor") {
-          const gates = Array.isArray(data.gates) ? data.gates : Array.isArray(data.launch_gates) ? data.launch_gates : [];
-          gates.forEach((g) => {
-            if (g && typeof g === "object" && (g as Record<string, unknown>).status === "RED") {
-              failedGates.push(g as Record<string, unknown>);
-            }
-          });
-        }
-      });
+      const { failedGates, latestScores } = processReports(safeReports);
 
       const scoreVals = Object.values(latestScores);
       const passport = {
@@ -145,8 +189,7 @@ export class TwinMemory {
         latestScores,
         passport,
       };
-    } catch (err) {
-      console.error("loadMemoryContext failed", err);
+    } catch {
       return EMPTY;
     }
   }
@@ -154,7 +197,6 @@ export class TwinMemory {
   static formatMemoryForPrompt(memory: MemoryContext): string {
     const out: string[] = [];
 
-    // Project context
     if (memory.selectedProject) {
       const p = memory.selectedProject;
       const stage = String(p.stage ?? "unknown");
@@ -162,7 +204,6 @@ export class TwinMemory {
       out.push(`## Active Project\nName: ${String(p.name ?? "Untitled")}\nStage: ${stage}\nIdea: ${idea}`);
     }
 
-    // Score overview — gives AI immediate signal on overall health
     if (Object.keys(memory.latestScores).length > 0) {
       const scoreLines = Object.entries(memory.latestScores)
         .map(([k, v]) => `  ${k}: ${v}/100`)
@@ -172,7 +213,6 @@ export class TwinMemory {
       out.push(`## Intelligence Scores (${trend} overall — avg ${avg}/100)\n${scoreLines}`);
     }
 
-    // Recent report history with key signals
     if (memory.latestReports.length > 0) {
       out.push(`## Report History (${memory.latestReports.length} total)`);
       memory.latestReports.slice(0, 8).forEach((r) => {
@@ -180,18 +220,14 @@ export class TwinMemory {
         const score = typeof r.score === "number" ? ` — score: ${r.score}/100` : "";
         const tool = String(r.tool ?? "report");
         const title = String(r.title ?? "Untitled");
-
-        // Extract key signal from payload
         const payload = extractPayload(r);
         const data = (payload.data ?? payload) as Record<string, unknown>;
         const verdict = String(data.verdict ?? data.go_signal ?? data.go_no_go ?? "");
         const verdictNote = verdict ? ` [${verdict}]` : "";
-
         out.push(`- [${tool}] ${title}${score}${verdictNote} (${created})`);
       });
     }
 
-    // Open tasks grouped by priority
     if (memory.openTasks.length > 0) {
       const high = memory.openTasks.filter((t) => String(t.priority) === "high");
       const med = memory.openTasks.filter((t) => String(t.priority) === "medium");
@@ -201,7 +237,6 @@ export class TwinMemory {
       if (memory.openTasks.length > 9) out.push(`  ... and ${memory.openTasks.length - 9} more tasks`);
     }
 
-    // Proof signals — quantify the evidence base
     if (memory.proofSignals.length > 0) {
       const kinds = memory.proofSignals.reduce<Record<string, number>>((acc, s) => {
         const k = String(s.kind ?? "other");
@@ -216,7 +251,6 @@ export class TwinMemory {
       });
     }
 
-    // Failed gates — critical blockers
     if (memory.failedGates.length > 0) {
       out.push(`## Critical Gate Failures (${memory.failedGates.length} RED gates)`);
       memory.failedGates.slice(0, 3).forEach((g) => {
@@ -224,7 +258,6 @@ export class TwinMemory {
       });
     }
 
-    // Scans
     if (memory.scans.length > 0) {
       out.push(`## Repo Scans (${memory.scans.length})`);
       memory.scans.slice(0, 3).forEach((s) => {

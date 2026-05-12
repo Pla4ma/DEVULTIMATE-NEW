@@ -58,11 +58,13 @@ export default function TasksPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     getTasks()
-      .then((t) => setTasks((t as Task[]) ?? []))
-      .catch((err) => toast({ title: "Failed to load tasks", description: err?.message ?? "Unknown error", variant: "destructive" }))
-      .finally(() => setLoading(false));
-  }, []);
+      .then((t) => { if (!cancelled) setTasks((t as Task[]) ?? []); })
+      .catch((err) => { if (!cancelled) toast({ title: "Failed to load tasks", description: err?.message ?? "Unknown error", variant: "destructive" }); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = useMemo(() => {
     let list = tasks;

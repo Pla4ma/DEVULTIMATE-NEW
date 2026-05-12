@@ -1,9 +1,11 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { useEffect } from "react";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth";
 import { AuthGuard } from "@/components/AuthGuard";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 import LandingPage from "@/pages/landing";
 import DashboardPage from "@/pages/dashboard";
@@ -31,6 +33,51 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const ROUTE_TITLES: Record<string, string> = {
+  "/": "Noctra — Developer Intelligence OS",
+  "/app": "Dashboard — Noctra",
+  "/app/idea": "Signal Chamber — Noctra",
+  "/app/reality": "Pressure Matrix — Noctra",
+  "/app/proof": "Proof Reactor — Noctra",
+  "/app/swarm": "Swarm Field — Noctra",
+  "/app/mvp": "Blueprint Board — Noctra",
+  "/app/doctor": "Diagnostic Bay — Noctra",
+  "/app/launch": "Launch Control — Noctra",
+  "/app/twin": "Memory Constellation — Noctra",
+  "/app/passport": "Founder Passport — Noctra",
+  "/app/reports": "Reports — Noctra",
+  "/app/tasks": "Tasks — Noctra",
+  "/app/projects": "Projects — Noctra",
+};
+
+function TitleSetter() {
+  const [location] = useLocation();
+  useEffect(() => {
+    // Match exact route first, then check prefixes for detail pages
+    const exact = ROUTE_TITLES[location];
+    if (exact) {
+      document.title = exact;
+      return;
+    }
+    if (location.startsWith("/app/reports/")) {
+      document.title = "Report — Noctra";
+    } else if (location.startsWith("/app/projects/")) {
+      document.title = "Project — Noctra";
+    } else {
+      document.title = "Noctra — Developer Intelligence OS";
+    }
+  }, [location]);
+  return null;
+}
+
+function ScrollToTop() {
+  const [location] = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [location]);
+  return null;
+}
 
 function AppRoutes() {
   return (
@@ -94,7 +141,11 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <AppRoutes />
+            <TitleSetter />
+            <ScrollToTop />
+            <ErrorBoundary>
+              <AppRoutes />
+            </ErrorBoundary>
           </WouterRouter>
           <Toaster />
         </TooltipProvider>

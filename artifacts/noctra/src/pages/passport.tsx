@@ -109,8 +109,10 @@ export default function PassportPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     Promise.all([getPassport(), getReports(), getTasks(), getProofSignals()])
       .then(([passport, reports, tasks, signals]) => {
+        if (cancelled) return;
         setData({
           passport: passport as Record<string, unknown> | null,
           reports: (reports as Record<string, unknown>[]) ?? [],
@@ -118,9 +120,10 @@ export default function PassportPage() {
           signals: (signals as Record<string, unknown>[]) ?? [],
         });
       })
-      .catch((err) => toast({ title: "Failed to load passport", description: err?.message ?? "Unknown error", variant: "destructive" }))
-      .finally(() => setLoading(false));
-  }, []);
+      .catch((err) => { if (!cancelled) toast({ title: "Failed to load passport", description: err?.message ?? "Unknown error", variant: "destructive" }); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return (
     <AppShell>

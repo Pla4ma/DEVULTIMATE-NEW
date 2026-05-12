@@ -388,8 +388,7 @@ export async function generateTasksFromReport(input: {
       })),
     );
     return Array.isArray(saved) ? saved.length : unique.length;
-  } catch (err) {
-    console.error("generateTasksFromReport: saveTasks failed", err);
+  } catch {
     return 0;
   }
 }

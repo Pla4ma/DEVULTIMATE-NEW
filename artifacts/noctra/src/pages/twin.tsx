@@ -39,11 +39,14 @@ export default function TwinPage() {
 
   // Load memory and projects on mount
   useEffect(() => {
+    let cancelled = false;
+
     getProjects()
-      .then((p) => setProjects((p as Project[]) ?? []))
-      .catch(() => setProjects([]));
+      .then((p) => { if (!cancelled) setProjects((p as Project[]) ?? []); })
+      .catch(() => { if (!cancelled) setProjects([]); });
 
     TwinMemory.loadMemoryContext().then((ctx) => {
+      if (cancelled) return;
       const formatted = TwinMemory.formatMemoryForPrompt(ctx);
       setMemCtx(formatted);
       const greeting = [
@@ -53,21 +56,27 @@ export default function TwinPage() {
       ].join("");
       setMessages([{ role: "assistant", content: greeting }]);
     }).catch(() => {
-      setMessages([{
-        role: "assistant",
-        content: "Memory constellation initialized. Run intelligence tools to build your founder context.",
-      }]);
+      if (!cancelled) {
+        setMessages([{
+          role: "assistant",
+          content: "Memory constellation initialized. Run intelligence tools to build your founder context.",
+        }]);
+      }
     });
+
+    return () => { cancelled = true; };
   }, []);
 
-  // Load reports when project context changes
+  // Load reports when project context changes — use a cancelled flag to prevent stale state on rapid project switches
   useEffect(() => {
+    let cancelled = false;
     const query = selectedProjectId !== "all"
       ? getReports(undefined, selectedProjectId)
       : getReports();
 
     query
       .then((r) => {
+        if (cancelled) return;
         const reps = ((r as ReportSummary[]) ?? []);
         setAllReports(reps);
         setRecentReports(reps.slice(0, 8));
@@ -76,10 +85,14 @@ export default function TwinPage() {
         }
       })
       .catch(() => {
-        setAllReports([]);
-        setRecentReports([]);
-        setContradictions([]);
+        if (!cancelled) {
+          setAllReports([]);
+          setRecentReports([]);
+          setContradictions([]);
+        }
       });
+
+    return () => { cancelled = true; };
   }, [selectedProjectId]);
 
   // Auto-synthesize when we have enough reports
