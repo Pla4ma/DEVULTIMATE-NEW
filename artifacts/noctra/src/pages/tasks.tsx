@@ -4,7 +4,7 @@ import { Panel, EmptyState, Badge, NoctraButton } from "@/components/Primitives"
 import { getTasks, updateTaskStatus, deleteTask, createTask } from "@/lib/repository";
 import {
   CheckSquare, Loader2, Trash2, Plus, CheckCircle, Circle,
-  Search, Download, Filter, MoreHorizontal
+  Search, Download, Filter
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 

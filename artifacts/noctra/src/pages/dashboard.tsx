@@ -30,7 +30,7 @@ import {
   Zap, AlertTriangle, TrendingUp, TrendingDown, Minus,
   Brain, ChevronRight, Sparkles, Shield, ShieldOff, Clock,
   Sun, Target, Map, Terminal, Copy, Download, Plus,
-  Command, XCircle, CheckCircle, Info,
+  XCircle, CheckCircle, Info,
 } from "lucide-react";
 
 type DashData = Awaited<ReturnType<typeof getDashboardData>>;
@@ -284,7 +284,6 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold" style={{ color: "var(--noctra-text)" }}>Command Center</h1>
             <p className="text-sm mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
               Founder intelligence hub
-              <span className="ml-2 opacity-50 text-xs">⌘K to search</span>
             </p>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs" style={{ background: "rgba(61,216,255,0.08)", border: "1px solid rgba(61,216,255,0.2)", color: "var(--noctra-cyan)" }}>
@@ -1232,11 +1231,6 @@ export default function DashboardPage() {
               </Panel>
             )}
 
-            {/* ── CMD+K HINT ─────────────────────────────────────────────── */}
-            <div className="flex items-center justify-center gap-2 py-3 text-xs" style={{ color: "var(--noctra-text-muted)" }}>
-              <Command size={11} />
-              <span>K — search tools, navigate, or ask the Product Twin</span>
-            </div>
           </>
         )}
       </div>
