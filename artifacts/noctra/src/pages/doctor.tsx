@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { ToolScene } from "@/components/ToolScene";
 import { DoctorReportView } from "@/components/reports/DoctorReportView";
@@ -9,7 +10,7 @@ import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import {
   Stethoscope, Loader2, RotateCcw, Upload, FileArchive,
-  CheckCircle, AlertTriangle, XCircle, ArrowRight,
+  CheckCircle, AlertTriangle, XCircle, ArrowRight, ExternalLink,
 } from "lucide-react";
 
 const TOOL = TOOL_BY_KEY["doctor"]!;
@@ -54,11 +55,13 @@ const PHASE_ORDER: Record<Phase, number> = {
 };
 
 export default function DoctorPage() {
+  const [, navigate] = useLocation();
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState("");
   const [zipFile, setZipFile] = useState<File | null>(null);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [aiResult, setAiResult] = useState<AIResult | null>(null);
+  const [savedReportId, setSavedReportId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [scanFallbackMode, setScanFallbackMode] = useState<ScanFallbackMode>("none");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -129,9 +132,11 @@ export default function DoctorPage() {
         score: result.score ?? undefined,
         summary: result.summary,
       });
-      if (report) {
+      const r = report as { id?: string } | null;
+      setSavedReportId(r?.id ?? null);
+      if (r?.id) {
         await generateTasksFromReport({
-          id: report.id,
+          id: r.id,
           tool: "doctor",
           payload: { data: result.data },
           project_id: null,
@@ -300,6 +305,16 @@ export default function DoctorPage() {
             </div>
           </div>
           <DoctorReportView report={{ id: "", payload: { data: aiResult.data, markdown: aiResult.markdown }, score: aiResult.score ?? null }} />
+          <div className="flex gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+            {savedReportId && (
+              <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${savedReportId}`)} className="flex-1">
+                <ExternalLink size={12} /> View Full Report
+              </NoctraButton>
+            )}
+            <NoctraButton variant="ghost" onClick={() => navigate("/app/launch")} className="flex-1">
+              Next: Launch Control <ArrowRight size={12} />
+            </NoctraButton>
+          </div>
         </div>
       );
     }

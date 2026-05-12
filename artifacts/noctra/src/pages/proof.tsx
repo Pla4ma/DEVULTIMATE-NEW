@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { Panel, EmptyState, NoctraButton, Badge, ScoreRing } from "@/components/Primitives";
 import { callStructuredAI } from "@/lib/ai";
@@ -7,14 +8,15 @@ import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
 import {
-  FlaskConical, Wand2, Loader2, RotateCcw, Save, Plus, Trash2,
-  Target, AlertTriangle, CheckCircle, TrendingUp
+  FlaskConical, Wand2, Loader2, RotateCcw, Plus, Trash2,
+  Target, AlertTriangle, CheckCircle, TrendingUp, ExternalLink, ArrowRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const TOOL = TOOL_BY_KEY["proof"]!;
 type Phase = "idle" | "running" | "done" | "error";
 type Tab = "analysis" | "signals" | "score";
+
 
 type ProofSignalRow = {
   id: string; label: string; kind: string;
@@ -42,13 +44,14 @@ const KIND_COLOR: Record<string, string> = {
 
 export default function ProofPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [tab, setTab] = useState<Tab>("analysis");
   const [input, setInput] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [result, setResult] = useState<Awaited<ReturnType<typeof callStructuredAI>> | null>(null);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savedReportId, setSavedReportId] = useState<string | null>(null);
   const [signals, setSignals] = useState<ProofSignalRow[]>([]);
   const [signalsLoading, setSignalsLoading] = useState(true);
   const [newLabel, setNewLabel] = useState("");
@@ -68,7 +71,7 @@ export default function ProofPage() {
 
   async function run() {
     if (!input.trim()) return;
-    setPhase("running"); setError(""); setResult(null); setSaved(false);
+    setPhase("running"); setError(""); setResult(null); setSaved(false); setSavedReportId(null);
     const signalCtx = signals.map((s) =>
       `${s.kind}: ${s.label}${s.value != null ? ` (n=${s.value})` : ""}${s.source ? ` [${s.source}]` : ""}`
     ).join("; ");
@@ -79,23 +82,26 @@ export default function ProofPage() {
       });
       setResult(res); setPhase("done");
       setTab("analysis");
+      void autoSave(res);
     } catch (err) { setError(err instanceof Error ? err.message : "Analysis failed"); setPhase("error"); }
   }
 
-  async function handleSave() {
-    if (!result) return;
-    setSaving(true);
+  async function autoSave(res: Awaited<ReturnType<typeof callStructuredAI>>) {
     try {
       const report = await saveReport({
         tool: "proof",
-        title: result.title || `Proof Reactor — ${input.slice(0, 60)}`,
-        payload: { data: result.data, markdown: result.markdown },
-        score: result.score ?? undefined,
-        summary: result.summary,
+        title: res.title || `Proof Reactor — ${input.slice(0, 60)}`,
+        payload: { data: res.data, markdown: res.markdown },
+        score: res.score ?? undefined,
+        summary: res.summary,
       });
-      if (report) await generateTasksFromReport({ id: report.id, tool: "proof", payload: { data: result.data }, project_id: null });
+      const r = report as { id?: string } | null;
+      setSavedReportId(r?.id ?? null);
+      if (r?.id) await generateTasksFromReport({ id: r.id, tool: "proof", payload: { data: res.data }, project_id: null });
       setSaved(true);
-    } catch (err) { toast({ title: "Failed to save report", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" }); } finally { setSaving(false); }
+    } catch {
+      // silent
+    }
   }
 
   async function handleAddSignal() {
@@ -210,12 +216,6 @@ export default function ProofPage() {
                   </NoctraButton>
                   {phase === "done" && <NoctraButton variant="ghost" onClick={reset}><RotateCcw size={13} /></NoctraButton>}
                 </div>
-                {phase === "done" && (
-                  <NoctraButton onClick={handleSave} disabled={saving || saved} variant={saved ? "ghost" : "ghost"} className="w-full">
-                    {saving ? <Loader2 size={12} className="animate-spin" /> : saved ? <CheckCircle size={12} style={{ color: "var(--noctra-emerald)" }} /> : <Save size={12} />}
-                    {saved ? "Saved to Intelligence" : "Save Report"}
-                  </NoctraButton>
-                )}
               </div>
             </Panel>
 
@@ -286,6 +286,19 @@ export default function ProofPage() {
                           </li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {saved && (
+                    <div className="flex gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+                      {savedReportId && (
+                        <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${savedReportId}`)} className="flex-1">
+                          <ExternalLink size={12} /> View Full Report
+                        </NoctraButton>
+                      )}
+                      <NoctraButton variant="ghost" onClick={() => navigate("/app/swarm")} className="flex-1">
+                        Next: Swarm Field <ArrowRight size={12} />
+                      </NoctraButton>
                     </div>
                   )}
                 </div>

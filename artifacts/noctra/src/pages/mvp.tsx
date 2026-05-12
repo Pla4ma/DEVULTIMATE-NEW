@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { ToolScene } from "@/components/ToolScene";
 import { MvpReportView } from "@/components/reports/MvpReportView";
@@ -8,7 +9,7 @@ import { saveReport, saveTasks } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
-import { ListChecks, Wand2, Loader2, RotateCcw, Save, CheckCircle, Download, FileDown } from "lucide-react";
+import { ListChecks, Wand2, Loader2, RotateCcw, CheckCircle, Download, FileDown, ExternalLink, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { reportToMarkdown, downloadMarkdown } from "@/lib/export";
 
@@ -21,6 +22,7 @@ const FOCUS_OPTIONS = ["Web app", "Mobile app", "API / Service", "Chrome extensi
 
 export default function MvpPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [input, setInput] = useState("");
   const [timeline, setTimeline] = useState("4 weeks");
   const [stack, setStack] = useState("");
@@ -29,14 +31,14 @@ export default function MvpPage() {
   const [result, setResult] = useState<Awaited<ReturnType<typeof callStructuredAI>> | null>(null);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savedReportId, setSavedReportId] = useState<string | null>(null);
   const [exportingTasks, setExportingTasks] = useState(false);
   const [tasksExported, setTasksExported] = useState(false);
   const [downloadingPrd, setDownloadingPrd] = useState(false);
 
   async function run() {
     if (!input.trim()) return;
-    setPhase("running"); setError(""); setResult(null); setSaved(false); setTasksExported(false);
+    setPhase("running"); setError(""); setResult(null); setSaved(false); setSavedReportId(null); setTasksExported(false);
     const context = {
       timeline,
       tech_stack: stack || undefined,
@@ -46,26 +48,29 @@ export default function MvpPage() {
       const res = await callStructuredAI("mvp", input.trim(), context as Record<string, unknown>);
       setResult(res);
       setPhase("done");
+      void autoSave(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Analysis failed");
       setPhase("error");
     }
   }
 
-  async function handleSave() {
-    if (!result) return;
-    setSaving(true);
+  async function autoSave(res: Awaited<ReturnType<typeof callStructuredAI>>) {
     try {
       const report = await saveReport({
         tool: "mvp",
-        title: result.title || `Blueprint — ${input.slice(0, 60)}`,
-        payload: { data: result.data, markdown: result.markdown, timeline, stack, focus },
-        score: result.score ?? undefined,
-        summary: result.summary,
+        title: res.title || `Blueprint — ${input.slice(0, 60)}`,
+        payload: { data: res.data, markdown: res.markdown, timeline, stack, focus },
+        score: res.score ?? undefined,
+        summary: res.summary,
       });
-      if (report) await generateTasksFromReport({ id: report.id, tool: "mvp", payload: { data: result.data }, project_id: null });
+      const r = report as { id?: string } | null;
+      setSavedReportId(r?.id ?? null);
+      if (r?.id) await generateTasksFromReport({ id: r.id, tool: "mvp", payload: { data: res.data }, project_id: null });
       setSaved(true);
-    } catch (err) { toast({ title: "Failed to save report", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" }); } finally { setSaving(false); }
+    } catch {
+      // silent
+    }
   }
 
   function handleDownloadPrd() {
@@ -108,7 +113,7 @@ export default function MvpPage() {
   }
 
   function reset() {
-    setPhase("idle"); setResult(null); setError(""); setSaved(false); setInput(""); setTasksExported(false);
+    setPhase("idle"); setResult(null); setError(""); setSaved(false); setSavedReportId(null); setInput(""); setTasksExported(false);
   }
 
   const d = result?.data as Record<string, unknown> | null;
@@ -178,19 +183,15 @@ export default function MvpPage() {
       {phase === "done" && (
         <div className="space-y-2">
           <div className="flex gap-2">
-            <NoctraButton onClick={handleSave} disabled={saving || saved} className="flex-1" variant="ghost">
-              {saving ? <Loader2 size={12} className="animate-spin" /> : saved ? <CheckCircle size={12} style={{ color: "var(--noctra-emerald)" }} /> : <Save size={12} />}
-              {saved ? "Saved" : "Save Report"}
-            </NoctraButton>
             <NoctraButton onClick={handleExportTasks} disabled={exportingTasks || tasksExported} className="flex-1" variant="ghost">
               {exportingTasks ? <Loader2 size={12} className="animate-spin" /> : tasksExported ? <CheckCircle size={12} style={{ color: "var(--noctra-emerald)" }} /> : <Download size={12} />}
               {tasksExported ? "Tasks Exported" : "Export to Tasks"}
             </NoctraButton>
+            <NoctraButton onClick={handleDownloadPrd} disabled={downloadingPrd} className="flex-1" variant="ghost">
+              {downloadingPrd ? <Loader2 size={12} className="animate-spin" /> : <FileDown size={12} />}
+              Download PRD
+            </NoctraButton>
           </div>
-          <NoctraButton onClick={handleDownloadPrd} disabled={downloadingPrd} className="w-full" variant="ghost">
-            {downloadingPrd ? <Loader2 size={12} className="animate-spin" /> : <FileDown size={12} />}
-            Download PRD (Markdown)
-          </NoctraButton>
         </div>
       )}
     </div>
@@ -209,6 +210,18 @@ export default function MvpPage() {
     ) : phase === "done" && result ? (
       <div className="space-y-4">
         <MvpReportView report={{ payload: { data: result.data, markdown: result.markdown }, score: result.score ?? null }} />
+        {saved && (
+          <div className="flex gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+            {savedReportId && (
+              <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${savedReportId}`)} className="flex-1">
+                <ExternalLink size={12} /> View Full Report
+              </NoctraButton>
+            )}
+            <NoctraButton variant="ghost" onClick={() => navigate("/app/doctor")} className="flex-1">
+              Next: Diagnostic Bay <ArrowRight size={12} />
+            </NoctraButton>
+          </div>
+        )}
         {featureROI.length > 0 && (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>Feature ROI Scores</p>

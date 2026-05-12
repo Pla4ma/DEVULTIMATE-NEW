@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { ToolScene } from "@/components/ToolScene";
 import { LaunchReportView } from "@/components/reports/LaunchReportView";
@@ -7,7 +8,7 @@ import { callStructuredAI } from "@/lib/ai";
 import { saveReport, getProjects, getReports } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
-import { Rocket, Wand2, Loader2, RotateCcw, Save, CheckCircle, FolderOpen, RefreshCw, AlertTriangle } from "lucide-react";
+import { Rocket, Wand2, Loader2, RotateCcw, CheckCircle, FolderOpen, RefreshCw, AlertTriangle, ExternalLink, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const TOOL = TOOL_BY_KEY["launch"]!;
@@ -17,12 +18,13 @@ type Report = { id: string; tool: string; title: string; summary?: string | null
 
 export default function LaunchPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [input, setInput] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [result, setResult] = useState<Awaited<ReturnType<typeof callStructuredAI>> | null>(null);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savedReportId, setSavedReportId] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [contextReports, setContextReports] = useState<Report[]>([]);
@@ -65,7 +67,7 @@ export default function LaunchPage() {
 
   async function run() {
     if (!input.trim()) return;
-    setPhase("running"); setError(""); setResult(null); setSaved(false);
+    setPhase("running"); setError(""); setResult(null); setSaved(false); setSavedReportId(null);
     const context: Record<string, unknown> = {};
     if (selectedProjectId) context.project_id = selectedProjectId;
     if (contextReports.length > 0) {
@@ -77,32 +79,35 @@ export default function LaunchPage() {
       const res = await callStructuredAI("launch", input.trim(), Object.keys(context).length ? context : undefined);
       setResult(res);
       setPhase("done");
+      void autoSave(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Analysis failed");
       setPhase("error");
     }
   }
 
-  async function handleSave() {
-    if (!result) return;
-    setSaving(true);
+  async function autoSave(res: Awaited<ReturnType<typeof callStructuredAI>>) {
     try {
       const report = await saveReport({
         tool: "launch",
-        title: result.title || `Launch Control — ${input.slice(0, 60)}`,
-        payload: { data: result.data, markdown: result.markdown },
-        score: result.score ?? undefined,
-        summary: result.summary,
+        title: res.title || `Launch Control — ${input.slice(0, 60)}`,
+        payload: { data: res.data, markdown: res.markdown },
+        score: res.score ?? undefined,
+        summary: res.summary,
         projectId: selectedProjectId || undefined,
       });
-      if (report) await generateTasksFromReport({ id: report.id, tool: "launch", payload: { data: result.data }, project_id: selectedProjectId || null });
+      const r = report as { id?: string } | null;
+      setSavedReportId(r?.id ?? null);
+      if (r?.id) await generateTasksFromReport({ id: r.id, tool: "launch", payload: { data: res.data }, project_id: selectedProjectId || null });
       setSaved(true);
-    } catch (err) { toast({ title: "Failed to save report", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" }); } finally { setSaving(false); }
+    } catch {
+      // silent
+    }
   }
 
   function reset() {
-    setPhase("idle"); setResult(null); setError(""); setSaved(false); setInput("");
-    setContextReports([]); setSelectedProjectId("");
+    setPhase("idle"); setResult(null); setError(""); setSaved(false); setSavedReportId(null);
+    setInput(""); setContextReports([]); setSelectedProjectId("");
   }
 
   const d = result?.data as Record<string, unknown> | null;
@@ -202,12 +207,6 @@ export default function LaunchPage() {
         {phase === "done" && <NoctraButton variant="ghost" onClick={reset}><RotateCcw size={13} /></NoctraButton>}
       </div>
 
-      {phase === "done" && (
-        <NoctraButton onClick={handleSave} disabled={saving || saved} className="w-full" variant="ghost">
-          {saving ? <Loader2 size={12} className="animate-spin" /> : saved ? <CheckCircle size={12} style={{ color: "var(--noctra-emerald)" }} /> : <Save size={12} />}
-          {saved ? "Saved to Intelligence" : "Save Report + Launch Checklist"}
-        </NoctraButton>
-      )}
     </div>
   );
 
@@ -239,6 +238,19 @@ export default function LaunchPage() {
         )}
 
         <LaunchReportView report={{ payload: { data: result.data, markdown: result.markdown }, score: result.score ?? null }} />
+
+        {saved && (
+          <div className="flex gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+            {savedReportId && (
+              <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${savedReportId}`)} className="flex-1">
+                <ExternalLink size={12} /> View Full Report
+              </NoctraButton>
+            )}
+            <NoctraButton variant="ghost" onClick={() => navigate("/app/twin")} className="flex-1">
+              Next: Memory Constellation <ArrowRight size={12} />
+            </NoctraButton>
+          </div>
+        )}
 
         {/* Launch checklist */}
         {launchChecklist.length > 0 && (

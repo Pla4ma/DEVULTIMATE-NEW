@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { ToolScene } from "@/components/ToolScene";
 import { SwarmReportView } from "@/components/reports/SwarmReportView";
@@ -8,8 +9,7 @@ import { saveReport } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
-import { Users, Wand2, Loader2, RotateCcw, Save, CheckCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Users, Wand2, Loader2, RotateCcw, CheckCircle, ExternalLink, ArrowRight } from "lucide-react";
 
 const TOOL = TOOL_BY_KEY["swarm"]!;
 type Phase = "idle" | "running" | "done" | "error";
@@ -25,7 +25,7 @@ const PRICE_RANGES = [
 ];
 
 export default function SwarmPage() {
-  const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [input, setInput] = useState("");
   const [customPersonas, setCustomPersonas] = useState("");
   const [personaCount, setPersonaCount] = useState<typeof PERSONA_COUNTS[number]>(25);
@@ -35,11 +35,11 @@ export default function SwarmPage() {
   const [result, setResult] = useState<Awaited<ReturnType<typeof callStructuredAI>> | null>(null);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savedReportId, setSavedReportId] = useState<string | null>(null);
 
   async function run() {
     if (!input.trim()) return;
-    setPhase("running"); setError(""); setResult(null); setSaved(false);
+    setPhase("running"); setError(""); setResult(null); setSaved(false); setSavedReportId(null);
 
     const parts = [input.trim()];
     if (segment) parts.push(`Target segment: ${segment}`);
@@ -58,31 +58,34 @@ export default function SwarmPage() {
       const res = await callStructuredAI("swarm", fullInput, context as Record<string, unknown>);
       setResult(res);
       setPhase("done");
+      void autoSave(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Analysis failed");
       setPhase("error");
     }
   }
 
-  async function handleSave() {
-    if (!result) return;
-    setSaving(true);
+  async function autoSave(res: Awaited<ReturnType<typeof callStructuredAI>>) {
     try {
       const report = await saveReport({
         tool: "swarm",
-        title: result.title || `Swarm Field — ${input.slice(0, 60)}`,
-        payload: { data: result.data, markdown: result.markdown, personaCount, segment, priceRange },
-        score: result.score ?? undefined,
-        summary: result.summary,
+        title: res.title || `Swarm Field — ${input.slice(0, 60)}`,
+        payload: { data: res.data, markdown: res.markdown, personaCount, segment, priceRange },
+        score: res.score ?? undefined,
+        summary: res.summary,
       });
-      if (report) await generateTasksFromReport({ id: report.id, tool: "swarm", payload: { data: result.data }, project_id: null });
+      const r = report as { id?: string } | null;
+      setSavedReportId(r?.id ?? null);
+      if (r?.id) await generateTasksFromReport({ id: r.id, tool: "swarm", payload: { data: res.data }, project_id: null });
       setSaved(true);
-    } catch (err) { toast({ title: "Failed to save report", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" }); } finally { setSaving(false); }
+    } catch {
+      // silent — results still visible
+    }
   }
 
   function reset() {
-    setPhase("idle"); setResult(null); setError(""); setSaved(false); setInput("");
-    setCustomPersonas(""); setSegment(""); setPriceRange("");
+    setPhase("idle"); setResult(null); setError(""); setSaved(false); setSavedReportId(null);
+    setInput(""); setCustomPersonas(""); setSegment(""); setPriceRange("");
   }
 
   const InputPanel = (
@@ -189,13 +192,6 @@ export default function SwarmPage() {
         </NoctraButton>
         {phase === "done" && <NoctraButton variant="ghost" onClick={reset}><RotateCcw size={13} /></NoctraButton>}
       </div>
-
-      {phase === "done" && (
-        <NoctraButton onClick={handleSave} disabled={saving || saved} className="w-full" variant="ghost">
-          {saving ? <Loader2 size={12} className="animate-spin" /> : saved ? <CheckCircle size={12} style={{ color: "var(--noctra-emerald)" }} /> : <Save size={12} />}
-          {saved ? "Saved to Intelligence" : "Save Report"}
-        </NoctraButton>
-      )}
     </div>
   );
 
@@ -223,6 +219,18 @@ export default function SwarmPage() {
           </div>
         )}
         <SwarmReportView report={{ payload: { data: result.data, markdown: result.markdown }, score: result.score ?? null }} />
+        {saved && (
+          <div className="flex gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+            {savedReportId && (
+              <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${savedReportId}`)} className="flex-1">
+                <ExternalLink size={12} /> View Full Report
+              </NoctraButton>
+            )}
+            <NoctraButton variant="ghost" onClick={() => navigate("/app/mvp")} className="flex-1">
+              Next: Blueprint Board <ArrowRight size={12} />
+            </NoctraButton>
+          </div>
+        )}
       </div>
     ) : null
   );

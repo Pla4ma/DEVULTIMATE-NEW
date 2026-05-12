@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { ToolScene } from "@/components/ToolScene";
 import { IdeaReportView } from "@/components/reports/IdeaReportView";
@@ -10,12 +11,13 @@ import { saveReport } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
-import { ScanSearch, Wand2, Loader2, RotateCcw, CheckCircle, Zap } from "lucide-react";
+import { ScanSearch, Wand2, Loader2, RotateCcw, CheckCircle, Zap, ExternalLink, ArrowRight } from "lucide-react";
 
 const TOOL = TOOL_BY_KEY["idea"]!;
 type Phase = "idle" | "running" | "done" | "error";
 
 export default function IdeaPage() {
+  const [, navigate] = useLocation();
   const [input, setInput] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [currentStage, setCurrentStage] = useState("");
@@ -24,6 +26,7 @@ export default function IdeaPage() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [autoSaved, setAutoSaved] = useState(false);
+  const [savedReportId, setSavedReportId] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const examples = TOOL_EXAMPLES.idea;
@@ -78,9 +81,11 @@ export default function IdeaPage() {
         score: res.score ?? undefined,
         summary: res.summary,
       });
-      if (report) {
+      const r = report as { id?: string } | null;
+      setSavedReportId(r?.id ?? null);
+      if (r?.id) {
         await generateTasksFromReport({
-          id: report.id,
+          id: r.id,
           tool: "idea",
           payload: { data: res.data },
           project_id: null,
@@ -99,6 +104,7 @@ export default function IdeaPage() {
     setError("");
     setSaved(false);
     setAutoSaved(false);
+    setSavedReportId(null);
     setInput("");
     setCurrentStage("");
     setInjectedContext(null);
@@ -209,16 +215,30 @@ export default function IdeaPage() {
         </div>
       )}
       {phase === "done" && result && (
-        <IdeaReportView
-          report={{
-            payload: { data: result.data, markdown: result.markdown },
-            score: result.score,
-            tool: "idea",
-            title: result.title,
-            summary: result.summary,
-            created_at: new Date().toISOString(),
-          }}
-        />
+        <div className="space-y-4">
+          <IdeaReportView
+            report={{
+              payload: { data: result.data, markdown: result.markdown },
+              score: result.score,
+              tool: "idea",
+              title: result.title,
+              summary: result.summary,
+              created_at: new Date().toISOString(),
+            }}
+          />
+          {autoSaved && (
+            <div className="flex gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+              {savedReportId && (
+                <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${savedReportId}`)} className="flex-1">
+                  <ExternalLink size={12} /> View Full Report
+                </NoctraButton>
+              )}
+              <NoctraButton variant="ghost" onClick={() => navigate("/app/reality")} className="flex-1">
+                Next: Pressure Matrix <ArrowRight size={12} />
+              </NoctraButton>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
