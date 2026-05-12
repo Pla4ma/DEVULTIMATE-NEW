@@ -64,8 +64,8 @@ export default function IdeaPage() {
       setInjectedContext(res.injectedContext ?? null);
       setPhase("done");
 
-      // Auto-save immediately — no manual button click needed
-      await autoSave(res, input.trim());
+      // Auto-save fire-and-forget — results show immediately, nav buttons appear after save confirms
+      void autoSave(res, input.trim());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Analysis failed");
       setPhase("error");

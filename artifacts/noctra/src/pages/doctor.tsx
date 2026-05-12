@@ -156,6 +156,7 @@ export default function DoctorPage() {
     setScanResult(null);
     setError("");
     setZipFile(null);
+    setSavedReportId(null);
     setScanFallbackMode("none");
   }
 

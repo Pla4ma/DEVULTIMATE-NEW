@@ -126,7 +126,7 @@ export default function ProofPage() {
     } catch (err) { toast({ title: "Failed to delete signal", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" }); } finally { setDeletingId(null); }
   }
 
-  function reset() { setPhase("idle"); setResult(null); setError(""); setSaved(false); setInput(""); }
+  function reset() { setPhase("idle"); setResult(null); setError(""); setSaved(false); setSavedReportId(null); setInput(""); }
 
   const d = result?.data as Record<string, unknown> | null;
   const proofScore = typeof d?.proof_score === "number" ? d.proof_score : result?.score ?? null;

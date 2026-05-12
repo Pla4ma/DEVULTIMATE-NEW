@@ -11,7 +11,7 @@ import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
 import {
   Loader2, RotateCcw, CheckCircle, Wrench,
-  ArrowRight, Zap, Terminal, XCircle, AlertCircle, ChevronRight,
+  ArrowRight, ExternalLink, Zap, Terminal, XCircle, AlertCircle, ChevronRight,
   CheckSquare, Cpu, Play,
 } from "lucide-react";
 
@@ -972,17 +972,28 @@ export default function RealityPage() {
                   )}
 
                 {/* Bottom actions */}
-                <div className="flex gap-2 flex-wrap pt-1">
+                <div
+                  className="flex gap-2 flex-wrap pt-3 mt-2 border-t"
+                  style={{ borderColor: "var(--noctra-border)" }}
+                >
                   {savedReportId && (
                     <NoctraButton
                       variant="ghost"
                       onClick={() => navigate(`/app/reports/${savedReportId}`)}
                     >
-                      Full Report <ArrowRight size={11} />
+                      <ExternalLink size={11} /> Full Report
+                    </NoctraButton>
+                  )}
+                  {autoSaved && (
+                    <NoctraButton
+                      variant="ghost"
+                      onClick={() => navigate("/app/proof")}
+                    >
+                      Next: Proof Reactor <ArrowRight size={11} />
                     </NoctraButton>
                   )}
                   <NoctraButton variant="ghost" onClick={reset}>
-                    <RotateCcw size={12} /> Reset
+                    <RotateCcw size={12} />
                   </NoctraButton>
                 </div>
               </div>
