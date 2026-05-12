@@ -8,8 +8,9 @@ import { saveReport, saveTasks } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
-import { ListChecks, Wand2, Loader2, RotateCcw, Save, CheckCircle, Download } from "lucide-react";
+import { ListChecks, Wand2, Loader2, RotateCcw, Save, CheckCircle, Download, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { reportToMarkdown, downloadMarkdown } from "@/lib/export";
 
 const TOOL = TOOL_BY_KEY["mvp"]!;
 type Phase = "idle" | "running" | "done" | "error";
@@ -31,6 +32,7 @@ export default function MvpPage() {
   const [saving, setSaving] = useState(false);
   const [exportingTasks, setExportingTasks] = useState(false);
   const [tasksExported, setTasksExported] = useState(false);
+  const [downloadingPrd, setDownloadingPrd] = useState(false);
 
   async function run() {
     if (!input.trim()) return;
@@ -64,6 +66,24 @@ export default function MvpPage() {
       if (report) await generateTasksFromReport({ id: report.id, tool: "mvp", payload: { data: result.data }, project_id: null });
       setSaved(true);
     } catch (err) { toast({ title: "Failed to save report", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" }); } finally { setSaving(false); }
+  }
+
+  function handleDownloadPrd() {
+    if (!result) return;
+    setDownloadingPrd(true);
+    try {
+      const md = reportToMarkdown({
+        tool: "mvp",
+        title: result.title || `Blueprint — ${input.slice(0, 60)}`,
+        score: result.score ?? null,
+        summary: result.summary ?? null,
+        created_at: new Date().toISOString(),
+        payload: { data: result.data, markdown: result.markdown },
+      });
+      downloadMarkdown(`blueprint-${input.slice(0, 40).replace(/\s+/g, "-").toLowerCase()}`, md);
+    } finally {
+      setDownloadingPrd(false);
+    }
   }
 
   async function handleExportTasks() {
@@ -156,14 +176,20 @@ export default function MvpPage() {
       </div>
 
       {phase === "done" && (
-        <div className="flex gap-2">
-          <NoctraButton onClick={handleSave} disabled={saving || saved} className="flex-1" variant="ghost">
-            {saving ? <Loader2 size={12} className="animate-spin" /> : saved ? <CheckCircle size={12} style={{ color: "var(--noctra-emerald)" }} /> : <Save size={12} />}
-            {saved ? "Saved" : "Save Report"}
-          </NoctraButton>
-          <NoctraButton onClick={handleExportTasks} disabled={exportingTasks || tasksExported} className="flex-1" variant="ghost">
-            {exportingTasks ? <Loader2 size={12} className="animate-spin" /> : tasksExported ? <CheckCircle size={12} style={{ color: "var(--noctra-emerald)" }} /> : <Download size={12} />}
-            {tasksExported ? "Tasks Exported" : "Export to Tasks"}
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <NoctraButton onClick={handleSave} disabled={saving || saved} className="flex-1" variant="ghost">
+              {saving ? <Loader2 size={12} className="animate-spin" /> : saved ? <CheckCircle size={12} style={{ color: "var(--noctra-emerald)" }} /> : <Save size={12} />}
+              {saved ? "Saved" : "Save Report"}
+            </NoctraButton>
+            <NoctraButton onClick={handleExportTasks} disabled={exportingTasks || tasksExported} className="flex-1" variant="ghost">
+              {exportingTasks ? <Loader2 size={12} className="animate-spin" /> : tasksExported ? <CheckCircle size={12} style={{ color: "var(--noctra-emerald)" }} /> : <Download size={12} />}
+              {tasksExported ? "Tasks Exported" : "Export to Tasks"}
+            </NoctraButton>
+          </div>
+          <NoctraButton onClick={handleDownloadPrd} disabled={downloadingPrd} className="w-full" variant="ghost">
+            {downloadingPrd ? <Loader2 size={12} className="animate-spin" /> : <FileDown size={12} />}
+            Download PRD (Markdown)
           </NoctraButton>
         </div>
       )}

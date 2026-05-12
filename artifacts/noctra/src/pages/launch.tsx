@@ -7,7 +7,7 @@ import { callStructuredAI } from "@/lib/ai";
 import { saveReport, getProjects, getReports } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
-import { Rocket, Wand2, Loader2, RotateCcw, Save, CheckCircle, FolderOpen, RefreshCw } from "lucide-react";
+import { Rocket, Wand2, Loader2, RotateCcw, Save, CheckCircle, FolderOpen, RefreshCw, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const TOOL = TOOL_BY_KEY["launch"]!;
@@ -27,11 +27,26 @@ export default function LaunchPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [contextReports, setContextReports] = useState<Report[]>([]);
   const [loadingContext, setLoadingContext] = useState(false);
+  const [doctorRedGates, setDoctorRedGates] = useState<string[]>([]);
 
   useEffect(() => {
     getProjects()
       .then((p) => setProjects((p as Project[]) ?? []))
       .catch(() => setProjects([]));
+
+    // Load latest doctor report to surface RED gate warnings
+    getReports("doctor")
+      .then((reps) => {
+        const latest = ((reps as Array<{ payload: unknown }>) ?? [])[0];
+        if (!latest?.payload) return;
+        const p = latest.payload as Record<string, unknown>;
+        const data = (p.data ?? p) as Record<string, unknown> | null;
+        if (!data) return;
+        const gates = Array.isArray(data.gates) ? data.gates as Array<{ name: string; status: string }> : [];
+        const redNames = gates.filter((g) => g.status === "RED").map((g) => g.name);
+        setDoctorRedGates(redNames);
+      })
+      .catch(() => {});
   }, []);
 
   async function loadProjectContext(projectId: string) {
@@ -97,6 +112,27 @@ export default function LaunchPage() {
 
   const InputPanel = (
     <div className="space-y-4">
+      {/* Doctor RED gate warning */}
+      {doctorRedGates.length > 0 && (
+        <div
+          className="px-4 py-3 rounded-xl flex items-start gap-3"
+          style={{ background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.25)" }}
+        >
+          <AlertTriangle size={14} style={{ color: "var(--noctra-rose)", flexShrink: 0, marginTop: 1 }} />
+          <div>
+            <p className="text-sm font-semibold" style={{ color: "var(--noctra-rose)" }}>
+              {doctorRedGates.length} RED gate{doctorRedGates.length !== 1 ? "s" : ""} from your last Doctor scan
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
+              {doctorRedGates.join(" · ")}
+            </p>
+            <p className="text-xs mt-1" style={{ color: "var(--noctra-text-muted)" }}>
+              These may block a GO signal. Fix them before running the launch sequence for best results.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Project selector */}
       {projects.length > 0 && (
         <div>

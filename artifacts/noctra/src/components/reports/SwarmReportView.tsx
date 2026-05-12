@@ -2,8 +2,10 @@ import { ScoreRing, Badge, Panel, EmptyState, ProgressBar } from "@/components/P
 import { Users, ShieldAlert, ShieldCheck } from "lucide-react";
 import { computeAIDefenseScore, DEFENSE_RISK_COLOR, DEFENSE_RISK_LABEL } from "@/lib/ai-defense";
 
-type Persona = { name: string; role: string; reaction: string; objections?: string[]; willingness_to_pay?: string };
+type Persona = { name: string; role: string; reaction: string; objections?: string[]; willingness_to_pay?: string; top_objection?: string; segment?: string };
 type Experiment = { title: string; method?: string };
+type TopObjection = { objection: string; frequency?: string; blocking?: boolean; rebuttal?: string; killer_question?: string };
+type SegmentBreakdown = { enthusiasts?: number; skeptics?: number; neutrals?: number };
 
 type SwarmData = {
   verdict?: string;
@@ -12,11 +14,12 @@ type SwarmData = {
   score?: number;
   personas?: Persona[];
   consensus?: string;
-  top_objections?: string[];
+  top_objections?: (string | TopObjection)[];
   recommendations?: string[];
   next_experiments?: (string | Experiment)[];
   pricing_signal?: string;
   next_actions?: string[];
+  segment_breakdown?: SegmentBreakdown;
 };
 
 type Props = {
@@ -77,12 +80,48 @@ export function SwarmReportView({ report, compact }: Props) {
         </Panel>
       )}
 
+      {data.segment_breakdown && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Segment Breakdown</p>
+          <div className="flex gap-3">
+            {[
+              { label: "Enthusiasts", value: data.segment_breakdown.enthusiasts, color: "var(--noctra-emerald)" },
+              { label: "Neutrals", value: data.segment_breakdown.neutrals, color: "var(--noctra-amber)" },
+              { label: "Skeptics", value: data.segment_breakdown.skeptics, color: "var(--noctra-rose)" },
+            ].map(({ label, value, color }) => value != null ? (
+              <div key={label} className="flex-1 text-center px-2 py-3 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+                <p className="text-xl font-bold" style={{ color }}>{value}%</p>
+                <p className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{label}</p>
+              </div>
+            ) : null)}
+          </div>
+        </Panel>
+      )}
+
       {data.top_objections && data.top_objections.length > 0 && (
         <Panel>
           <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-rose)" }}>Top Objections</p>
-          <ul className="space-y-1">
-            {data.top_objections.map((o, i) => <li key={i} className="text-sm flex gap-2" style={{ color: "var(--noctra-text-soft)" }}><span style={{ color: "var(--noctra-rose)" }}>!</span>{o}</li>)}
-          </ul>
+          <div className="space-y-2">
+            {data.top_objections.map((o, i) => {
+              if (typeof o === "string") {
+                return <div key={i} className="text-sm flex gap-2" style={{ color: "var(--noctra-text-soft)" }}><span style={{ color: "var(--noctra-rose)" }}>!</span>{o}</div>;
+              }
+              return (
+                <div key={i} className="rounded-lg p-2.5" style={{ background: "var(--noctra-surface2)", border: "1px solid rgba(244,63,94,0.15)" }}>
+                  <div className="flex items-start gap-2 mb-1">
+                    <span style={{ color: "var(--noctra-rose)" }}>!</span>
+                    <p className="text-sm font-medium flex-1" style={{ color: "var(--noctra-text)" }}>{o.objection}</p>
+                    {o.frequency && (
+                      <Badge style={{ fontSize: "10px", background: o.blocking ? "rgba(244,63,94,0.15)" : "var(--noctra-surface)", color: o.blocking ? "var(--noctra-rose)" : "var(--noctra-text-muted)" }}>
+                        {o.blocking ? "blocking · " : ""}{o.frequency}
+                      </Badge>
+                    )}
+                  </div>
+                  {o.rebuttal && <p className="text-xs ml-4" style={{ color: "var(--noctra-text-muted)" }}>↳ {o.rebuttal}</p>}
+                </div>
+              );
+            })}
+          </div>
         </Panel>
       )}
 

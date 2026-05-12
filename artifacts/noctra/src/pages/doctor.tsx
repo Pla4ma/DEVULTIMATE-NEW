@@ -15,6 +15,7 @@ import {
 const TOOL = TOOL_BY_KEY["doctor"]!;
 
 type Phase = "idle" | "uploading" | "analyzing" | "saving" | "done" | "error";
+type ScanFallbackMode = "none" | "ai-only";
 
 type ScanResult = {
   summaryMarkdown: string;
@@ -59,6 +60,7 @@ export default function DoctorPage() {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [aiResult, setAiResult] = useState<AIResult | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [scanFallbackMode, setScanFallbackMode] = useState<ScanFallbackMode>("none");
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function handleFileSelect(file: File) {
@@ -76,9 +78,12 @@ export default function DoctorPage() {
   }
 
   async function runFullFlow(file: File) {
+    setScanFallbackMode("none");
+    let scan: ScanResult | null = null;
+
+    // ── Step 1: Upload & scan ──────────────────────────────────────────────
+    setPhase("uploading");
     try {
-      // ── Step 1: Upload & scan ──────────────────────────────────────────────
-      setPhase("uploading");
       const formData = new FormData();
       formData.append("file", file);
 
@@ -92,7 +97,7 @@ export default function DoctorPage() {
         throw new Error(err.error ?? `Upload failed: ${res.status}`);
       }
 
-      const scan = await res.json() as ScanResult;
+      scan = await res.json() as ScanResult;
       setScanResult(scan);
 
       await saveScan({
@@ -100,11 +105,19 @@ export default function DoctorPage() {
         summary: scan.summaryMarkdown ?? "",
         payload: scan as unknown as Record<string, unknown>,
       }).catch(() => {});
+    } catch {
+      // Scan failed — fall back to AI-only mode using file metadata
+      setScanFallbackMode("ai-only");
+      const fallbackSummary = `Repository file: ${file.name} (${(file.size / 1024).toFixed(0)} KB). Full static scan unavailable — running AI-only diagnostics based on file metadata.`;
+      scan = { summaryMarkdown: fallbackSummary };
+      setScanResult(scan);
+    }
 
-      // ── Step 2: AI analysis ────────────────────────────────────────────────
+    // ── Step 2: AI analysis ────────────────────────────────────────────────
+    try {
       setPhase("analyzing");
-      const context = { scan: scan.scan, launchGates: scan.launchGates };
-      const result = await callStructuredAI("doctor", scan.summaryMarkdown ?? "", context as Record<string, unknown>);
+      const context = scan?.scan ? { scan: scan.scan, launchGates: scan.launchGates } : {};
+      const result = await callStructuredAI("doctor", scan?.summaryMarkdown ?? "", context as Record<string, unknown>);
       setAiResult(result);
 
       // ── Step 3: Save report ────────────────────────────────────────────────
@@ -138,6 +151,7 @@ export default function DoctorPage() {
     setScanResult(null);
     setError("");
     setZipFile(null);
+    setScanFallbackMode("none");
   }
 
   const currentStep = PHASE_ORDER[phase];
@@ -261,6 +275,20 @@ export default function DoctorPage() {
     if (phase === "done" && aiResult) {
       return (
         <div className="space-y-4">
+          {scanFallbackMode === "ai-only" && (
+            <div
+              className="px-4 py-3 rounded-xl flex items-start gap-3"
+              style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.25)" }}
+            >
+              <AlertTriangle size={14} style={{ color: "var(--noctra-amber)", flexShrink: 0, marginTop: 1 }} />
+              <div>
+                <p className="text-sm font-medium" style={{ color: "var(--noctra-amber)" }}>Static scan unavailable — AI-only mode</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
+                  The backend scan service was unreachable. Diagnostics below are based on AI analysis of file metadata only and may be less precise than a full scan.
+                </p>
+              </div>
+            </div>
+          )}
           <div
             className="px-4 py-3 rounded-xl flex items-center gap-3"
             style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}

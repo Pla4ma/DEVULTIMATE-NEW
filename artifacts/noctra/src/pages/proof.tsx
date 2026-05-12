@@ -22,13 +22,22 @@ type ProofSignalRow = {
   created_at?: string;
 };
 
-const SIGNAL_KINDS = ["interview", "survey", "waitlist", "LOI", "pilot", "sale", "referral", "analytic", "experiment", "other"];
+const SIGNAL_KINDS = [
+  "interview", "waitlist", "signup", "pricing_click", "payment_intent",
+  "dm_reply", "demo_request", "objection", "churn_risk", "manual",
+];
 
 const KIND_COLOR: Record<string, string> = {
-  interview: "var(--noctra-violet)", survey: "var(--noctra-cyan)", waitlist: "var(--noctra-amber)",
-  LOI: "var(--noctra-emerald)", pilot: "var(--noctra-gold)", sale: "var(--noctra-emerald)",
-  referral: "var(--noctra-magenta)", analytic: "var(--noctra-cyan)", experiment: "var(--noctra-rose)",
-  other: "var(--noctra-text-muted)",
+  interview: "var(--noctra-violet)",
+  waitlist: "var(--noctra-amber)",
+  signup: "var(--noctra-cyan)",
+  pricing_click: "var(--noctra-gold)",
+  payment_intent: "var(--noctra-emerald)",
+  dm_reply: "var(--noctra-magenta)",
+  demo_request: "var(--noctra-cyan)",
+  objection: "var(--noctra-rose)",
+  churn_risk: "var(--noctra-rose)",
+  manual: "var(--noctra-text-muted)",
 };
 
 export default function ProofPage() {
@@ -119,12 +128,19 @@ export default function ProofPage() {
   const objections = Array.isArray(d?.objections) ? d!.objections as Array<Record<string, unknown>> : [];
   const evidenceGaps = Array.isArray(d?.evidence_gaps) ? d!.evidence_gaps as string[] : [];
 
-  const signalScore = signals.length === 0 ? 0
-    : Math.min(100, Math.round(
-      (signals.length / 10) * 40 +
-      (signals.filter((s) => s.kind === "sale" || s.kind === "LOI").length * 10) +
-      (signals.filter((s) => s.kind === "interview").length * 5)
-    ));
+  const paymentIntentCount = signals.filter((s) => s.kind === "payment_intent").length;
+  const interviewCount = signals.filter((s) => s.kind === "interview").length;
+  const conversionCount = signals.filter((s) => s.kind === "demo_request" || s.kind === "signup").length;
+  const negativeCount = signals.filter((s) => s.kind === "objection" || s.kind === "churn_risk").length;
+  const diversityBonus = new Set(signals.map((s) => s.kind)).size >= 3 ? 5 : 0;
+  const signalScore = signals.length === 0 ? 0 : Math.max(0, Math.min(100, Math.round(
+    Math.min(30, (signals.length / 10) * 30) +
+    Math.min(24, paymentIntentCount * 12) +
+    Math.min(20, interviewCount * 5) +
+    Math.min(10, conversionCount * 3) -
+    negativeCount * 3 +
+    diversityBonus
+  )));
 
   return (
     <AppShell>
@@ -389,9 +405,11 @@ export default function ProofPage() {
               <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Score Formula</p>
               <div className="space-y-2 text-xs" style={{ color: "var(--noctra-text-muted)" }}>
                 {[
-                  { label: "Signal volume (×4/signal)", points: Math.min(40, signals.length * 4), max: 40 },
-                  { label: "Sales / LOIs (×10 each)", points: Math.min(30, signals.filter((s) => s.kind === "sale" || s.kind === "LOI").length * 10), max: 30 },
-                  { label: "Interviews (×5 each)", points: Math.min(30, signals.filter((s) => s.kind === "interview").length * 5), max: 30 },
+                  { label: "Signal volume (×3/signal, max 30)", points: Math.min(30, Math.round((signals.length / 10) * 30)), max: 30 },
+                  { label: "Payment intent (×12 each, max 24)", points: Math.min(24, paymentIntentCount * 12), max: 24 },
+                  { label: "Interviews (×5 each, max 20)", points: Math.min(20, interviewCount * 5), max: 20 },
+                  { label: "Demo requests + signups (×3, max 10)", points: Math.min(10, conversionCount * 3), max: 10 },
+                  { label: "Diversity bonus (3+ kinds)", points: diversityBonus, max: 5 },
                 ].map(({ label, points, max }) => (
                   <div key={label}>
                     <div className="flex justify-between mb-1">
@@ -399,10 +417,15 @@ export default function ProofPage() {
                       <span style={{ color: "var(--noctra-text)" }}>{points}/{max}</span>
                     </div>
                     <div className="h-1.5 rounded-full" style={{ background: "var(--noctra-surface2)" }}>
-                      <div className="h-full rounded-full" style={{ width: `${(points / max) * 100}%`, background: TOOL.accent }} />
+                      <div className="h-full rounded-full" style={{ width: `${max > 0 ? (points / max) * 100 : 0}%`, background: TOOL.accent }} />
                     </div>
                   </div>
                 ))}
+                {negativeCount > 0 && (
+                  <p className="text-xs pt-1" style={{ color: "var(--noctra-rose)" }}>
+                    −{negativeCount * 3} pts: {negativeCount} objection / churn-risk signal{negativeCount !== 1 ? "s" : ""}
+                  </p>
+                )}
               </div>
             </Panel>
 
@@ -410,10 +433,10 @@ export default function ProofPage() {
               <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Next Milestones</p>
               <div className="space-y-2">
                 {[
-                  { label: "5 customer interviews", done: signals.filter((s) => s.kind === "interview").length >= 5, target: 5, current: signals.filter((s) => s.kind === "interview").length, kind: "interview" },
-                  { label: "1 paid sale or LOI", done: signals.filter((s) => s.kind === "sale" || s.kind === "LOI").length >= 1, target: 1, current: signals.filter((s) => s.kind === "sale" || s.kind === "LOI").length, kind: "sale" },
-                  { label: "10 total signals", done: signals.length >= 10, target: 10, current: signals.length, kind: "all" },
-                  { label: "3 different signal types", done: new Set(signals.map((s) => s.kind)).size >= 3, target: 3, current: new Set(signals.map((s) => s.kind)).size, kind: "variety" },
+                  { label: "5 customer interviews", done: interviewCount >= 5, target: 5, current: interviewCount },
+                  { label: "1 payment intent signal", done: paymentIntentCount >= 1, target: 1, current: paymentIntentCount },
+                  { label: "10 total signals", done: signals.length >= 10, target: 10, current: signals.length },
+                  { label: "3 different signal types", done: new Set(signals.map((s) => s.kind)).size >= 3, target: 3, current: new Set(signals.map((s) => s.kind)).size },
                 ].map(({ label, done, target, current }) => (
                   <div key={label} className="flex items-center gap-2 text-xs">
                     {done

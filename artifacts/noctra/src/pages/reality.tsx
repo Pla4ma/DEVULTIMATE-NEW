@@ -62,6 +62,7 @@ export default function RealityPage() {
   const [injectedContext, setInjectedContext] = useState<InjectedContext | null>(null);
   const [error, setError] = useState("");
   const [autoSaved, setAutoSaved] = useState(false);
+  const [autoSaveError, setAutoSaveError] = useState(false);
   const [savedReportId, setSavedReportId] = useState<string | null>(null);
   const [generatingTasks, setGeneratingTasks] = useState(false);
   const [applyingPatch, setApplyingPatch] = useState(false);
@@ -102,6 +103,7 @@ export default function RealityPage() {
       setResult(res);
       setInjectedContext(res.injectedContext ?? null);
       setPhase("done");
+      setAutoSaveError(false);
       void autoSave(res, input.trim());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Compilation failed");
@@ -136,7 +138,7 @@ export default function RealityPage() {
         });
       }
     } catch {
-      // silent — user still sees result
+      setAutoSaveError(true);
     }
   }
 
@@ -200,6 +202,7 @@ export default function RealityPage() {
     setResult(null);
     setError("");
     setAutoSaved(false);
+    setAutoSaveError(false);
     setSavedReportId(null);
     setInput("");
     setPatchSaved(false);
@@ -380,6 +383,20 @@ export default function RealityPage() {
                       View <ArrowRight size={10} className="inline" />
                     </button>
                   )}
+                </div>
+              )}
+              {autoSaveError && !autoSaved && (
+                <div
+                  className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg"
+                  style={{
+                    background: "rgba(244,63,94,0.06)",
+                    border: "1px solid rgba(244,63,94,0.2)",
+                  }}
+                >
+                  <AlertCircle size={12} style={{ color: "var(--noctra-rose)" }} />
+                  <p className="text-xs" style={{ color: "var(--noctra-rose)" }}>
+                    Auto-save failed — your analysis is visible but not stored. Check your connection.
+                  </p>
                 </div>
               )}
 
