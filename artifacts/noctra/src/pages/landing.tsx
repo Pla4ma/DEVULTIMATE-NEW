@@ -13,6 +13,7 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
+  const supabaseReady = !supabaseConfigError;
 
   useEffect(() => {
     if (user) {
@@ -23,6 +24,10 @@ export default function LandingPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(""); setMsg("");
+    if (!supabaseReady) {
+      setError(supabaseConfigError ?? "Supabase is not configured.");
+      return;
+    }
     setLoading(true);
     try {
       if (tab === "login") {
@@ -45,6 +50,11 @@ export default function LandingPage() {
 
   async function handleAnon() {
     setError(""); setLoading(true);
+    if (!supabaseReady) {
+      setLoading(false);
+      setError(supabaseConfigError ?? "Supabase is not configured.");
+      return;
+    }
     try {
       await signInAnon();
       navigate("/app");
@@ -122,6 +132,7 @@ export default function LandingPage() {
                 <AlertTriangle size={13} style={{ color: "var(--noctra-amber)", flexShrink: 0, marginTop: 1 }} />
                 <div>
                   <p className="font-medium mb-0.5" style={{ color: "var(--noctra-amber)" }}>Database not connected</p>
+                  <p style={{ color: "var(--noctra-text-muted)" }}>{supabaseConfigError}</p>
                   <p style={{ color: "var(--noctra-text-muted)" }}>Use <strong style={{ color: "var(--noctra-text-soft)" }}>Demo mode</strong> below to explore the app without credentials.</p>
                 </div>
               </div>
@@ -143,21 +154,21 @@ export default function LandingPage() {
             <form onSubmit={handleSubmit} className="space-y-3">
               <input
                 type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email" required autoComplete="email"
+                placeholder="Email" required autoComplete="email" disabled={!supabaseReady || loading}
                 className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-colors"
                 style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
               />
               <input
                 type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password" required minLength={6}
-                autoComplete={tab === "login" ? "current-password" : "new-password"}
+                autoComplete={tab === "login" ? "current-password" : "new-password"} disabled={!supabaseReady || loading}
                 className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-colors"
                 style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
               />
               {error && <p className="text-xs" style={{ color: "var(--noctra-rose)" }}>{error}</p>}
               {msg && <p className="text-xs" style={{ color: "var(--noctra-emerald)" }}>{msg}</p>}
               <button
-                type="submit" disabled={loading}
+                type="submit" disabled={loading || !supabaseReady}
                 className="w-full py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-opacity"
                 style={{ background: "var(--noctra-cyan)", color: "#000", opacity: loading ? 0.6 : 1 }}
               >
@@ -168,7 +179,7 @@ export default function LandingPage() {
 
             <div className="flex gap-2 mt-3">
               <button
-                onClick={handleAnon} disabled={loading}
+                onClick={handleAnon} disabled={loading || !supabaseReady}
                 className="flex-1 py-2 rounded-lg text-xs font-medium transition-opacity hover:opacity-80"
                 style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-soft)", opacity: loading ? 0.5 : 1 }}
               >

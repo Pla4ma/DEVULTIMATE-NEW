@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseConfigError, isSupabaseConfigured } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { isDemoMode, enableDemoMode, disableDemoMode, getDemoUser } from "@/lib/demo-mode";
 
@@ -59,6 +59,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
+    if (!isSupabaseConfigured()) {
+      setUser(null);
+      setSession(null);
+      setLoading(false);
+      return;
+    }
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
@@ -72,11 +78,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (!isSupabaseConfigured()) {
+      throw new Error(supabaseConfigError ?? "Supabase is not configured.");
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
 
   const signUp = async (email: string, password: string) => {
+    if (!isSupabaseConfigured()) {
+      throw new Error(supabaseConfigError ?? "Supabase is not configured.");
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -87,6 +99,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    if (!isSupabaseConfigured()) {
+      throw new Error(supabaseConfigError ?? "Supabase is not configured.");
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/app` },
@@ -97,6 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     if (isDemoMode()) {
       disableDemoMode();
+      setUser(null);
+      setSession(null);
+      return;
+    }
+    if (!isSupabaseConfigured()) {
       setUser(null);
       setSession(null);
       return;
@@ -112,6 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInAnon = async () => {
+    if (!isSupabaseConfigured()) {
+      throw new Error(supabaseConfigError ?? "Supabase is not configured.");
+    }
     const { error: anonErr } = await supabase.auth.signInAnonymously();
     if (!anonErr) return;
 

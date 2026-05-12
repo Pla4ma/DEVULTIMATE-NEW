@@ -2,6 +2,7 @@ import { Router } from "express";
 import Groq from "groq-sdk";
 import { callAIWithFallback, isAiConfigured, getConfiguredProviders } from "../lib/ai-client";
 import { safeParseAiJson, buildRepairPrompt } from "../lib/ai-json";
+import { buildFallbackResult, getRequiredFields, validateReportQuality } from "../lib/report-quality";
 
 const router = Router();
 
@@ -101,7 +102,7 @@ router.post("/chat", async (req, res) => {
   if (!isAiConfigured()) {
     res.status(503).json({
       error: "AI_NOT_CONFIGURED",
-      message: "No AI provider configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.",
+      message: "AI is not configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.",
     });
     return;
   }
@@ -143,7 +144,7 @@ router.post("/stream", async (req, res) => {
   if (providers.length === 0) {
     res.status(503).json({
       error: "AI_NOT_CONFIGURED",
-      message: "No AI provider configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.",
+      message: "AI is not configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.",
     });
     return;
   }
@@ -230,7 +231,7 @@ router.post("/structured", async (req, res) => {
   if (!isAiConfigured()) {
     res.status(503).json({
       error: "AI_NOT_CONFIGURED",
-      message: "No AI provider configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.",
+      message: "AI is not configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.",
     });
     return;
   }
@@ -259,6 +260,13 @@ router.post("/structured", async (req, res) => {
   }
 
   let raw = "";
+  let providerMeta: {
+    providerUsed: string;
+    modelUsed: string;
+    fallbackUsed: boolean;
+    attemptedProviders: string[];
+    providerWarnings: string[];
+  } | null = null;
   try {
     const result = await callAIWithFallback({
       messages: [{ role: "user", content: userContent }],
@@ -267,6 +275,13 @@ router.post("/structured", async (req, res) => {
       maxTokens: 6000,
     });
     raw = result.content;
+    providerMeta = {
+      providerUsed: result.providerUsed,
+      modelUsed: result.modelUsed,
+      fallbackUsed: result.fallbackUsed,
+      attemptedProviders: result.attemptedProviders,
+      providerWarnings: result.providerWarnings,
+    };
   } catch (err) {
     req.log.error({ err }, "AI structured error");
     res.status(500).json({
@@ -276,31 +291,74 @@ router.post("/structured", async (req, res) => {
     return;
   }
 
+  const normalizeData = (value: unknown): Record<string, unknown> | null =>
+    value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+
   // Parse JSON using the robust bracket-balanced extractor
   let parseResult = safeParseAiJson<Record<string, unknown>>(raw);
+  let data = normalizeData(parseResult.data);
+  let repairAttempted = false;
+  let quality = data ? validateReportQuality(tool, data, parseResult.repaired) : null;
 
-  // If initial parse failed, attempt a repair call
-  if (!parseResult.data && parseResult.error) {
-    req.log.warn({ tool, error: parseResult.error }, "Initial JSON parse failed, attempting repair");
+  const attemptRepair = async (reason: string) => {
+    repairAttempted = true;
     try {
-      const repairPrompt = buildRepairPrompt(tool, raw, parseResult.error);
+      const repairPrompt = buildRepairPrompt(tool, raw, reason);
       const repairResult = await callAIWithFallback({
         messages: [{ role: "user", content: repairPrompt }],
         temperature: 0.1,
         maxTokens: 4096,
       });
       parseResult = safeParseAiJson<Record<string, unknown>>(repairResult.content);
-      if (parseResult.data) {
+      data = normalizeData(parseResult.data);
+      if (data) {
+        quality = validateReportQuality(tool, data, parseResult.repaired || repairAttempted);
         req.log.info({ tool }, "JSON repair succeeded");
+      } else {
+        quality = null;
       }
+      providerMeta = {
+        providerUsed: repairResult.providerUsed,
+        modelUsed: repairResult.modelUsed,
+        fallbackUsed: repairResult.fallbackUsed,
+        attemptedProviders: repairResult.attemptedProviders,
+        providerWarnings: repairResult.providerWarnings,
+      };
     } catch (repairErr) {
       req.log.error({ repairErr }, "JSON repair call failed");
     }
+  };
+
+  if (!data && parseResult.error) {
+    req.log.warn({ tool, error: parseResult.error }, "Initial JSON parse failed, attempting repair");
+    await attemptRepair(parseResult.error);
   }
 
-  const data = parseResult.data;
-  const markdown = raw;
+  if (data && quality && !quality.valid && !repairAttempted) {
+    req.log.warn({ tool, missingFields: quality.missingFields }, "Structured output missing fields, attempting repair");
+    await attemptRepair(`Missing required fields: ${quality.missingFields.join(", ")}`);
+  }
 
+  if (data && !quality) {
+    quality = validateReportQuality(tool, data, parseResult.repaired || repairAttempted);
+  }
+
+  if (!data || (quality && !quality.valid)) {
+    const missingFields = quality?.missingFields ?? getRequiredFields(tool);
+    const warnings = [
+      ...(quality?.warnings ?? []),
+      ...(parseResult.error && !data ? [parseResult.error] : []),
+    ];
+    data = buildFallbackResult(tool);
+    quality = {
+      valid: false,
+      repaired: parseResult.repaired || repairAttempted,
+      missingFields,
+      warnings: warnings.length > 0 ? warnings : ["AI response missing required fields — fallback returned"],
+    };
+  }
+
+  const markdown = raw;
   const score = extractScore(data, tool);
   const title = extractTitle(data, tool, input);
   const summary = extractSummary(data, raw);
@@ -312,7 +370,8 @@ router.post("/structured", async (req, res) => {
     score,
     title,
     summary,
-    repaired: parseResult.repaired,
+    quality,
+    providerMeta,
   });
 });
 
@@ -935,7 +994,7 @@ router.post("/insight-sweep", async (req, res) => {
   if (!isAiConfigured()) {
     res.status(503).json({
       error: "AI_NOT_CONFIGURED",
-      message: "No AI provider configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.",
+      message: "AI is not configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.",
     });
     return;
   }
