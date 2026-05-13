@@ -33,13 +33,13 @@ export interface ContradictionEngineResult {
 }
 
 const TOOL_LABELS: Record<string, string> = {
-  idea: "Signal Chamber",
-  reality: "Pressure Matrix",
-  proof: "Proof Reactor",
-  swarm: "Swarm Field",
-  mvp: "Blueprint Board",
-  doctor: "Diagnostic Bay",
-  launch: "Launch Control",
+  idea: "Idea Checker",
+  reality: "Reality Compiler",
+  proof: "Proof Engine",
+  swarm: "Market Swarm",
+  mvp: "MVP Planner",
+  doctor: "Project Doctor",
+  launch: "Launch Room",
 };
 
 function extractData(report: ReportSummary): Record<string, unknown> {
@@ -98,9 +98,9 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         conflictType: "assumption-conflict",
         sourceA: { tool: "idea", label: label("idea"), reportId: idea.id },
         sourceB: { tool: "reality", label: label("reality"), reportId: reality.id },
-        explanation: `Signal Chamber scored ${ideaScore}/100 (strong) but Pressure Matrix returned ${goSignal}. Your strongest assumptions may be the most dangerous ones — confirmation bias is likely distorting the idea score.`,
+        explanation: `Idea Checker scored ${ideaScore}/100 (strong) but Reality Compiler returned ${goSignal}. Your strongest assumptions may be the most dangerous ones — confirmation bias is likely distorting the idea score.`,
         whyItMatters: "Founders who score their idea highly while failing reality checks are the most at risk of building something nobody needs. The gap between these two signals is a red flag.",
-        recommendedResolution: "Re-run Pressure Matrix focusing on each assumption the Signal Chamber deemed strong. Look for hidden market size assumptions, user behavior assumptions, and competition blind spots.",
+        recommendedResolution: "Re-run Reality Compiler focusing on each assumption the Idea Checker deemed strong. Look for hidden market size assumptions, user behavior assumptions, and competition blind spots.",
         suggestedTask: "Identify the top 3 assumptions driving the high idea score and write a falsification test for each one.",
       });
     }
@@ -113,9 +113,9 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         conflictType: "assumption-conflict",
         sourceA: { tool: "idea", label: label("idea"), reportId: idea.id },
         sourceB: { tool: "reality", label: label("reality"), reportId: reality.id },
-        explanation: `Signal Chamber scored ${ideaScore}/100 (weak) but Pressure Matrix returned GO. You may be pressure-testing a different version of the idea than what was originally analyzed.`,
+        explanation: `Idea Checker scored ${ideaScore}/100 (weak) but Reality Compiler returned GO. You may be pressure-testing a different version of the idea than what was originally analyzed.`,
         whyItMatters: "A GO on a weak idea suggests the reality check input was too optimistic. The idea needs to be reformulated with honest market assumptions before the GO signal is trustworthy.",
-        recommendedResolution: "Sharpen the idea formulation, re-run Signal Chamber with the refined version, then re-run Pressure Matrix using consistent assumptions.",
+        recommendedResolution: "Sharpen the idea formulation, re-run Idea Checker with the refined version, then re-run Reality Compiler using consistent assumptions.",
         suggestedTask: "Rewrite the idea description with explicit target user, problem, and pricing assumptions before re-running both tools.",
       });
     }
@@ -133,10 +133,10 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         conflictType: "health-launch-conflict",
         sourceA: { tool: "launch", label: label("launch"), reportId: launch.id },
         sourceB: { tool: "doctor", label: label("doctor"), reportId: doctor.id },
-        explanation: `Launch Control shows ${launchScore}/100 readiness but Diagnostic Bay health is ${doctorScore}/100. You're planning to launch on a broken technical foundation.`,
+        explanation: `Launch Room shows ${launchScore}/100 readiness but Project Doctor health is ${doctorScore}/100. You're planning to launch on a broken technical foundation.`,
         whyItMatters: "Launching with a sub-50 health score means production incidents within hours. User trust, once broken at launch, is extremely hard to recover.",
-        recommendedResolution: `Resolve all RED gates from Diagnostic Bay first. Re-run Doctor scan after fixes. Only proceed to launch when Doctor score exceeds 70/100.`,
-        suggestedTask: "Fix all critical Diagnostic Bay failures — prioritize security, authentication, error handling, and deployment gates.",
+        recommendedResolution: `Resolve all RED gates from Project Doctor first. Re-run Doctor scan after fixes. Only proceed to launch when Doctor score exceeds 70/100.`,
+        suggestedTask: "Fix all critical Project Doctor failures — prioritize security, authentication, error handling, and deployment gates.",
       });
     }
   }
@@ -153,10 +153,10 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         conflictType: "proof-launch-conflict",
         sourceA: { tool: "proof", label: label("proof"), reportId: proof.id },
         sourceB: { tool: "launch", label: label("launch"), reportId: launch.id },
-        explanation: `Proof Reactor score is ${proofScore}/100 (insufficient validation) but Launch Control scores ${launchScore}/100. You may be launching without evidence that anyone wants this product.`,
+        explanation: `Proof Engine score is ${proofScore}/100 (insufficient validation) but Launch Room scores ${launchScore}/100. You may be launching without evidence that anyone wants this product.`,
         whyItMatters: "Products that launch without proof of demand fail within 3 months. A low proof score means you're optimizing for launch speed at the expense of product-market fit.",
         recommendedResolution: "Collect at least 5 strong proof signals (user interviews, landing page signups, LOIs, pilot agreements) before treating the Launch score as valid.",
-        suggestedTask: "Add 3 high-quality proof signals to Proof Reactor before proceeding with launch planning.",
+        suggestedTask: "Add 3 high-quality proof signals to Proof Engine before proceeding with launch planning.",
       });
     }
   }
@@ -177,7 +177,7 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         conflictType: "pricing-mismatch",
         sourceA: { tool: "swarm", label: label("swarm"), reportId: swarm.id },
         sourceB: { tool: "mvp", label: label("mvp"), reportId: mvp.id },
-        explanation: `Swarm Field simulated ${willingnessToPay}% willingness to pay but Blueprint Board plans a paid model. You risk building a paid product nobody will purchase.`,
+        explanation: `Market Swarm simulated ${willingnessToPay}% willingness to pay but MVP Planner plans a paid model. You risk building a paid product nobody will purchase.`,
         whyItMatters: "Willingness-to-pay signals below 50% mean your pricing model must either change or your value proposition needs significant strengthening.",
         recommendedResolution: "Either run a freemium model first to prove retention, or redesign the value proposition to justify the price. Re-run Swarm after the pivot.",
         suggestedTask: "Run a pricing experiment — create a landing page with explicit pricing and measure conversion rate before building the payment flow.",
@@ -201,7 +201,7 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         conflictType: "scope-conflict",
         sourceA: { tool: "mvp", label: label("mvp"), reportId: mvpReports[1].id },
         sourceB: { tool: "mvp", label: label("mvp"), reportId: mvpReports[0].id },
-        explanation: `MVP score dropped from ${prevScore} to ${latestScore} across Blueprint Board runs — scope is likely expanding instead of contracting.`,
+        explanation: `MVP score dropped from ${prevScore} to ${latestScore} across MVP Planner runs — scope is likely expanding instead of contracting.`,
         whyItMatters: "Scope creep is the most common reason MVPs take 3x longer to ship. Each added feature is a bet that customers need it — without proof.",
         recommendedResolution: "Return to first principles: what is the single user action that proves this MVP works? Cut everything else. Ship the smallest version first.",
         suggestedTask: "Create a 'cut list' — features that were in the last MVP plan but not the original. Archive them as phase 2.",
@@ -222,9 +222,9 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         conflictType: "timing-conflict",
         sourceA: { tool: "idea", label: label("idea"), reportId: idea.id },
         sourceB: { tool: "mvp", label: label("mvp"), reportId: mvp.id },
-        explanation: "Signal Chamber and Blueprint Board run on the same day with no Proof Reactor — you may be planning a full build before validating demand.",
+        explanation: "Idea Checker and MVP Planner run on the same day with no Proof Engine — you may be planning a full build before validating demand.",
         whyItMatters: "Running idea and MVP tools on the same day without proof means you're planning to build based on untested assumptions. This is the #1 startup mistake.",
-        recommendedResolution: "Run Proof Reactor before finalizing MVP scope. Build only what validated demand requires.",
+        recommendedResolution: "Run Proof Engine before finalizing MVP scope. Build only what validated demand requires.",
         suggestedTask: "Run 3 user discovery interviews this week before committing to the MVP feature list.",
       });
     }
@@ -243,10 +243,10 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         conflictType: "assumption-conflict",
         sourceA: { tool: "proof", label: label("proof"), reportId: proof.id },
         sourceB: { tool: "proof", label: label("proof"), reportId: proof.id },
-        explanation: `Proof Reactor scores ${proofScore}/100 but flagged ${gaps} unaddressed evidence gaps. The score may be inflated by low-quality or self-reported signals.`,
+        explanation: `Proof Engine scores ${proofScore}/100 but flagged ${gaps} unaddressed evidence gaps. The score may be inflated by low-quality or self-reported signals.`,
         whyItMatters: "A proof score that's high due to weak signals gives false confidence. Investors and customers will probe these gaps directly.",
         recommendedResolution: "Close at least 2 of the flagged evidence gaps with external, verifiable validation before treating the proof score as launch-ready.",
-        suggestedTask: "Address the top 2 evidence gaps identified in Proof Reactor — convert them to concrete experiments with measurable outcomes.",
+        suggestedTask: "Address the top 2 evidence gaps identified in Proof Engine — convert them to concrete experiments with measurable outcomes.",
       });
     }
   }

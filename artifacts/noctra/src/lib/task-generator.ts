@@ -80,7 +80,7 @@ export async function generateTasksFromReport(input: {
       // Next actions from signal analysis
       asArray(data.next_actions).slice(0, 6).forEach((a) => {
         const title = str(a);
-        if (title) push({ title: truncate(title), priority: "high", category: "strategy", detail: "Generated from Signal Chamber analysis" });
+        if (title) push({ title: truncate(title), priority: "high", category: "strategy", detail: "Generated from Idea Checker analysis" });
       });
       // Each risky assumption becomes a validation task
       asArray(data.assumptions).slice(0, 5).forEach((raw) => {
@@ -98,7 +98,7 @@ export async function generateTasksFromReport(input: {
       // Sharpest experiment as a standalone task
       const experiment = str(data.sharpest_experiment);
       if (experiment) {
-        push({ title: truncate(`Run: ${experiment}`), detail: "Sharpest experiment from Signal Chamber", priority: "high", category: "validation" });
+        push({ title: truncate(`Run: ${experiment}`), detail: "Sharpest experiment from Idea Checker", priority: "high", category: "validation" });
       }
       break;
     }

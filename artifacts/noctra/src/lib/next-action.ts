@@ -71,10 +71,10 @@ export function computeNextAction(params: {
     (t) => t.status === "todo" && (t.priority === "high" || t.priority === "critical")
   ).length;
 
-  // 1. No idea reports → start at Signal Chamber
+  // 1. No idea reports → start at Idea Checker
   if (!hasTool(reports, "idea")) {
     return {
-      title: "Run Signal Chamber",
+      title: "Run Idea Checker",
       description: "Analyze your startup idea for signal strength, red flags, and ICP fit.",
       reason: "Start here — validate your product idea before building anything.",
       href: "/app/idea",
@@ -86,9 +86,9 @@ export function computeNextAction(params: {
   // 2. Idea exists but no reality check
   if (!hasTool(reports, "reality")) {
     return {
-      title: "Run Pressure Matrix",
+      title: "Run Reality Compiler",
       description: "Reality-check every assumption before committing resources.",
-      reason: "Signal Chamber is done — now pressure-test assumptions against reality.",
+      reason: "Idea Checker is done — now pressure-test assumptions against reality.",
       href: "/app/reality",
       priority: "high",
       tool: "reality",
@@ -100,7 +100,7 @@ export function computeNextAction(params: {
   const realityScore = scoreFor(reports, "reality");
   if (realityScore > 0 && realityScore < 50) {
     return {
-      title: "Fix Pressure Matrix Failures",
+      title: "Fix Reality Compiler Failures",
       description: "Your reality score is below 50. Review red flags and patch assumptions.",
       reason: `Reality score of ${realityScore}/100 — critical assumptions are failing. Fix before proceeding.`,
       href: "/app/reality",
@@ -110,10 +110,10 @@ export function computeNextAction(params: {
     };
   }
 
-  // 4. No proof signals and no proof report → start Proof Reactor
+  // 4. No proof signals and no proof report → start Proof Engine
   if (!hasTool(reports, "proof") && proofSignals.length === 0) {
     return {
-      title: "Start Proof Reactor",
+      title: "Start Proof Engine",
       description: "Collect validation evidence and design experiments to prove your assumptions.",
       reason: "No proof signals yet — assumptions need real-world validation evidence.",
       href: "/app/proof",
@@ -137,7 +137,7 @@ export function computeNextAction(params: {
   // 6. No MVP report → generate blueprint
   if (!hasTool(reports, "mvp")) {
     return {
-      title: "Generate Blueprint Board",
+      title: "Generate MVP Planner",
       description: "Create a week-by-week MVP plan with feature ROI scoring and architecture decisions.",
       reason: "Define your ruthless MVP scope — cut what doesn't ship value.",
       href: "/app/mvp",
@@ -149,7 +149,7 @@ export function computeNextAction(params: {
   // 7. MVP exists but very few tasks → generate tasks from blueprint
   if (hasTool(reports, "mvp") && tasks.length < 3) {
     return {
-      title: "Generate Tasks from Blueprint",
+      title: "Generate Tasks from MVP Plan",
       description: "Turn your MVP plan into actionable tasks with priority and category.",
       reason: "Your blueprint is ready — generate the execution task queue.",
       href: "/app/tasks",
@@ -162,7 +162,7 @@ export function computeNextAction(params: {
   // 8. Massive task backlog → deal with it first
   if (openTaskCount > 15) {
     return {
-      title: "Clear Your Task Queue",
+      title: "Clear Your Tasks",
       description: `You have ${openTaskCount} open tasks — work through the backlog before generating more analysis.`,
       reason: "Backlog overload reduces velocity. Complete outstanding tasks first.",
       href: "/app/tasks",
@@ -214,7 +214,7 @@ export function computeNextAction(params: {
   if (proofScore > 0 && proofScore < 50) {
     return {
       title: "Strengthen Proof Signals",
-      description: "Add more validation evidence to boost your Proof Reactor confidence score.",
+      description: "Add more validation evidence to boost your Proof Engine confidence score.",
       reason: `Proof score ${proofScore}/100 — run more experiments to build conviction.`,
       href: "/app/proof",
       priority: "medium",
@@ -314,10 +314,10 @@ export function getReportNextActions(
 
   switch (tool) {
     case "idea":
-      actions.push({ title: "Run Pressure Matrix", href: "/app/reality", tool: "reality", description: "Reality-check every assumption in this idea" });
+      actions.push({ title: "Run Reality Compiler", href: "/app/reality", tool: "reality", description: "Reality-check every assumption in this idea" });
       actions.push({ title: "Run Market Swarm", href: "/app/swarm", tool: "swarm", description: "Simulate market demand with AI personas" });
       if (!context.hasMvp) {
-        actions.push({ title: "Generate Blueprint Board", href: "/app/mvp", tool: "mvp", description: "Plan your MVP based on this idea" });
+        actions.push({ title: "Generate MVP Planner", href: "/app/mvp", tool: "mvp", description: "Plan your MVP based on this idea" });
       }
       if (!context.hasProject) {
         actions.push({ title: "Create Project", href: "/app/projects", tool: "projects", description: "Organize this idea into a project workspace" });
@@ -328,13 +328,13 @@ export function getReportNextActions(
       break;
 
     case "reality":
-      actions.push({ title: "Start Proof Reactor", href: "/app/proof", tool: "proof", description: "Validate assumptions with real evidence" });
+      actions.push({ title: "Start Proof Engine", href: "/app/proof", tool: "proof", description: "Validate assumptions with real evidence" });
       actions.push({ title: "Run Market Swarm", href: "/app/swarm", tool: "swarm", description: "Simulate market reaction to this thesis" });
       if (!context.hasTasks) {
         actions.push({ title: "Generate Fix Tasks", href: "/app/tasks", tool: "tasks", description: "Turn red flags into actionable fix tasks" });
       }
       if (score < 50) {
-        actions.push({ title: "Re-run Pressure Matrix", href: "/app/reality", tool: "reality", description: "Revise your assumptions and re-run" });
+        actions.push({ title: "Re-run Reality Compiler", href: "/app/reality", tool: "reality", description: "Revise your assumptions and re-run" });
       }
       break;
 
@@ -342,7 +342,7 @@ export function getReportNextActions(
       actions.push({ title: "Add Proof Signals", href: "/app/proof", tool: "proof", description: "Log more validation evidence" });
       actions.push({ title: "Run Market Swarm", href: "/app/swarm", tool: "swarm", description: "Cross-validate with persona simulation" });
       if (!context.hasMvp && score >= 60) {
-        actions.push({ title: "Generate Blueprint Board", href: "/app/mvp", tool: "mvp", description: "Proof is strong — plan the build now" });
+        actions.push({ title: "Generate MVP Planner", href: "/app/mvp", tool: "mvp", description: "Proof is strong — plan the build now" });
       }
       if (!context.hasTasks) {
         actions.push({ title: "Generate Experiment Tasks", href: "/app/tasks", tool: "tasks", description: "Turn experiments into actionable tasks" });
@@ -350,7 +350,7 @@ export function getReportNextActions(
       break;
 
     case "swarm":
-      actions.push({ title: "Generate Blueprint Board", href: "/app/mvp", tool: "mvp", description: "Turn swarm insights into an MVP plan" });
+      actions.push({ title: "Generate MVP Planner", href: "/app/mvp", tool: "mvp", description: "Turn swarm insights into an MVP plan" });
       actions.push({ title: "Generate Proof Experiments", href: "/app/proof", tool: "proof", description: "Design experiments to address objections" });
       if (!context.hasTasks) {
         actions.push({ title: "Generate Tasks from Objections", href: "/app/tasks", tool: "tasks", description: "Turn persona objections into fix tasks" });
@@ -388,7 +388,7 @@ export function getReportNextActions(
 
     default:
       actions.push({ title: "View All Reports", href: "/app/reports", tool: "reports", description: "See all your intelligence reports" });
-      actions.push({ title: "Run Signal Chamber", href: "/app/idea", tool: "idea", description: "Analyze a new product idea" });
+      actions.push({ title: "Run Idea Checker", href: "/app/idea", tool: "idea", description: "Analyze a new product idea" });
   }
 
   return actions;

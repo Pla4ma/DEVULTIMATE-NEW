@@ -27,9 +27,9 @@ export interface InjectedContext {
 }
 
 const TOOL_LABELS: Record<string, string> = {
-  idea: "Signal Chamber", reality: "Pressure Matrix", proof: "Proof Reactor",
-  swarm: "Swarm Field", mvp: "Blueprint Board", doctor: "Diagnostic Bay",
-  launch: "Launch Control", twin: "Memory Constellation",
+  idea: "Idea Checker", reality: "Reality Compiler", proof: "Proof Engine",
+  swarm: "Market Swarm", mvp: "MVP Planner", doctor: "Project Doctor",
+  launch: "Launch Room", twin: "Product Twin",
 };
 
 function pickKeyInsights(data: Record<string, unknown>, tool: string): string[] {

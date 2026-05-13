@@ -88,8 +88,10 @@ export default function ProjectsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Operations Map</h1>
-            <p className="text-sm mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{projects.length} project{projects.length !== 1 ? "s" : ""}</p>
+            <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Projects</h1>
+            <p className="text-sm mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
+              Operations Map · {projects.length} project{projects.length !== 1 ? "s" : ""}
+            </p>
           </div>
           <NoctraButton onClick={() => setShowForm((v) => !v)}>
             <Plus size={13} /> New Project
@@ -150,7 +152,14 @@ export default function ProjectsPage() {
             <Loader2 size={22} className="animate-spin" style={{ color: "var(--noctra-cyan)" }} />
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyState icon={<FolderOpen size={24} />} title="No projects yet" body="Create your first project to start organizing your founder context, reports, and tasks." />
+          <div className="space-y-3">
+            <EmptyState icon={<FolderOpen size={24} />} title="No projects yet" body="Create your first project to start organizing your founder context, reports, and tasks." />
+            <div className="flex justify-center">
+              <NoctraButton onClick={() => setShowForm(true)}>
+                <Plus size={13} /> Create Project
+              </NoctraButton>
+            </div>
+          </div>
         ) : (
           <div className="space-y-3">
             {filtered.map((proj) => {
