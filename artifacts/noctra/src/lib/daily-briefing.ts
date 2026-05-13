@@ -16,13 +16,13 @@ export interface DailyBriefing {
 }
 
 const TOOL_LABELS: Record<string, string> = {
-  idea: "Signal Chamber",
-  reality: "Pressure Matrix",
-  proof: "Proof Reactor",
-  swarm: "Swarm Field",
-  mvp: "Blueprint Board",
-  doctor: "Diagnostic Bay",
-  launch: "Launch Control",
+  idea: "Idea Checker",
+  reality: "Reality Compiler",
+  proof: "Proof Engine",
+  swarm: "Market Swarm",
+  mvp: "MVP Planner",
+  doctor: "Project Doctor",
+  launch: "Launch Room",
 };
 
 const NEXT_TOOL_SEQUENCE = ["idea", "reality", "proof", "swarm", "mvp", "doctor", "launch"];
@@ -98,7 +98,7 @@ export function generateDailyBriefing(params: {
   } else if (scores.launch && scores.launch < 60) {
     currentFocus = `Launch readiness is at ${scores.launch}/100 — resolve blockers before pushing to production.`;
   } else if (scores.doctor && scores.doctor < 60) {
-    currentFocus = `Diagnostic Bay flagged ${scores.doctor}/100 — code health needs attention before shipping.`;
+    currentFocus = `Project Doctor flagged ${scores.doctor}/100 — code health needs attention before shipping.`;
   } else if (proofSignals.length < 3) {
     currentFocus = "Proof signals are thin — get more validation evidence before committing to a build.";
   } else {
@@ -142,7 +142,7 @@ export function generateDailyBriefing(params: {
   } else if (scores.doctor && scores.doctor < 50) {
     biggestRisk = `Project Doctor health score is ${scores.doctor}/100 — production launch with this score risks immediate failures.`;
   } else if (scores.reality && scores.reality < 40) {
-    biggestRisk = `Pressure Matrix score is ${scores.reality}/100 — core idea assumptions have not been validated.`;
+    biggestRisk = `Reality Compiler score is ${scores.reality}/100 — core idea assumptions have not been validated.`;
   } else if (proofSignals.length === 0) {
     biggestRisk = "Zero proof signals — you have no external validation that anyone wants this product.";
   } else {
@@ -152,9 +152,9 @@ export function generateDailyBriefing(params: {
   // Easiest win
   let easiestWin = "Run a quick tool to expand your intelligence coverage.";
   if (nextTool === "idea") {
-    easiestWin = "Run Signal Chamber — takes 2 minutes and unlocks the full intelligence pipeline.";
+    easiestWin = "Run Idea Checker — takes 2 minutes and unlocks the full intelligence pipeline.";
   } else if (nextTool === "reality") {
-    easiestWin = "Run Pressure Matrix — stress-test your top 3 assumptions in under 5 minutes.";
+    easiestWin = "Run Reality Compiler — stress-test your top 3 assumptions in under 5 minutes.";
   } else if (openCritical.length === 0 && openHigh.length > 0) {
     const taskTitle = (openHigh[0] as { title?: string }).title;
     easiestWin = `Complete "${taskTitle ?? "high priority task"}" — high impact, already queued.`;
@@ -173,7 +173,7 @@ export function generateDailyBriefing(params: {
   } else if (scores.proof && scores.proof < 40 && scores.mvp && scores.mvp > 60) {
     oneThingToAvoid = "Don't over-invest in building — your proof score is too low to justify heavy build work.";
   } else if (scores.doctor && scores.doctor < 50 && scores.launch && scores.launch > 60) {
-    oneThingToAvoid = "Don't launch yet — Launch Control says ready but Diagnostic Bay says critical issues exist.";
+    oneThingToAvoid = "Don't launch yet — Launch Room says ready but Project Doctor says critical issues exist.";
   } else if (coverage.percentage < 30) {
     oneThingToAvoid = "Don't skip validation tools — building without intelligence coverage leads to expensive pivots.";
   }

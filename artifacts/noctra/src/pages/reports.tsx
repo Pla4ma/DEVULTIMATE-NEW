@@ -69,7 +69,7 @@ export default function ReportsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Intelligence Reports</h1>
+            <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Reports</h1>
             <p className="text-sm mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{reports.length} report{reports.length !== 1 ? "s" : ""}</p>
           </div>
         </div>

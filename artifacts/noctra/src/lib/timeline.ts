@@ -49,11 +49,11 @@ type ProjectLike = {
 };
 
 const TOOL_LABELS: Record<string, string> = {
-  idea: "Signal Chamber",
-  reality: "Pressure Matrix",
-  proof: "Proof Reactor",
+  idea: "Idea Checker",
+  reality: "Reality Compiler",
+  proof: "Proof Engine",
   swarm: "Market Swarm",
-  mvp: "Blueprint Board",
+  mvp: "MVP Planner",
   doctor: "Project Doctor",
   launch: "Launch Room",
 };
@@ -77,7 +77,7 @@ export const TIMELINE_TYPE_LABELS: Record<TimelineEventType, string> = {
   proof_generated: "Proof report generated",
   proof_signal_added: "Proof signal added",
   swarm_run: "Market simulated",
-  mvp_planned: "Blueprint created",
+  mvp_planned: "MVP planned",
   tasks_generated: "Tasks generated",
   project_scanned: "Codebase scanned",
   launch_planned: "Launch plan created",

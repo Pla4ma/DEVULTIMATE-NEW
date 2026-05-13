@@ -37,7 +37,7 @@ function computeStamps(data: PassportData): Stamp[] {
     },
     {
       id: "idea_hunter", label: "Idea Hunter", emoji: "🔍",
-      description: "Run 3 Signal Chamber analyses",
+      description: "Run 3 Idea Checker analyses",
       earned: ideaCount >= 3, progress: ideaCount, total: 3,
     },
     {
@@ -62,12 +62,12 @@ function computeStamps(data: PassportData): Stamp[] {
     },
     {
       id: "code_doctor", label: "Code Doctor", emoji: "🏥",
-      description: "Run a Diagnostic Bay analysis",
+      description: "Run a Project Doctor analysis",
       earned: doctorCount >= 1,
     },
     {
       id: "launch_ready", label: "Launch Ready", emoji: "🚀",
-      description: "Complete a Launch Control analysis",
+      description: "Complete a Launch Room analysis",
       earned: launchCount >= 1,
     },
     {
@@ -87,7 +87,7 @@ function computeStamps(data: PassportData): Stamp[] {
     },
     {
       id: "mvp_planner", label: "Blueprint Builder", emoji: "📋",
-      description: "Run the Blueprint Board",
+      description: "Run the MVP Planner",
       earned: reports.some((r) => r.tool === "mvp"),
     },
   ];
@@ -165,7 +165,7 @@ export default function PassportPage() {
             <CreditCard size={18} style={{ color: "var(--noctra-gold)" }} />
           </div>
           <div>
-            <h1 className="text-lg font-bold" style={{ color: "var(--noctra-text)" }}>Founder Passport</h1>
+            <h1 className="text-lg font-bold" style={{ color: "var(--noctra-text)" }}>Passport</h1>
             <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>Your intelligence profile and achievement record</p>
           </div>
         </div>

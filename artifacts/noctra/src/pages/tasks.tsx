@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { Panel, EmptyState, Badge, NoctraButton } from "@/components/Primitives";
-import { getTasks, updateTaskStatus, deleteTask, createTask } from "@/lib/repository";
+import { getTasks, updateTaskStatus, deleteTask, createTask, getProjects } from "@/lib/repository";
 import {
   CheckSquare, Loader2, Trash2, Plus, CheckCircle, Circle,
   Search, Download, Filter
@@ -11,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 type Task = {
   id: string; title: string; detail?: string | null;
   priority: string; category?: string | null; status: string; created_at: string;
+  source_report_id?: string | null;
+  project_id?: string | null;
 };
 
 const STATUS_CYCLE: Record<string, string> = {
@@ -43,6 +46,7 @@ function exportToCSV(tasks: Task[]) {
 
 export default function TasksPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusTab>("todo");
@@ -56,12 +60,21 @@ export default function TasksPage() {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [projectMap, setProjectMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
-    getTasks()
-      .then((t) => { if (!cancelled) setTasks((t as Task[]) ?? []); })
-      .catch((err) => { if (!cancelled) toast({ title: "Failed to load tasks", description: err?.message ?? "Unknown error", variant: "destructive" }); })
+    Promise.all([getTasks(), getProjects().catch(() => [])])
+      .then(([t, p]) => {
+        if (cancelled) return;
+        setTasks((t as Task[]) ?? []);
+        const map: Record<string, string> = {};
+        (p as Array<{ id: string; name: string }>).forEach((proj) => { map[proj.id] = proj.name; });
+        setProjectMap(map);
+      })
+      .catch((err) => {
+        if (!cancelled) toast({ title: "Failed to load tasks", description: err?.message ?? "Unknown error", variant: "destructive" });
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -84,16 +97,26 @@ export default function TasksPage() {
   async function toggleStatus(task: Task) {
     const next = STATUS_CYCLE[task.status] ?? "todo";
     setTogglingId(task.id);
-    await updateTaskStatus(task.id, next);
-    setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, status: next } : t));
-    setTogglingId(null);
+    try {
+      await updateTaskStatus(task.id, next);
+      setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, status: next } : t));
+    } catch (err) {
+      toast({ title: "Failed to update status", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setTogglingId(null);
+    }
   }
 
   async function handleDelete(id: string) {
     setDeletingId(id);
-    await deleteTask(id);
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-    setDeletingId(null);
+    try {
+      await deleteTask(id);
+      setTasks((prev) => prev.filter((t) => t.id !== id));
+    } catch (err) {
+      toast({ title: "Failed to delete task", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function handleAdd() {
@@ -114,9 +137,9 @@ export default function TasksPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Mission Queue</h1>
+            <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Tasks</h1>
             <p className="text-sm mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
-              {tasks.length} task{tasks.length !== 1 ? "s" : ""} · {completedPct}% done
+              Mission Queue · {tasks.length} task{tasks.length !== 1 ? "s" : ""} · {completedPct}% done
             </p>
           </div>
           <div className="flex gap-2">
@@ -233,10 +256,32 @@ export default function TasksPage() {
                         <p className="text-sm" style={{ color: task.status === "completed" ? "var(--noctra-text-muted)" : "var(--noctra-text)", textDecoration: task.status === "completed" ? "line-through" : "none" }}>
                           {task.title}
                         </p>
-                        {expandedId === task.id && task.detail && (
-                          <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--noctra-text-muted)" }}>{task.detail}</p>
-                        )}
                       </button>
+                      {expandedId === task.id && task.detail && (
+                        <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--noctra-text-muted)" }}>{task.detail}</p>
+                      )}
+                      {expandedId === task.id && (task.source_report_id || task.project_id) && (
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          {task.source_report_id && (
+                            <button
+                              onClick={() => navigate(`/app/reports/${task.source_report_id}`)}
+                              className="text-[11px] px-2 py-1 rounded-full"
+                              style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-cyan)" }}
+                            >
+                              View source report
+                            </button>
+                          )}
+                          {task.project_id && (
+                            <button
+                              onClick={() => navigate(`/app/projects/${task.project_id}`)}
+                              className="text-[11px] px-2 py-1 rounded-full"
+                              style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-muted)" }}
+                            >
+                              {projectMap[task.project_id] ? `Project: ${projectMap[task.project_id]}` : "View project"}
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">

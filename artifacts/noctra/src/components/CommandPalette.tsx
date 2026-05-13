@@ -16,19 +16,19 @@ type PaletteAction = {
 };
 
 const ACTIONS: PaletteAction[] = [
-  { id: "dashboard", title: "Go to Dashboard", description: "Command center — overview of all intelligence", href: "/app", icon: LayoutDashboard, group: "Navigate" },
-  { id: "idea", title: "New Idea Check", description: "Signal Chamber — validate a startup idea", href: "/app/idea", icon: Lightbulb, group: "Tools" },
-  { id: "reality", title: "Run Reality Compiler", description: "Pressure Matrix — stress-test assumptions", href: "/app/reality", icon: AlertTriangle, group: "Tools" },
-  { id: "proof", title: "Open Proof Engine", description: "Proof Reactor — validate with evidence", href: "/app/proof", icon: FlaskConical, group: "Tools" },
+  { id: "dashboard", title: "Go to Command Center", description: "Command center — overview of all intelligence", href: "/app", icon: LayoutDashboard, group: "Navigate" },
+  { id: "idea", title: "New Idea Check", description: "Idea Checker — validate a startup idea", href: "/app/idea", icon: Lightbulb, group: "Tools" },
+  { id: "reality", title: "Run Reality Compiler", description: "Reality Compiler — stress-test assumptions", href: "/app/reality", icon: AlertTriangle, group: "Tools" },
+  { id: "proof", title: "Open Proof Engine", description: "Proof Engine — validate with evidence", href: "/app/proof", icon: FlaskConical, group: "Tools" },
   { id: "swarm", title: "Run Market Swarm", description: "Simulate market demand with AI personas", href: "/app/swarm", icon: Users, group: "Tools" },
-  { id: "mvp", title: "Plan MVP", description: "Blueprint Board — week-by-week build plan", href: "/app/mvp", icon: Map, group: "Tools" },
+  { id: "mvp", title: "Plan MVP", description: "MVP Planner — week-by-week build plan", href: "/app/mvp", icon: Map, group: "Tools" },
   { id: "doctor", title: "Upload Project ZIP", description: "Project Doctor — scan code for launch blockers", href: "/app/doctor", icon: Stethoscope, group: "Tools" },
-  { id: "launch", title: "Launch Control", description: "Launch Room — go/no-go assessment", href: "/app/launch", icon: Rocket, group: "Tools" },
+  { id: "launch", title: "Launch Room", description: "Launch Room — go/no-go assessment", href: "/app/launch", icon: Rocket, group: "Tools" },
   { id: "twin", title: "Ask Product Twin", description: "AI chat with full cross-tool memory", href: "/app/twin", icon: Brain, group: "Tools" },
   { id: "tasks", title: "Open Tasks", description: "View and manage your action queue", href: "/app/tasks", icon: CheckSquare, group: "Workspace" },
   { id: "projects", title: "Open Projects", description: "Browse and manage project workspaces", href: "/app/projects", icon: FolderOpen, group: "Workspace" },
   { id: "reports", title: "Open Reports", description: "History of all intelligence analyses", href: "/app/reports", icon: FileText, group: "Workspace" },
-  { id: "passport", title: "Founder Passport", description: "Intelligence summary and milestones", href: "/app/passport", icon: BookOpen, group: "Workspace" },
+  { id: "passport", title: "Passport", description: "Intelligence summary and milestones", href: "/app/passport", icon: BookOpen, group: "Workspace" },
 ];
 
 export function CommandPalette() {

@@ -88,13 +88,13 @@ const TOOL_JOURNEY: Array<{
   prereq?: string;
   reason: string;
 }> = [
-  { tool: "idea", title: "Run Signal Chamber", route: "/app/idea", reason: "Start by validating your product idea before building anything" },
-  { tool: "reality", title: "Run Pressure Matrix", route: "/app/reality", prereq: "idea", reason: "Your idea scored well — now pressure-test every assumption" },
-  { tool: "proof", title: "Run Proof Reactor", route: "/app/proof", prereq: "reality", reason: "Time to collect evidence — assumptions need real-world validation" },
-  { tool: "swarm", title: "Run Swarm Field", route: "/app/swarm", prereq: "idea", reason: "Simulate your target market before committing to a direction" },
-  { tool: "mvp", title: "Run Blueprint Board", route: "/app/mvp", prereq: "idea", reason: "Define your ruthless MVP scope — cut what doesn't ship value" },
-  { tool: "doctor", title: "Run Diagnostic Bay", route: "/app/doctor", prereq: "mvp", reason: "Scan your codebase for launch blockers before going live" },
-  { tool: "launch", title: "Run Launch Control", route: "/app/launch", prereq: "doctor", reason: "Get your go/no-go signal before launching" },
+  { tool: "idea", title: "Run Idea Checker", route: "/app/idea", reason: "Start by validating your product idea before building anything" },
+  { tool: "reality", title: "Run Reality Compiler", route: "/app/reality", prereq: "idea", reason: "Your idea scored well — now pressure-test every assumption" },
+  { tool: "proof", title: "Run Proof Engine", route: "/app/proof", prereq: "reality", reason: "Time to collect evidence — assumptions need real-world validation" },
+  { tool: "swarm", title: "Run Market Swarm", route: "/app/swarm", prereq: "idea", reason: "Simulate your target market before committing to a direction" },
+  { tool: "mvp", title: "Run MVP Planner", route: "/app/mvp", prereq: "idea", reason: "Define your ruthless MVP scope — cut what doesn't ship value" },
+  { tool: "doctor", title: "Run Project Doctor", route: "/app/doctor", prereq: "mvp", reason: "Scan your codebase for launch blockers before going live" },
+  { tool: "launch", title: "Run Launch Room", route: "/app/launch", prereq: "doctor", reason: "Get your go/no-go signal before launching" },
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,7 +104,7 @@ function computeNextBestAction(reports: any[], tasks: any[], projects: any[], la
 
   if (openTaskCount > 12) {
     return {
-      title: "Clear Your Mission Queue",
+      title: "Clear Your Tasks",
       reason: `You have ${openTaskCount} open tasks — work through the backlog before generating more intelligence`,
       route: "/app/tasks",
     };
@@ -146,7 +146,7 @@ function computeNextBestAction(reports: any[], tasks: any[], projects: any[], la
 
   if (toolsDone.has("launch")) {
     return {
-      title: "Consult Memory Constellation",
+      title: "Consult Product Twin",
       reason: "You've run the full intelligence suite — synthesize all signals with your digital twin",
       route: "/app/twin",
       tool: "twin",
@@ -154,7 +154,7 @@ function computeNextBestAction(reports: any[], tasks: any[], projects: any[], la
   }
 
   return {
-    title: "Run Signal Chamber",
+    title: "Run Idea Checker",
     reason: "Validate your product idea before building further",
     route: "/app/idea",
     tool: "idea",
@@ -359,8 +359,8 @@ export async function getDashboardData() {
       if (highPriorityOpen > 5) riskRadar.push(`${highPriorityOpen} high-priority tasks unaddressed`);
       if (lowScoreCount > 2) riskRadar.push(`${lowScoreCount} reports scoring below 50 — review and act on findings`);
       if (projects.length === 0 && reports.length > 2) riskRadar.push("No project workspace — create one to organize your reports and tasks");
-      if (latestScores.ideaScore > 0 && latestScores.realityScore === 0) riskRadar.push("Signal Chamber done but no Pressure Matrix — validate your assumptions next");
-      if (latestScores.doctorScore > 0 && latestScores.doctorScore < 50) riskRadar.push("Diagnostic Bay flagged critical issues — review before launch");
+    if (latestScores.ideaScore > 0 && latestScores.realityScore === 0) riskRadar.push("Idea Checker done but no Reality Compiler — validate your assumptions next");
+    if (latestScores.doctorScore > 0 && latestScores.doctorScore < 50) riskRadar.push("Project Doctor flagged critical issues — review before launch");
       if (latestScores.launchScore > 0 && latestScores.launchScore < 65) riskRadar.push("Launch readiness below 65 — resolve gate failures before going live");
 
       return { reports, projects, tasks, proofSignalCount, latestScores, nextBestAction, riskRadar };
@@ -370,7 +370,7 @@ export async function getDashboardData() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         reports: [] as any[], projects: [] as any[], tasks: [] as any[], proofSignalCount: 0,
         latestScores: { ideaScore: 0, realityScore: 0, proofScore: 0, swarmScore: 0, mvpScore: 0, doctorScore: 0, launchScore: 0 },
-        nextBestAction: { title: "Run Signal Chamber", reason: "Start by validating your product idea", route: "/app/idea", tool: "idea" as string | undefined },
+        nextBestAction: { title: "Run Idea Checker", reason: "Start by validating your product idea", route: "/app/idea", tool: "idea" as string | undefined },
         riskRadar: [] as string[],
       };
     }

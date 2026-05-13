@@ -208,7 +208,7 @@ export function computeProjectState(params: {
   } else if (scores.doctor > 0 && scores.doctor < 50) {
     topBlocker = `Project Doctor score is ${scores.doctor}/100 — critical launch blockers detected`;
   } else if (scores.reality > 0 && scores.reality < 50) {
-    topBlocker = `Pressure Matrix score is ${scores.reality}/100 — core assumptions are failing`;
+    topBlocker = `Reality Compiler score is ${scores.reality}/100 — core assumptions are failing`;
   } else if (openP0Tasks > 0) {
     topBlocker = `${openP0Tasks} critical task${openP0Tasks > 1 ? "s" : ""} unresolved in the queue`;
   }
