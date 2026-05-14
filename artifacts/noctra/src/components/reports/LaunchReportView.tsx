@@ -1,5 +1,5 @@
 import { ScoreRing, Badge, Panel, EmptyState, StatusDot, ProgressBar } from "@/components/Primitives";
-import { Rocket } from "lucide-react";
+import { Rocket, FileText } from "lucide-react";
 
 type Gate = { name: string; status: "GREEN" | "YELLOW" | "RED"; how_to_fix?: string };
 type Risk = { risk: string; probability?: string; mitigation?: string };
@@ -90,6 +90,36 @@ export function LaunchReportView({ report }: Props) {
               </li>
             ))}
           </ul>
+        </Panel>
+      )}
+
+      {/* Asset checklist */}
+      {data.asset_checklist && data.asset_checklist.length > 0 && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-cyan)" }}>
+            <FileText size={11} className="inline mr-1" />Assets Required
+          </p>
+          <ul className="space-y-1">
+            {data.asset_checklist.map((item, i) => (
+              <li key={i} className="text-sm flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
+                <span style={{ color: "var(--noctra-cyan)" }}>○</span>{item}
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
+      {/* Next actions */}
+      {data.next_actions && data.next_actions.length > 0 && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-cyan)" }}>Next Actions</p>
+          <ol className="space-y-1">
+            {data.next_actions.map((a, i) => (
+              <li key={i} className="text-sm flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
+                <span className="text-xs font-mono shrink-0" style={{ color: "var(--noctra-text-muted)" }}>{i + 1}.</span>{a}
+              </li>
+            ))}
+          </ol>
         </Panel>
       )}
 

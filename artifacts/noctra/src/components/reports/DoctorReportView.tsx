@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { ScoreRing, Badge, Panel, EmptyState, StatusDot, ProgressBar, NoctraButton } from "@/components/Primitives";
-import { Stethoscope, Rocket, CheckSquare, Copy, Check, Download, AlertTriangle, ExternalLink, FileText, Shield, Bug, ListOrdered, GitBranch, Terminal, RefreshCw, FolderOpen } from "lucide-react";
+import { Stethoscope, Rocket, CheckSquare, Copy, Check, Download, AlertTriangle, ExternalLink, FileText, Shield, Bug, ListOrdered, GitBranch, Terminal, RefreshCw, FolderOpen, Package, Target, XCircle, ShieldAlert, BarChart3, Wrench, ClipboardList, Loader2 } from "lucide-react";
 import { createTask } from "@/lib/repository";
 import { downloadMarkdown } from "@/lib/export";
 import { generateDevAgentPrompt } from "@/lib/brief-generator";
+import { generatePromptPackFromReport, exportPromptPackToMarkdown } from "@/lib/prompt-pack";
 
 type Gate = { name: string; status: "GREEN" | "YELLOW" | "RED"; evidence?: string[]; how_to_fix?: string; why?: string };
 type Issue = { severity: string; issue: string; fix?: string; file?: string; line?: number; explanation?: string };
@@ -65,6 +66,9 @@ type DoctorData = {
   alignment?: AlignmentData;
   next_actions?: string[];
   critical_issues?: string[];
+  security_findings?: string[];
+  testing_gaps?: string[];
+  deployment_gaps?: string[];
 };
 
 type Props = {
@@ -94,10 +98,12 @@ export function DoctorReportView({ report, projectId }: Props) {
   const scan = p?.scan as ScanData | null;
   const [briefCopied, setBriefCopied] = useState(false);
   const [promptCopied, setPromptCopied] = useState(false);
+  const [generatingPack, setGeneratingPack] = useState(false);
 
   if (!payloadData) return <EmptyState icon={<Stethoscope size={24} />} title="No data available" />;
+  const pd = payloadData!;
 
-  const score = payloadData.health_score ?? payloadData.score ?? report.score ?? 0;
+  const score = pd.health_score ?? pd.score ?? report.score ?? 0;
   const gates = payloadData.gates ?? [];
   const redGates = gates.filter(g => g.status === "RED");
   const yellowGates = gates.filter(g => g.status === "YELLOW");
@@ -108,47 +114,38 @@ export function DoctorReportView({ report, projectId }: Props) {
   const evidence = payloadData.evidence ?? scan?.evidenceIndex ?? [];
   const nextActions = payloadData.next_actions ?? [];
   const alignment = payloadData.alignment ?? null;
+  const redGateNames = payloadData.red_gates ?? [];
+  const yellowGateNames = payloadData.yellow_gates ?? [];
 
   const healthColor = score >= 70 ? "var(--noctra-emerald)" : score >= 40 ? "var(--noctra-amber)" : "var(--noctra-rose)";
   const readinessScore = payloadData.launch_readiness_score ?? score;
 
   async function copyPrompt() {
-    const prompt = generateDevAgentPrompt({
-      project: { name: "Current Project", idea: payloadData!.summary },
-      state: {
-        phase: "launch-prep",
-        readiness: readinessScore,
-        doctorScore: score,
-        failedGates: redGates.map(g => g.name),
-        topBlocker: payloadData!.top_blocker ?? null,
-        nextAction: { title: payloadData!.recommended_action ?? "Fix launch blockers", href: "/app/tasks", reason: "", description: "", priority: "high", tool: "doctor" },
-        ideaScore: 0, realityScore: 0, proofScore: 0, swarmScore: 0, mvpScore: 0, launchScore: 0,
-        overallScore: 0, coveredTools: [], missingTools: [], openP0Tasks: 0, openP1Tasks: 0,
-        latestReportByTool: {}, proofSignalCount: 0, scanCount: 0, totalReports: 0,
-        totalTasks: 0, completedTasks: 0, taskCompletionRate: 0,
-      },
-      tasks: [],
-      doctorPayload: report.payload,
-    });
+    const prompt = generateNextBuildPrompt();
     try {
       await navigator.clipboard.writeText(prompt);
       setPromptCopied(true);
       setTimeout(() => setPromptCopied(false), 2500);
     } catch {
-      downloadPrompt();
+      downloadMarkdown("next-build-prompt", prompt);
     }
   }
 
   function downloadPrompt() {
-    const prompt = generateDevAgentPrompt({
-      project: { name: "Current Project", idea: payloadData!.summary },
+    const prompt = generateNextBuildPrompt();
+    downloadMarkdown("next-build-prompt", prompt);
+  }
+
+  function generateNextBuildPrompt(): string {
+    return generateDevAgentPrompt({
+      project: { name: "Current Project", idea: pd.summary },
       state: {
         phase: "launch-prep",
         readiness: readinessScore,
         doctorScore: score,
-        failedGates: redGates.map(g => g.name),
-        topBlocker: payloadData!.top_blocker ?? null,
-        nextAction: { title: payloadData!.recommended_action ?? "Fix launch blockers", href: "/app/tasks", reason: "", description: "", priority: "high", tool: "doctor" },
+        failedGates: [...new Set([...redGates.map(g => g.name), ...redGateNames])],
+        topBlocker: pd.top_blocker ?? null,
+        nextAction: { title: pd.recommended_action ?? "Fix launch blockers", href: "/app/tasks", reason: "", description: "", priority: "high", tool: "doctor" },
         ideaScore: 0, realityScore: 0, proofScore: 0, swarmScore: 0, mvpScore: 0, launchScore: 0,
         overallScore: 0, coveredTools: [], missingTools: [], openP0Tasks: 0, openP1Tasks: 0,
         latestReportByTool: {}, proofSignalCount: 0, scanCount: 0, totalReports: 0,
@@ -157,46 +154,160 @@ export function DoctorReportView({ report, projectId }: Props) {
       tasks: [],
       doctorPayload: report.payload,
     });
-    downloadMarkdown("next-build-prompt", prompt);
   }
+
+  async function handleGeneratePromptPack() {
+    setGeneratingPack(true);
+    try {
+      const pack = generatePromptPackFromReport(
+        { id: report.id, tool: "doctor", title: "Project Doctor Report", payload: report.payload },
+        "Replit"
+      );
+      const md = exportPromptPackToMarkdown(pack);
+      downloadMarkdown("doctor-prompt-pack", md);
+      setBriefCopied(true);
+      setTimeout(() => setBriefCopied(false), 2500);
+    } finally {
+      setGeneratingPack(false);
+    }
+  }
+
+  function handleExportFixPlan() {
+    const lines: string[] = [
+      `# Doctor Fix Plan — ${new Date().toLocaleDateString()}`,
+      "",
+      `Health Score: ${score}/100`,
+      `Launch Readiness: ${pd.launch_readiness ?? "N/A"}`,
+      `Top Blocker: ${pd.top_blocker ?? "None"}`,
+      "",
+      "## Launch Gates",
+      ...gates.map(g => `- [${g.status}] ${g.name}${g.how_to_fix ? ` → Fix: ${g.how_to_fix}` : ""}`),
+      "",
+      "## Repair Queue",
+      ...repairQueue.map((item, i) => `${i + 1}. ${item}`),
+      "",
+      "## Fix Plan",
+      ...fixPlan.map(f => `- [${f.priority}] ${f.title}${f.files ? ` (Files: ${f.files.join(", ")})` : ""}${f.acceptance_criteria ? `\n  AC: ${f.acceptance_criteria.join("; ")}` : ""}`),
+      "",
+      "## Evidence Index",
+      ...evidence.slice(0, 20).map(e => `- [${e.severity}] ${e.filePath}${e.lineNumber ? `:${e.lineNumber}` : ""} — ${e.explanation || e.signal}`),
+    ];
+    downloadMarkdown("doctor-fix-plan", lines.join("\n"));
+  }
+
+  const allBlockers = [...new Set([...redGates.map(g => g.name), ...redGateNames])];
+  const allWarnings = [...new Set([...yellowGates.map(g => g.name), ...yellowGateNames])];
 
   return (
     <div className="space-y-4">
       {/* ===== 1. Executive Verdict ===== */}
-      <div className="flex gap-4 items-start flex-wrap">
-        <ScoreRing value={score} label="Health" color={healthColor} />
+      <div
+        className="rounded-xl p-4 flex gap-4 items-start flex-wrap"
+        style={{
+          background: score >= 70 ? "rgba(52,211,153,0.04)" : score >= 40 ? "rgba(245,158,11,0.04)" : "rgba(244,63,94,0.04)",
+          border: `1px solid ${healthColor}22`,
+        }}
+      >
+        <ScoreRing value={score} label="Health" color={healthColor} size={72} stroke={6} />
         <div className="flex-1 min-w-0">
-          {payloadData.verdict && <p className="text-sm font-semibold mb-1" style={{ color: "var(--noctra-text)" }}>{payloadData.verdict}</p>}
-          {payloadData.summary && <p className="text-xs mb-2" style={{ color: "var(--noctra-text-soft)" }}>{payloadData.summary}</p>}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 mb-1">
+            <Target size={13} style={{ color: healthColor }} />
+            <p className="text-sm font-bold" style={{ color: "var(--noctra-text)" }}>Executive Verdict</p>
             {payloadData.launch_readiness && (
               <Badge style={{
+                marginLeft: "auto",
                 background: payloadData.launch_readiness === "GO" ? "rgba(52,211,153,0.1)" : payloadData.launch_readiness === "CONDITIONAL" ? "rgba(245,158,11,0.1)" : "rgba(244,63,94,0.1)",
                 color: payloadData.launch_readiness === "GO" ? "var(--noctra-emerald)" : payloadData.launch_readiness === "CONDITIONAL" ? "var(--noctra-amber)" : "var(--noctra-rose)",
               }}>
                 Launch: {payloadData.launch_readiness}
               </Badge>
             )}
-            {payloadData.top_blocker && <Badge style={{ background: "rgba(244,63,94,0.1)", color: "var(--noctra-rose)" }}>Blocker: {payloadData.top_blocker}</Badge>}
-            {redGates.length > 0 && <Badge style={{ background: "rgba(244,63,94,0.1)", color: "var(--noctra-rose)" }}>{redGates.length} RED gates</Badge>}
-            {yellowGates.length > 0 && <Badge style={{ background: "rgba(245,158,11,0.1)", color: "var(--noctra-amber)" }}>{yellowGates.length} YELLOW</Badge>}
+          </div>
+          {payloadData.verdict && <p className="text-sm font-semibold mb-1" style={{ color: "var(--noctra-text)" }}>{payloadData.verdict}</p>}
+          {payloadData.summary && <p className="text-xs mb-2" style={{ color: "var(--noctra-text-soft)" }}>{payloadData.summary}</p>}
+          <div className="flex items-center gap-2 flex-wrap text-xs">
+            {payloadData.top_blocker && (
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.2)" }}>
+                <XCircle size={10} style={{ color: "var(--noctra-rose)" }} />
+                <span style={{ color: "var(--noctra-rose)" }}>Blocker: {payloadData.top_blocker}</span>
+              </div>
+            )}
+            {allBlockers.length > 0 && <Badge style={{ background: "rgba(244,63,94,0.1)", color: "var(--noctra-rose)" }}>{allBlockers.length} RED gates</Badge>}
+            {allWarnings.length > 0 && <Badge style={{ background: "rgba(245,158,11,0.1)", color: "var(--noctra-amber)" }}>{allWarnings.length} YELLOW</Badge>}
             {greenGates.length > 0 && <Badge style={{ background: "rgba(52,211,153,0.1)", color: "var(--noctra-emerald)" }}>{greenGates.length} GREEN</Badge>}
           </div>
           {payloadData.recommended_action && (
             <p className="text-xs mt-2 flex items-center gap-1" style={{ color: "var(--noctra-cyan)" }}>
-              <Terminal size={10} /> Next: {payloadData.recommended_action}
+              <Terminal size={10} /> Next action: {payloadData.recommended_action}
             </p>
           )}
         </div>
       </div>
 
-      {/* ===== 2. Launch Gates ===== */}
+      {/* ===== 2. Critical Issues ===== */}
+      {payloadData.critical_issues && payloadData.critical_issues.length > 0 && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: "var(--noctra-rose)" }}>
+            <XCircle size={11} />Critical Issues
+          </p>
+          <div className="space-y-2">
+            {payloadData.critical_issues.map((issue, i) => (
+              <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg" style={{ background: "rgba(244,63,94,0.04)", border: "1px solid rgba(244,63,94,0.15)" }}>
+                <span className="text-xs font-mono shrink-0 mt-0.5" style={{ color: "var(--noctra-rose)" }}>#{i + 1}</span>
+                <p className="text-xs" style={{ color: "var(--noctra-text-soft)" }}>{issue}</p>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      )}
+
+      {/* ===== 2b. Security / Testing / Deployment Gaps ===== */}
+      {(payloadData.security_findings?.length ?? 0) > 0 && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-rose)" }}>Security Findings</p>
+          <div className="space-y-1">
+            {payloadData.security_findings!.map((f, i) => (
+              <p key={i} className="text-xs flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
+                <span style={{ color: "var(--noctra-rose)" }}>!</span>{f}
+              </p>
+            ))}
+          </div>
+        </Panel>
+      )}
+      {(payloadData.testing_gaps?.length ?? 0) > 0 && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-amber)" }}>Testing Gaps</p>
+          <div className="space-y-1">
+            {payloadData.testing_gaps!.map((g, i) => (
+              <p key={i} className="text-xs flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
+                <span style={{ color: "var(--noctra-amber)" }}>—</span>{g}
+              </p>
+            ))}
+          </div>
+        </Panel>
+      )}
+      {(payloadData.deployment_gaps?.length ?? 0) > 0 && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-amber)" }}>Deployment Gaps</p>
+          <div className="space-y-1">
+            {payloadData.deployment_gaps!.map((g, i) => (
+              <p key={i} className="text-xs flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
+                <span style={{ color: "var(--noctra-amber)" }}>—</span>{g}
+              </p>
+            ))}
+          </div>
+        </Panel>
+      )}
+
+      {/* ===== 3. Launch Gates ===== */}
       {gates.length > 0 && (
         <Panel>
           <div className="flex items-center gap-2 mb-3">
-            <Shield size={13} style={{ color: "var(--noctra-rose)" }} />
+            <ShieldAlert size={13} style={{ color: "var(--noctra-rose)" }} />
             <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Launch Gates</p>
-            <span className="ml-auto text-xs font-mono" style={{ color: "var(--noctra-text-muted)" }}>{redGates.length} RED · {yellowGates.length} YELLOW · {greenGates.length} GREEN</span>
+            <span className="ml-auto text-xs font-mono" style={{ color: "var(--noctra-text-muted)" }}>
+              {allBlockers.length} RED · {allWarnings.length} YELLOW · {greenGates.length} GREEN
+            </span>
           </div>
           <div className="space-y-2">
             {gates.map((g, i) => (
@@ -219,7 +330,7 @@ export function DoctorReportView({ report, projectId }: Props) {
                   </ul>
                 )}
                 {g.why && (
-                  <p className="text-xs mt-1.5 italic" style={{ color: "var(--noctra-text-muted)" }}>
+                  <p className="text-xs mt-1 italic" style={{ color: "var(--noctra-text-muted)" }}>
                     Why: {g.why}
                   </p>
                 )}
@@ -243,45 +354,63 @@ export function DoctorReportView({ report, projectId }: Props) {
           <div className="flex items-center gap-2 mb-3">
             <Bug size={13} style={{ color: "var(--noctra-amber)" }} />
             <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Evidence Index</p>
-            <span className="ml-auto text-xs font-mono" style={{ color: "var(--noctra-text-muted)" }}>{evidence.length} items</span>
+            <span className="ml-auto text-xs font-mono" style={{ color: "var(--noctra-text-muted)" }}>{evidence.length} findings</span>
           </div>
-          <div className="space-y-1.5 max-h-64 overflow-y-auto">
-            {evidence.slice(0, 20).map((e, i) => (
-              <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded-lg text-xs" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
-                <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: SEV_COLOR[e.severity] ?? "var(--noctra-text-muted)" }} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-mono text-[10px]" style={{ color: "var(--noctra-text-muted)" }}>{e.filePath}{e.lineNumber ? `:${e.lineNumber}` : ""}</span>
-                    <Badge style={{ fontSize: "9px", background: `${SEV_COLOR[e.severity] ?? "var(--noctra-text-muted)"}18`, color: SEV_COLOR[e.severity] ?? "var(--noctra-text-muted)" }}>{e.severity}</Badge>
+          <div className="space-y-1.5 max-h-72 overflow-y-auto">
+            {evidence.slice(0, 25).map((e, i) => {
+              const relatedFix = payloadData.issues?.find(iss => iss.file === e.filePath || (e.signal && iss.issue?.toLowerCase().includes(e.signal.toLowerCase())));
+              return (
+                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+                  <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: SEV_COLOR[e.severity] ?? "var(--noctra-text-muted)" }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-mono text-[10px]" style={{ color: "var(--noctra-text-muted)" }}>{e.filePath}{e.lineNumber ? `:${e.lineNumber}` : ""}</span>
+                      <Badge style={{ fontSize: "9px", background: `${SEV_COLOR[e.severity] ?? "var(--noctra-text-muted)"}18`, color: SEV_COLOR[e.severity] ?? "var(--noctra-text-muted)" }}>{e.severity}</Badge>
+                    </div>
+                    <p className="mt-0.5" style={{ color: "var(--noctra-text-soft)" }}>{e.explanation || e.signal || e.snippet}</p>
+                    {relatedFix?.fix && (
+                      <p className="mt-0.5 text-[10px]" style={{ color: "var(--noctra-cyan)" }}>Fix: {relatedFix.fix}</p>
+                    )}
                   </div>
-                  <p className="mt-0.5" style={{ color: "var(--noctra-text-soft)" }}>{e.explanation || e.signal || e.snippet}</p>
                 </div>
-              </div>
-            ))}
-            {evidence.length > 20 && (
-              <p className="text-xs text-center pt-1" style={{ color: "var(--noctra-text-muted)" }}>+{evidence.length - 20} more items</p>
+              );
+            })}
+            {evidence.length > 25 && (
+              <p className="text-xs text-center pt-1" style={{ color: "var(--noctra-text-muted)" }}>+{evidence.length - 25} more findings</p>
             )}
           </div>
         </Panel>
       )}
 
       {/* ===== 4. Repair Queue ===== */}
-      {(repairQueue.length > 0 || fixPlan.length > 0) && (
+      {(repairQueue.length > 0 || fixPlan.length > 0 || allBlockers.length > 0) && (
         <Panel>
           <div className="flex items-center gap-2 mb-3">
-            <ListOrdered size={13} style={{ color: "var(--noctra-amber)" }} />
+            <Wrench size={13} style={{ color: "var(--noctra-amber)" }} />
             <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Repair Queue</p>
           </div>
           <div className="space-y-2">
+            {/* RED gates first */}
+            {allBlockers.map((name, i) => (
+              <div key={`r-${i}`} className="flex items-start gap-2 px-3 py-2 rounded-lg" style={{ background: "rgba(244,63,94,0.04)", border: "1px solid rgba(244,63,94,0.2)" }}>
+                <span className="text-xs font-mono shrink-0 mt-0.5" style={{ color: "var(--noctra-rose)" }}>#{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium" style={{ color: "var(--noctra-rose)" }}>{name}</p>
+                  <Badge style={{ fontSize: "9px", background: "rgba(244,63,94,0.1)", color: "var(--noctra-rose)", marginTop: 2, display: "inline-block" }}>HIGH</Badge>
+                </div>
+              </div>
+            ))}
+            {/* repair_queue items */}
             {repairQueue.map((item, i) => (
               <div key={`rq-${i}`} className="flex items-start gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
-                <span className="text-xs font-mono shrink-0 mt-0.5" style={{ color: "var(--noctra-amber)" }}>#{i + 1}</span>
+                <span className="text-xs font-mono shrink-0 mt-0.5" style={{ color: "var(--noctra-amber)" }}>#{allBlockers.length + i + 1}</span>
                 <p className="text-xs" style={{ color: "var(--noctra-text-soft)" }}>{item}</p>
               </div>
             ))}
+            {/* fix_plan items */}
             {fixPlan.map((item, i) => (
               <div key={`fp-${i}`} className="flex items-start gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
-                <span className="text-xs font-mono shrink-0 mt-0.5" style={{ color: "var(--noctra-amber)" }}>#{repairQueue.length + i + 1}</span>
+                <span className="text-xs font-mono shrink-0 mt-0.5" style={{ color: "var(--noctra-amber)" }}>#{allBlockers.length + repairQueue.length + i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>{item.title}</p>
@@ -357,56 +486,108 @@ export function DoctorReportView({ report, projectId }: Props) {
               </div>
             </div>
           )}
+          {alignment.recommendedCodeTasks && alignment.recommendedCodeTasks.length > 0 && (
+            <div className="mt-2">
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--noctra-cyan)" }}>Recommended Code Tasks</p>
+              {alignment.recommendedCodeTasks.map((t, i) => (
+                <div key={i} className="px-2 py-1.5 rounded-lg mb-1 text-xs" style={{ background: "rgba(61,216,255,0.04)", border: "1px solid rgba(61,216,255,0.15)" }}>
+                  <span className="font-medium" style={{ color: "var(--noctra-text)" }}>{t.title}</span>
+                  <p style={{ color: "var(--noctra-text-muted)" }}>{t.reason}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </Panel>
       )}
 
-      {/* ===== 6. Generated Fix Tasks ===== */}
-      {report.id && (
-        <Panel>
-          <div className="flex items-center gap-2 mb-3">
-            <CheckSquare size={13} style={{ color: "var(--noctra-emerald)" }} />
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Fix Tasks</p>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <NoctraButton variant="ghost" onClick={() => navigate(`/app/tasks?report=${report.id}`)}>
-              <ExternalLink size={11} /> View Tasks from this Report
-            </NoctraButton>
-            {report.project_id && (
-              <NoctraButton variant="ghost" onClick={() => navigate(`/app/projects/${report.project_id}`)}>
-                <FolderOpen size={11} /> Open Project
-              </NoctraButton>
-            )}
-          </div>
-        </Panel>
-      )}
-
-      {/* ===== 7. Next Build Prompt ===== */}
-      <div className="rounded-xl p-4" style={{ background: "rgba(61,216,255,0.04)", border: "1px solid rgba(61,216,255,0.2)" }}>
+      {/* ===== 6. Generated Execution ===== */}
+      <Panel>
         <div className="flex items-center gap-2 mb-3">
-          <Terminal size={13} style={{ color: "var(--noctra-cyan)" }} />
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-cyan)" }}>Next Build Prompt</p>
+          <ClipboardList size={13} style={{ color: "var(--noctra-emerald)" }} />
+          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Generated Execution</p>
         </div>
-        <p className="text-xs mb-3" style={{ color: "var(--noctra-text-muted)" }}>
-          Copy this prompt into Codex, Replit Agent, Cursor, or Windsurf to fix all identified issues.
-        </p>
-        <div className="flex gap-2">
-          <button
-            onClick={copyPrompt}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium"
-            style={{ background: promptCopied ? "rgba(52,211,153,0.15)" : "var(--noctra-cyan)", color: promptCopied ? "var(--noctra-emerald)" : "#000" }}
-          >
-            {promptCopied ? <><Check size={11} /> Copied</> : <><Copy size={11} /> Copy Prompt</>}
-          </button>
-          <button
-            onClick={downloadPrompt}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium"
-            style={{ background: "var(--noctra-surface2)", color: "var(--noctra-text)", border: "1px solid var(--noctra-border)" }}
-          >
-            <Download size={11} /> Download
-          </button>
-        </div>
-      </div>
 
+        {/* Fix Tasks */}
+        {report.id && (
+          <div className="mb-3 pb-3 border-b" style={{ borderColor: "var(--noctra-border)" }}>
+            <p className="text-xs font-medium mb-2" style={{ color: "var(--noctra-text)" }}>Fix Tasks</p>
+            <div className="flex flex-wrap gap-2">
+              <NoctraButton variant="ghost" onClick={() => navigate(`/app/tasks?report=${report.id}`)}>
+                <ExternalLink size={11} /> View Fix Tasks
+              </NoctraButton>
+              {report.project_id && (
+                <NoctraButton variant="ghost" onClick={() => navigate(`/app/projects/${report.project_id}`)}>
+                  <FolderOpen size={11} /> Open Project
+                </NoctraButton>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Next Build Prompt */}
+        <div className="mb-3 pb-3 border-b" style={{ borderColor: "var(--noctra-border)" }}>
+          <div className="flex items-center gap-2 mb-2">
+            <Terminal size={13} style={{ color: "var(--noctra-cyan)" }} />
+            <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>Next Build Prompt</p>
+          </div>
+          <p className="text-xs mb-2" style={{ color: "var(--noctra-text-muted)" }}>
+            Copy this prompt into Codex, Replit Agent, Cursor, or Windsurf to fix all identified issues.
+          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <Badge style={{ fontSize: "9px", background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Codex</Badge>
+            <Badge style={{ fontSize: "9px", background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Replit</Badge>
+            <Badge style={{ fontSize: "9px", background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Cursor</Badge>
+            <Badge style={{ fontSize: "9px", background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Windsurf</Badge>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={copyPrompt}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium"
+              style={{ background: promptCopied ? "rgba(52,211,153,0.15)" : "var(--noctra-cyan)", color: promptCopied ? "var(--noctra-emerald)" : "#000" }}
+            >
+              {promptCopied ? <><Check size={11} /> Copied</> : <><Copy size={11} /> Copy Prompt</>}
+            </button>
+            <button
+              onClick={downloadPrompt}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium"
+              style={{ background: "var(--noctra-surface2)", color: "var(--noctra-text)", border: "1px solid var(--noctra-border)" }}
+            >
+              <Download size={11} /> Download
+            </button>
+          </div>
+        </div>
+
+        {/* Prompt Pack */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Package size={13} style={{ color: "var(--noctra-violet)" }} />
+            <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>Prompt Pack</p>
+          </div>
+          <p className="text-xs mb-2" style={{ color: "var(--noctra-text-muted)" }}>
+            Generate a multi-step prompt pack with phase-by-phase repair instructions for your AI coding tool.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleGeneratePromptPack}
+              disabled={generatingPack}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium"
+              style={{ background: generatingPack ? "rgba(149,117,255,0.1)" : "var(--noctra-surface2)", color: "var(--noctra-violet)", border: "1px solid rgba(149,117,255,0.25)" }}
+            >
+              {generatingPack ? <Loader2 size={11} className="animate-spin" /> : <Package size={11} />}
+              Generate Prompt Pack
+            </button>
+            <button
+              onClick={handleExportFixPlan}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium"
+              style={{ background: "var(--noctra-surface2)", color: "var(--noctra-text)", border: "1px solid var(--noctra-border)" }}
+            >
+              <FileText size={11} /> Export Fix Plan
+            </button>
+          </div>
+        </div>
+      </Panel>
+
+      {/* Issues section */}
       {issues.length > 0 && (
         <Panel>
           <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-rose)" }}>Issues</p>

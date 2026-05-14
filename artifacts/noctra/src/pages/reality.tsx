@@ -5,7 +5,7 @@ import { EmptyState, NoctraButton, Panel, Badge } from "@/components/Primitives"
 import { callWithCrossContext } from "@/lib/ai";
 import type { StructuredResult } from "@/lib/ai";
 import type { InjectedContext } from "@/lib/cross-context";
-import { saveReport } from "@/lib/repository";
+import { saveReport, getReports } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
@@ -69,6 +69,17 @@ export default function RealityPage() {
   const [generatingTasks, setGeneratingTasks] = useState(false);
   const [applyingPatch, setApplyingPatch] = useState(false);
   const [patchSaved, setPatchSaved] = useState(false);
+  const [latestIdea, setLatestIdea] = useState<string | null>(null);
+
+  useEffect(() => {
+    getReports("idea").then((reps) => {
+      const latest = (reps as Array<{ summary?: string | null; payload?: Record<string, unknown> }>)?.[0];
+      if (latest) {
+        const desc = latest.summary ?? ((latest.payload as Record<string, unknown>)?.markdown as string) ?? "";
+        setLatestIdea(desc ? `Based on my latest idea analysis:\n\n${desc.slice(0, 1000)}` : null);
+      }
+    }).catch(() => {});
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -410,6 +421,11 @@ export default function RealityPage() {
               )}
 
               <div className="flex gap-2 mt-3">
+                {latestIdea && phase === "idle" && !input.trim() && (
+                  <NoctraButton variant="ghost" onClick={() => setInput(latestIdea)}>
+                    Use latest Idea report
+                  </NoctraButton>
+                )}
                 <NoctraButton
                   onClick={run}
                   disabled={phase === "running" || !input.trim()}

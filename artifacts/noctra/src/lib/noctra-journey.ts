@@ -12,7 +12,7 @@ export const JOURNEY: JourneyNode[] = [
   { key: "reality",   label: "Reality",   tool: "reality",  hint: "Compile risk and blind spots" },
   { key: "blueprint", label: "Blueprint", tool: "mvp",      hint: "Compress to a build-ready scope" },
   { key: "proof",     label: "Proof",     tool: "proof",    hint: "Quantify validation evidence" },
-  { key: "market",    label: "Market",    tool: "swarm",    hint: "Simulate persona reactions" },
+  { key: "market",    label: "Market",    tool: "swarm",    hint: "Analyze demand signals and segments" },
   { key: "build",     label: "Build",     tool: "doctor",   hint: "Diagnose execution health" },
   { key: "launch",    label: "Launch",    tool: "launch",   hint: "Ready the launch sequence" },
   { key: "evolve",    label: "Evolve",    tool: "passport", hint: "Lock progression and learn" },
@@ -37,8 +37,8 @@ export const TOOL_EXAMPLES: Record<ToolKey, string[]> = {
     "12 interviews surfaced the same urgent hiring pain.",
   ],
   swarm: [
-    "Offer: AI sales coach that audits your last 5 calls for $49/mo.",
-    "Personas: indie SaaS founders, RevOps leads, fractional CROs.",
+    "Product: AI sales coach at $49/mo. TAM ~$800M. Top segment: indie SaaS founders.",
+    "Pricing test: $29 vs $49/mo. Segment: small teams (2–10 people) in B2B SaaS.",
   ],
   doctor: [
     "React + TanStack codebase, 240 files, no tests, slow CI.",
@@ -59,17 +59,17 @@ export const TOOL_EXAMPLES: Record<ToolKey, string[]> = {
 };
 
 export const NEXT_BEST_MOVES: { tool: ToolKey; title: string; reason: string; confidence: number }[] = [
-  { tool: "idea",    title: "Run a Signal Scan on your sharpest idea",      reason: "Fastest path to a measurable validation step.", confidence: 86 },
-  { tool: "reality", title: "Compile a Reality Scan on your top assumption", reason: "Surface the blind spots before you build.",     confidence: 78 },
-  { tool: "proof",   title: "Open a proof cycle in Validation Lab",          reason: "Your validation depth is below launch threshold.", confidence: 72 },
+  { tool: "idea",    title: "Run Idea Checker on your sharpest idea",      reason: "Fastest path to a measurable validation step.", confidence: 86 },
+  { tool: "reality", title: "Run Reality Compiler on your top assumption", reason: "Surface blind spots before you build.",     confidence: 78 },
+  { tool: "proof",   title: "Run Proof Engine to assess validation depth", reason: "Your validation depth is below launch threshold.", confidence: 72 },
 ];
 
 export const COMPANION_LINES = {
-  hero: "I'm watching the signal. Open Command Center to see your next move.",
-  dashboard: "Your proof layer is thin. I'd run Validation Lab next.",
-  loadingShort: "Compiling reality. Holding for signal.",
+  hero: "Run Idea Checker to surface strengths, fragilities, and the next validation step.",
+  dashboard: "Review your execution plan. Gaps in proof or Doctor may block launch.",
+  loadingShort: "Processing. You'll see results in a moment.",
   briefingReady: "Briefing compiled. Review the intelligence panel.",
-  warning: "Reality pressure rising. Re-test your sharpest assumption.",
-  success: "Signal locked. Founder trajectory updated.",
-  launching: "Launch readiness rising. Coordinating telemetry.",
+  warning: "Critical findings detected. Address before moving to build phase.",
+  success: "Report saved. Next action available below.",
+  launching: "Launch readiness under assessment. Results will show here.",
 };

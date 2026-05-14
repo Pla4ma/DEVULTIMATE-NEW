@@ -35,8 +35,8 @@ const queryClient = new QueryClient({
 });
 
 const ROUTE_TITLES: Record<string, string> = {
-  "/": "Noctra — Developer Intelligence OS",
-  "/app": "Command Center — Noctra",
+  "/": "Noctra — Turn Your Idea Into an Execution Plan",
+  "/app": "Dashboard — Noctra",
   "/app/idea": "Idea Checker — Noctra",
   "/app/reality": "Reality Compiler — Noctra",
   "/app/proof": "Proof Engine — Noctra",
@@ -65,7 +65,7 @@ function TitleSetter() {
     } else if (location.startsWith("/app/projects/")) {
       document.title = "Project — Noctra";
     } else {
-      document.title = "Noctra — Developer Intelligence OS";
+      document.title = "Noctra — Turn Your Idea Into an Execution Plan";
     }
   }, [location]);
   return null;

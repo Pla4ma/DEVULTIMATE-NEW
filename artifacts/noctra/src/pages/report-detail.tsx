@@ -814,7 +814,7 @@ export default function ReportDetailPage() {
 
   // ── Action categorization ──────────────────────────────────────────────────
   const continueWorkflowIds = new Set(["gen-reality", "gen-swarm", "gen-mvp", "gen-proof", "gen-launch", "apply-patch"]);
-  const createExecutionIds = new Set(["gen-tasks", "gen-sprint", "gen-prompt-pack"]);
+  const createExecutionIds = new Set(["gen-tasks", "gen-sprint", "gen-prompt-pack", "copy-doctor-prompt", "gen-launch-blockers"]);
   const exportShareIds = new Set(["export-prd", "export-github", "export-fix-plan", "export-launch-pack", "copy-sprint", "download-sprint", "copy-pack", "download-pack"]);
 
   const continueWorkflowActions = toolActions.filter((a) => continueWorkflowIds.has(a.id));
@@ -1030,11 +1030,11 @@ export default function ReportDetailPage() {
           </Panel>
         ) : null}
 
-        {/* Export / Share */}
+        {/* Export */}
         <Panel>
           <div className="flex items-center gap-2 mb-3">
             <Download size={12} style={{ color: "var(--noctra-text-muted)" }} />
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Export / Share</p>
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Export</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {/* Always-available */}

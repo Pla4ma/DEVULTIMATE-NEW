@@ -298,171 +298,192 @@ export async function generateTasksFromReport(input: {
     }
 
     case "doctor": {
-      // Evidence items from scan
-      const evidence = asArray(data.evidence ?? data.evidenceIndex ?? data.scan_evidence);
-      evidence.slice(0, 8).forEach((raw) => {
-        const e = asObj(raw);
-        const title = str(e.explanation ?? e.signal ?? e.snippet);
-        const filePath = str(e.filePath);
-        const sev = str(e.severity);
-        if (!title) return;
-        const detail = filePath ? `File: ${filePath}${e.lineNumber ? `:${e.lineNumber}` : ""}` : undefined;
-        push({
-          title: truncate(`${sev === "error" ? "Fix" : "Address"}: ${title.slice(0, 80)}`),
-          detail: detail || undefined,
-          priority: sev === "error" || sev === "CRITICAL" ? "high" : sev === "warning" || sev === "HIGH" ? "medium" : "low",
-          category: "technical",
-          acceptance_criteria: detail ? [`Issue in ${filePath} is resolved`] : undefined,
-        });
-      });
-      // CRITICAL and HIGH issues first
-      asArray(data.issues).slice(0, 8).forEach((raw) => {
-        const issue = asObj(raw);
-        const sev = str(issue.severity);
-        if (sev !== "CRITICAL" && sev !== "HIGH") return;
-        const title = str(issue.issue);
-        const fix = str(issue.fix);
-        if (!title) return;
-        push({
-          title: truncate(`Fix: ${title}`),
-          detail: fix || undefined,
-          priority: sev === "CRITICAL" ? "high" : "medium",
-          category: "technical",
-          acceptance_criteria: fix ? [`${fix} is applied and tested`] : undefined,
-        });
-      });
-      // Repair queue items
-      asArray(data.repair_queue).slice(0, 6).forEach((item) => {
-        const title = str(typeof item === "string" ? item : asObj(item).title ?? item);
-        if (title) push({ title: truncate(title), priority: "high", category: "technical" });
-      });
-      // Fix plan items
-      asArray(data.fix_plan).slice(0, 6).forEach((raw) => {
-        const f = asObj(raw);
-        const title = str(f.title);
-        if (!title) return;
-        const files = asArray(f.files).map((x) => str(x)).filter(Boolean);
-        const criteria = asArray(f.acceptance_criteria).map((x) => str(x)).filter(Boolean);
-        push({
-          title: truncate(title),
-          detail: files.length > 0 ? `Files: ${files.join(", ")}` : str(f.code_hint) || undefined,
-          priority: normalizePriority(f.priority ?? "medium"),
-          category: "technical",
-          acceptance_criteria: criteria.length > 0 ? criteria : undefined,
-        });
-      });
-      // Gates from doctor data (gates array with objects)
+      function appendAC(detail: string, ac?: string[]): string {
+        return ac && ac.length > 0 ? `${detail}\nAC: ${ac.join("; ")}`.trim() : detail;
+      }
+
+      // RED gates — launch blockers, highest priority
       const gatesData = asArray(data.gates ?? data.launch_gates);
-      gatesData.slice(0, 6).forEach((raw) => {
+      gatesData.forEach((raw) => {
         const g = asObj(raw);
         const name = str(g.name ?? g.gate);
         const status = str(g.status);
         if (!name || status === "GREEN") return;
         const howToFix = str(g.how_to_fix ?? g.fix);
+        const why = str(g.why);
+        const evidence = asArray(g.evidence).map((x: unknown) => str(x)).filter(Boolean);
+        const detail = [howToFix ? `Fix: ${howToFix}` : "", why ? `Why: ${why}` : "", evidence.length > 0 ? `Evidence: ${evidence.join(", ")}` : ""].filter(Boolean).join(" | ");
         push({
-          title: truncate(`Gate (${status}): ${name}`),
-          detail: howToFix ? `Fix: ${howToFix}` : `Status: ${status}`,
+          title: truncate(status === "RED" ? `[BLOCKER] ${name}` : `Fix: ${name}`),
+          detail: appendAC(detail, [`${name} gate is GREEN or PASSING`]),
           priority: status === "RED" ? "high" : "medium",
           category: "technical",
-          acceptance_criteria: howToFix ? [`${name} gate is GREEN or PASSING`] : undefined,
         });
       });
-      // RED/YELLOW gate names as strings
-      asArray(data.red_gates).slice(0, 5).forEach((raw) => {
+      // RED gate names as plain strings (from AI data)
+      asArray(data.red_gates).forEach((raw) => {
         if (typeof raw === "string") {
-          push({ title: truncate(`Fix RED gate: ${raw}`), priority: "high", category: "technical" });
+          push({ title: truncate(`[BLOCKER] Resolve: ${raw}`), priority: "high", category: "technical", detail: appendAC("", [`"${raw}" is resolved and gate turns GREEN`]) });
         } else {
           const g = asObj(raw);
           const name = str(g.name ?? g.gate);
-          const howToFix = str(g.how_to_fix ?? g.fix);
           if (!name) return;
+          const fix = str(g.how_to_fix ?? g.fix);
           push({
-            title: truncate(`Gate (RED): ${name}`),
-            detail: howToFix ? `Fix: ${howToFix}` : undefined,
-            priority: "high",
-            category: "technical",
-            acceptance_criteria: howToFix ? [`${name} gate is GREEN or PASSING`] : undefined,
+            title: truncate(`[BLOCKER] Resolve: ${name}`),
+            detail: appendAC(fix || "", [`${name} gate is GREEN or PASSING`]),
+            priority: "high", category: "technical",
           });
         }
       });
-      asArray(data.yellow_gates).slice(0, 3).forEach((raw) => {
+      // YELLOW gate names
+      asArray(data.yellow_gates).forEach((raw) => {
         if (typeof raw === "string") {
-          push({ title: truncate(`Fix YELLOW gate: ${raw}`), priority: "medium", category: "technical" });
+          push({ title: truncate(`Address: ${raw}`), priority: "medium", category: "technical", detail: appendAC("", [`"${raw}" is addressed before launch`]) });
         } else {
           const g = asObj(raw);
           const name = str(g.name ?? g.gate);
-          const howToFix = str(g.how_to_fix ?? g.fix);
           if (!name) return;
           push({
-            title: truncate(`Gate (YELLOW): ${name}`),
-            detail: howToFix ? `Fix: ${howToFix}` : undefined,
-            priority: "medium",
-            category: "technical",
+            title: truncate(`Address: ${name}`),
+            detail: appendAC(str(g.how_to_fix ?? g.fix) || "", [`${name} gate is YELLOW or GREEN`]),
+            priority: "medium", category: "technical",
           });
         }
       });
-      // Security findings
-      asArray(data.security_findings).slice(0, 5).forEach((raw) => {
+      // Security findings — always high priority
+      asArray(data.security_findings).forEach((raw) => {
         const s = asObj(raw);
         const title = str(s.finding ?? s.issue ?? s.description);
         const fix = str(s.fix ?? s.recommendation);
+        const sev = str(s.severity);
         if (!title) return;
         push({
-          title: truncate(`Security: ${title}`),
-          detail: fix || undefined,
-          priority: "high",
+          title: truncate(`[SECURITY] ${title}`),
+          detail: appendAC(fix || "Investigate and fix security issue", [`Security issue "${title}" is resolved and verified`]),
+          priority: sev === "CRITICAL" || sev === "HIGH" ? "high" : "medium",
           category: "technical",
-          acceptance_criteria: fix ? [`Security issue "${title}" is resolved and verified`] : undefined,
+        });
+      });
+      // CRITICAL and HIGH issues
+      asArray(data.issues).forEach((raw) => {
+        const issue = asObj(raw);
+        const sev = str(issue.severity);
+        if (sev !== "CRITICAL" && sev !== "HIGH") return;
+        const title = str(issue.issue);
+        const fix = str(issue.fix);
+        const filePath = str(issue.file);
+        if (!title) return;
+        const detailParts = [fix ? `Fix: ${fix}` : ""];
+        if (filePath) detailParts.push(`File: ${filePath}`);
+        push({
+          title: truncate(`Fix: ${title}`),
+          detail: appendAC(detailParts.filter(Boolean).join(" | "), fix ? [`${fix} is applied and tested`] : [`${title} is resolved`]),
+          priority: sev === "CRITICAL" ? "high" : "medium",
+          category: "technical",
+        });
+      });
+      // Repair queue items (ordered, each becomes a task)
+      asArray(data.repair_queue).forEach((item, idx) => {
+        const title = str(typeof item === "string" ? item : asObj(item).title ?? item);
+        if (title) push({ title: truncate(`#${idx + 1} ${title}`), priority: "high", category: "technical", detail: appendAC("", [`Repair item "${title}" is completed`]) });
+      });
+      // Fix plan items with files and acceptance criteria
+      asArray(data.fix_plan).forEach((raw) => {
+        const f = asObj(raw);
+        const title = str(f.title);
+        if (!title) return;
+        const files = asArray(f.files).map((x) => str(x)).filter(Boolean);
+        const criteria = asArray(f.acceptance_criteria).map((x) => str(x)).filter(Boolean);
+        const detailParts: string[] = [];
+        if (files.length > 0) detailParts.push(`Files: ${files.join(", ")}`);
+        if (str(f.code_hint)) detailParts.push(`Hint: ${str(f.code_hint)}`);
+        push({
+          title: truncate(title),
+          detail: appendAC(detailParts.join(" | "), criteria.length > 0 ? criteria : [`${title} is done and verified`]),
+          priority: normalizePriority(f.priority ?? "high"),
+          category: "technical",
+        });
+      });
+      // Evidence items from scan (with file paths)
+      const evidence = asArray(data.evidence ?? data.evidenceIndex ?? data.scan_evidence);
+      evidence.forEach((raw) => {
+        const e = asObj(raw);
+        const signal = str(e.explanation ?? e.signal ?? e.snippet);
+        const filePath = str(e.filePath);
+        const sev = str(e.severity);
+        if (!signal) return;
+        const detailParts = filePath ? [`File: ${filePath}${e.lineNumber ? `:${e.lineNumber}` : ""}`] : [];
+        push({
+          title: truncate(`${sev === "error" || sev === "CRITICAL" ? "Fix" : "Address"}: ${signal.slice(0, 80)}`),
+          detail: appendAC(detailParts.join(" | "), filePath ? [`Issue in ${filePath} is resolved`] : [`${signal} is addressed`]),
+          priority: sev === "error" || sev === "CRITICAL" ? "high" : sev === "warning" || sev === "HIGH" ? "medium" : "low",
+          category: "technical",
         });
       });
       // Testing gaps
-      asArray(data.testing_gaps).slice(0, 4).forEach((t) => {
-        const title = str(t);
-        if (title) push({ title: truncate(`Test gap: ${title}`), priority: "medium", category: "technical" });
+      asArray(data.testing_gaps).forEach((t) => {
+        const title = str(typeof t === "string" ? t : asObj(t).gap ?? asObj(t).description ?? t);
+        if (title) push({ title: truncate(`[TESTING] ${title}`), priority: "medium", category: "technical", detail: appendAC("", [`Testing gap "${title}" is addressed`]) });
       });
       // Deployment gaps
-      asArray(data.deployment_gaps).slice(0, 4).forEach((d) => {
-        const title = str(d);
-        if (title) push({ title: truncate(`Deploy: ${title}`), priority: "medium", category: "technical" });
+      asArray(data.deployment_gaps).forEach((d) => {
+        const title = str(typeof d === "string" ? d : asObj(d).gap ?? asObj(d).description ?? d);
+        if (title) push({ title: truncate(`[DEPLOY] ${title}`), priority: "medium", category: "technical", detail: appendAC("", [`Deployment gap "${title}" is resolved`]) });
       });
-      // Evidence gaps from alignment
+      // Codebase alignment tasks
       const alignment = asObj(data.alignment ?? {});
       const alignmentTasks = asArray(alignment.recommendedCodeTasks);
-      alignmentTasks.slice(0, 6).forEach((raw) => {
+      alignmentTasks.forEach((raw) => {
         const t = asObj(raw);
         const title = str(t.title);
         const reason = str(t.reason);
         if (!title) return;
         push({
           title: truncate(title),
-          detail: reason || undefined,
-          priority: normalizePriority(t.priority ?? "high"),
+          detail: appendAC(reason || "", [`${title} is done and verified`]),
+          priority: normalizePriority(t.priority ?? "medium"),
           category: "technical",
-          acceptance_criteria: reason ? [`${title} is done and verified`] : undefined,
         });
       });
       // Missing product requirements from alignment
       const missingReqs = asArray(alignment.missingProductRequirements);
-      missingReqs.slice(0, 4).forEach((raw) => {
+      missingReqs.forEach((raw) => {
         const m = asObj(raw);
         const title = str(m.title);
         if (!title) return;
         push({
-          title: truncate(`Product gap: ${title}`),
-          detail: str(m.description) || undefined,
+          title: truncate(`[PRODUCT GAP] ${title}`),
+          detail: appendAC(str(m.description) || "", [`Product requirement "${title}" is implemented`]),
           priority: "high",
           category: "development",
         });
       });
-      // Critical issues as separate tasks
-      asArray(data.critical_issues).slice(0, 3).forEach((c) => {
+      // Risky implementation choices from alignment
+      const riskyChoices = asArray(alignment.riskyImplementationChoices);
+      riskyChoices.forEach((raw) => {
+        const r = asObj(raw);
+        const title = str(r.title);
+        if (!title) return;
+        push({
+          title: truncate(`[RISK] Address: ${title}`),
+          detail: appendAC(str(r.description) || "", [`Risk "${title}" is mitigated`]),
+          priority: "medium",
+          category: "technical",
+        });
+      });
+      // Critical issues
+      asArray(data.critical_issues).forEach((c) => {
         const title = str(c);
-        if (title) push({ title: truncate(`CRITICAL: ${title}`), priority: "high", category: "technical" });
+        if (title) push({ title: truncate(`[CRITICAL] ${title}`), priority: "high", category: "technical", detail: appendAC("", [`${title} is resolved`]) });
       });
-      asArray(data.next_actions).slice(0, 3).forEach((a) => {
-        const title = str(a);
-        if (title) push({ title: truncate(title), priority: "high", category: "technical" });
-      });
+      // Next actions — only when no more specific tasks exist
+      if (drafts.length < 3) {
+        asArray(data.next_actions).slice(0, 3).forEach((a) => {
+          const title = str(a);
+          if (title) push({ title: truncate(title), priority: "medium", category: "technical" });
+        });
+      }
       break;
     }
 

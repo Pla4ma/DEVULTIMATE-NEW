@@ -8,54 +8,82 @@ export function reportToMarkdown(report: {
 }): string {
   const lines: string[] = [];
   lines.push(`# ${report.title}`);
-  lines.push(`**Tool:** ${report.tool} | **Date:** ${new Date(report.created_at).toLocaleDateString()}`);
-  if (report.score != null) lines.push(`**Score:** ${report.score}/100`);
-  if (report.summary) lines.push(`\n> ${report.summary}`);
   lines.push("");
+  lines.push(`> **Tool:** ${report.tool} | **Date:** ${new Date(report.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`);
+  if (report.score != null) lines.push(`> **Score:** ${report.score}/100`);
+  lines.push("");
+
+  if (report.summary) {
+    lines.push("## Summary");
+    lines.push(`> ${report.summary}`);
+    lines.push("");
+  }
 
   const p = report.payload as Record<string, unknown> | null;
   if (!p) return lines.join("\n");
   const data = p.data as Record<string, unknown> | null;
   const output = p.output as string | null;
-  if (data) lines.push(objToMarkdown(data));
-  else if (output) lines.push(output);
-  else if (report.summary) lines.push(report.summary);
-  else lines.push("This report's structured data was not available in a formatted export. Please view the report on the Noctra platform for the full output.");
+  if (data) {
+    lines.push(objToMarkdown(data));
+  } else if (output) {
+    lines.push(output);
+  }
+
+  lines.push("---");
+  lines.push("");
+  lines.push(`*Exported from Noctra on ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}*`);
 
   return lines.join("\n");
 }
 
-function objToMarkdown(obj: Record<string, unknown>): string {
+function objToMarkdown(obj: Record<string, unknown>, depth = 0): string {
   const lines: string[] = [];
+  const prefix = depth > 0 ? "  " : "";
+
   for (const [key, value] of Object.entries(obj)) {
     const sectionName = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     if (value === null || value === undefined) continue;
+
     if (Array.isArray(value)) {
-      lines.push(`\n## ${sectionName}`);
+      if (value.length === 0) continue;
+      const header = depth === 0 ? `\n## ${sectionName}` : `\n### ${sectionName}`;
+      lines.push(header);
       for (const item of value) {
-        if (typeof item === "string") lines.push(`- ${item}`);
-        else if (typeof item === "object" && item !== null) {
+        if (typeof item === "string") {
+          lines.push(`${prefix}- ${item}`);
+        } else if (typeof item === "object" && item !== null) {
           const o = item as Record<string, unknown>;
-          const head = String(o.title ?? o.name ?? o.issue ?? o.feature ?? o.assumption ?? "");
-          if (head) lines.push(`\n### ${head}`);
+          const head = String(o.title ?? o.name ?? o.issue ?? o.feature ?? o.assumption ?? o.label ?? "");
+          if (head) lines.push(`\n${prefix}### ${head}`);
           for (const [k, v] of Object.entries(o)) {
             if (k === "title" || k === "name") continue;
             if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
-              lines.push(`- **${k.replace(/_/g, " ")}**: ${v}`);
-            } else if (Array.isArray(v)) {
-              lines.push(`- **${k.replace(/_/g, " ")}**: ${v.join(", ")}`);
+              const label = k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+              lines.push(`${prefix}- **${label}**: ${v}`);
+            } else if (Array.isArray(v) && v.length > 0) {
+              const label = k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+              lines.push(`${prefix}- **${label}**: ${v.join(", ")}`);
             }
           }
         }
       }
     } else if (typeof value === "object") {
-      lines.push(`\n## ${sectionName}`);
+      const entries = Object.entries(value as Record<string, unknown>).filter(([, v]) => v != null);
+      if (entries.length === 0) continue;
+      const header = depth === 0 ? `\n## ${sectionName}` : `\n### ${sectionName}`;
+      lines.push(header);
       for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-        if (Array.isArray(v)) lines.push(`**${k.replace(/_/g, " ")}:** ${v.join(", ")}`);
-        else if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") lines.push(`- **${k.replace(/_/g, " ")}**: ${v}`);
+        if (v == null) continue;
+        const label = k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        if (Array.isArray(v)) {
+          lines.push(`${prefix}- **${label}**: ${v.join(", ")}`);
+        } else if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+          lines.push(`${prefix}- **${label}**: ${v}`);
+        }
       }
     } else {
-      lines.push(`\n## ${sectionName}\n${value}`);
+      lines.push(`\n## ${sectionName}`);
+      lines.push(`${value}`);
     }
   }
   return lines.join("\n");
@@ -69,19 +97,21 @@ export function reportToSummary(report: {
   created_at: string;
   payload?: unknown;
 }): string {
-  const lines = [
-    `${report.title} (${report.tool})`,
-    `Date: ${new Date(report.created_at).toLocaleDateString()}`,
-  ];
-  if (report.score != null) lines.push(`Score: ${report.score}/100`);
-  if (report.summary) lines.push(`Summary: ${report.summary}`);
+  const lines: string[] = [];
+  lines.push(`# ${report.title}`);
+  lines.push(`**Tool:** ${report.tool} | **Date:** ${new Date(report.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`);
+  if (report.score != null) lines.push(`**Score:** ${report.score}/100`);
+  if (report.summary) lines.push(`**Summary:** ${report.summary}`);
   const p = report.payload as Record<string, unknown> | null;
   const data = p?.data as Record<string, unknown> | null;
-  if (data?.verdict) lines.push(`Verdict: ${data.verdict}`);
+  if (data?.verdict) lines.push(`**Verdict:** ${data.verdict}`);
   if (data?.next_actions && Array.isArray(data.next_actions)) {
-    lines.push("\nNext Actions:");
-    (data.next_actions as string[]).slice(0, 5).forEach((a) => lines.push(`- ${a}`));
+    lines.push("");
+    lines.push("**Next Actions:**");
+    (data.next_actions as string[]).slice(0, 5).forEach((a) => lines.push(`1. ${a}`));
   }
+  if (data?.top_blocker) lines.push(`**Top Blocker:** ${data.top_blocker}`);
+  if (data?.launch_readiness) lines.push(`**Launch Readiness:** ${data.launch_readiness}`);
   return lines.join("\n");
 }
 

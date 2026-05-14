@@ -70,7 +70,7 @@ export default function ReportsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Reports</h1>
-            <p className="text-sm mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{reports.length} report{reports.length !== 1 ? "s" : ""}</p>
+            <p className="text-sm mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>All generated reports ({reports.length})</p>
           </div>
         </div>
 
@@ -108,12 +108,25 @@ export default function ReportsPage() {
           <div className="flex items-center justify-center py-16">
             <Loader2 size={22} className="animate-spin" style={{ color: "var(--noctra-cyan)" }} />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : filtered.length === 0 ? (reports.length === 0 ? (
+          <div className="space-y-4">
+            <EmptyState
+              icon={<FileText size={24} />}
+              title="No reports yet"
+              body="Run an intelligence tool to generate your first analysis report."
+            />
+            <div className="flex justify-center gap-3">
+              <NoctraButton onClick={() => navigate("/app/idea")}>Run Idea Checker</NoctraButton>
+              <NoctraButton variant="ghost" onClick={() => navigate("/app/doctor")}>Run Project Doctor</NoctraButton>
+            </div>
+          </div>
+        ) : (
           <EmptyState
             icon={<FileText size={24} />}
             title={search || toolFilter !== "all" ? "No reports match your filter" : "No reports yet"}
             body="Run any intelligence tool and save the report to see it here."
           />
+        )
         ) : (
           <div className="space-y-2">
             {filtered.map((report) => {

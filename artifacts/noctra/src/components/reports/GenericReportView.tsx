@@ -40,15 +40,49 @@ export function GenericReportView({ report }: Props) {
                 return (
                   <div key={key}>
                     <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>{label}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {value.map((item, i) => (
-                        <Badge key={i} variant="muted">{typeof item === "string" ? item : JSON.stringify(item)}</Badge>
+                    <div className="space-y-1">
+                      {value.map((item, i) => {
+                        if (typeof item === "string") {
+                          return <p key={i} className="text-xs flex gap-2" style={{ color: "var(--noctra-text-soft)" }}><span className="text-xs font-mono shrink-0" style={{ color: "var(--noctra-text-muted)" }}>•</span>{item}</p>;
+                        }
+                        if (typeof item === "object" && item !== null) {
+                          const obj = item as Record<string, unknown>;
+                          const head = String(obj.title ?? obj.name ?? obj.issue ?? obj.feature ?? obj.assumption ?? obj.label ?? "");
+                          return (
+                            <div key={i} className="rounded-lg p-2" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+                              {head && <p className="text-xs font-medium mb-1" style={{ color: "var(--noctra-text)" }}>{head}</p>}
+                              {Object.entries(obj).map(([k, v]) => {
+                                if (k === "title" || k === "name" || k === "issue" || k === "feature" || k === "assumption" || k === "label") return null;
+                                if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+                                  return <p key={k} className="text-[10px]" style={{ color: "var(--noctra-text-muted)" }}><span className="font-medium capitalize">{k.replace(/_/g, " ")}:</span> {String(v)}</p>;
+                                }
+                                return null;
+                              })}
+                            </div>
+                          );
+                        }
+                        return <p key={i} className="text-xs" style={{ color: "var(--noctra-text-soft)" }}>{String(item)}</p>;
+                      })}
+                    </div>
+                  </div>
+                );
+              }
+              if (typeof value === "object" && value !== null) {
+                const entries = Object.entries(value as Record<string, unknown>).filter(([, v]) => v != null);
+                if (entries.length === 0) return null;
+                return (
+                  <div key={key}>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-text-muted)" }}>{label}</p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                      {entries.map(([k, v]) => (
+                        <span key={k} className="text-xs" style={{ color: "var(--noctra-text-soft)" }}>
+                          <span className="font-medium capitalize" style={{ color: "var(--noctra-text-muted)" }}>{k.replace(/_/g, " ")}:</span> {typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? String(v) : typeof v === "object" ? "[Structured]" : String(v)}
+                        </span>
                       ))}
                     </div>
                   </div>
                 );
               }
-              if (typeof value === "object" && value !== null) return null;
               return (
                 <div key={key} className="flex gap-2">
                   <span className="text-xs font-medium w-32 shrink-0" style={{ color: "var(--noctra-text-muted)" }}>{label}</span>

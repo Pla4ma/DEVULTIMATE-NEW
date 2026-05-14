@@ -1,5 +1,5 @@
 import { ScoreRing, Badge, Panel, EmptyState, ProgressBar } from "@/components/Primitives";
-import { FlaskConical, Clock, Target, AlertTriangle, CheckCircle2, Circle } from "lucide-react";
+import { FlaskConical, Clock, Target, AlertTriangle, CheckCircle2, Circle, ListChecks, Lightbulb } from "lucide-react";
 
 type Experiment = {
   title: string;
@@ -157,6 +157,27 @@ export function ProofReportView({ report }: Props) {
             })}
           </div>
         </div>
+      )}
+
+      {/* Proof Signals */}
+      {data.proof_signals && data.proof_signals.length > 0 && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-emerald)" }}>
+            <Lightbulb size={11} className="inline mr-1" />Proof Signals
+          </p>
+          <div className="space-y-2">
+            {data.proof_signals.map((s, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "var(--noctra-emerald)" }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>{s.label}</p>
+                  {s.source && <p className="text-[10px] mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>Source: {s.source}</p>}
+                </div>
+                <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "rgba(52,211,153,0.1)", color: "var(--noctra-emerald)" }}>{s.kind}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
       )}
 
       {data.evidence_gaps && data.evidence_gaps.length > 0 && (

@@ -1,10 +1,9 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
-import { ScoreRing, Panel, Badge, EmptyState, ProgressBar } from "@/components/Primitives";
+import { Panel, Badge, EmptyState, ProgressBar } from "@/components/Primitives";
 import { getDashboardData, getReports, getProofSignals, getTasks, getProjects, createTask, saveTasks } from "@/lib/repository";
 import { TOOL_BY_KEY, TOOLS } from "@/lib/noctra-tools";
-import { callInsightSweep } from "@/lib/ai";
 import { computeNextAction, computePipeline } from "@/lib/next-action";
 import { extractRisks, RISK_SEV_COLOR } from "@/lib/risk-radar";
 import { buildTimeline, formatTimeAgo, TIMELINE_TYPE_COLOR } from "@/lib/timeline";
@@ -13,7 +12,6 @@ import {
   extractScoreTrends,
   computeToolCoverage,
   generateInsightBrief,
-  buildInsightSweepInput,
   type ScoreTrend,
   type ToolCoverage,
   type InsightBrief,
@@ -28,9 +26,9 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, ArrowRight, FileText, CheckSquare, FolderOpen,
   Zap, AlertTriangle, TrendingUp, TrendingDown, Minus,
-  Brain, ChevronRight, Sparkles, Shield, ShieldOff, Clock,
-  Sun, Target, Map, Terminal, Copy, Download, Plus,
-  XCircle, CheckCircle, Info,
+  Brain, ShieldOff, Clock,
+  Target, Map, Terminal, Copy, Download, Plus,
+  XCircle, CheckCircle, Info, Stethoscope, Lightbulb, Upload,
 } from "lucide-react";
 
 type DashData = Awaited<ReturnType<typeof getDashboardData>>;
@@ -93,11 +91,6 @@ export default function DashboardPage() {
   const [allProjects, setAllProjects] = useState<{ id: string; name: string; stage?: string | null; updated_at?: string }[]>([]);
   const [allTasks, setAllTasks] = useState<{ id: string; status: string; priority: string; title?: string; category?: string | null; created_at?: string; updated_at?: string }[]>([]);
 
-  // Insight sweep — AI synthesis of all reports
-  const [sweeping, setSweeping] = useState(false);
-  const [sweep, setSweep] = useState<Record<string, unknown> | null>(null);
-  const [sweepError, setSweepError] = useState("");
-
   const runIntelligence = useCallback((
     reps: ReportSummary[],
     taskList: typeof allTasks,
@@ -150,21 +143,6 @@ export default function DashboardPage() {
       })
       .finally(() => setLoading(false));
   }, [runIntelligence]);
-
-  async function runInsightSweep() {
-    if (reports.length === 0) return;
-    setSweeping(true);
-    setSweepError("");
-    try {
-      const input = buildInsightSweepInput(reports);
-      const result = await callInsightSweep(input);
-      setSweep(result.data);
-    } catch (err) {
-      setSweepError(err instanceof Error ? err.message : "Sweep failed");
-    } finally {
-      setSweeping(false);
-    }
-  }
 
   async function createRoadmapTasks() {
     if (!roadmap) return;
@@ -293,65 +271,10 @@ export default function DashboardPage() {
       return { title: "Run Launch Control", description: "You're close to shipping — check launch readiness.", reason: "Go/no-go decision before launch", estimatedTime: "15 min", href: "/app/launch", sourceType: "launch" };
     }
     if (reports.length === 0) {
-      return { title: "Run Idea Checker", description: "Start by describing your product idea.", reason: "First step to building your intelligence stack", estimatedTime: "5 min", href: "/app/idea", sourceType: "onboarding" };
+      return { title: "Run Idea Checker", description: "Start by describing your product idea.", reason: "First step to building your execution plan", estimatedTime: "5 min", href: "/app/idea", sourceType: "onboarding" };
     }
     return { title: "Review your command center", description: "All major milestones reached. Review insights and plan next moves.", reason: "Maintain momentum", estimatedTime: "10 min", href: "/app/reports", sourceType: "review" };
   }, [allTasks, reports, proofSignals]);
-
-  // ── Continue Where You Left Off ──────────────────────────────────────────
-  type ContinueAction = { title: string; description: string; reason: string; href: string; sourceType: string } | null;
-
-  const continueAction = useMemo((): ContinueAction => {
-    const hasMvp = reports.some((r) => r.tool === "mvp");
-    const hasDoctor = reports.some((r) => r.tool === "doctor");
-    const hasProofReport = reports.some((r) => r.tool === "proof");
-    const proofSignalCount = proofSignals.length;
-    const mvpTasks = allTasks.filter((t) => t.category === "mvp");
-    const doctorTasks = allTasks.filter((t) => t.category === "doctor");
-
-    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const completedThisWeek = allTasks.filter((t) => t.status === "completed" && new Date(t.updated_at ?? t.created_at ?? 0).getTime() > oneWeekAgo);
-
-    if (hasMvp && mvpTasks.length === 0) {
-      const mvpReport = [...reports].reverse().find((r) => r.tool === "mvp");
-      return { title: "MVP tasks not yet created", description: "You generated an MVP plan but have not created tasks yet.", reason: "Break the plan into execution steps", href: mvpReport ? `/app/reports/${mvpReport.id}` : "/app/reports", sourceType: "mvp" };
-    }
-    if (hasDoctor && doctorTasks.length === 0) {
-      const doctorReport = [...reports].reverse().find((r) => r.tool === "doctor");
-      return { title: "Doctor red gates not addressed", description: "Project Doctor found issues. Create fix tasks.", reason: "Resolve launch blockers", href: doctorReport ? `/app/reports/${doctorReport.id}` : "/app/doctor", sourceType: "doctor" };
-    }
-    if (proofSignalCount > 0 && !hasProofReport) {
-      return { title: "Proof signals not analyzed", description: `You have ${proofSignalCount} proof signal${proofSignalCount !== 1 ? "s" : ""} but no proof analysis report.`, reason: "Turn signals into validation evidence", href: "/app/proof", sourceType: "proof" };
-    }
-    if (allTasks.length > 0 && completedThisWeek.length === 0) {
-      return { title: "No tasks completed this week", description: "You created tasks but have not completed any this week.", reason: "Build execution momentum", href: "/app/tasks", sourceType: "task" };
-    }
-    if (reports.length > 0) {
-      const last = reports[reports.length - 1];
-      return { title: `Continue from ${last.tool}`, description: `Your latest report was "${last.title}". Review and take next action.`, reason: "Pick up where you left off", href: `/app/reports/${last.id}`, sourceType: "report" };
-    }
-    return null;
-  }, [reports, allTasks, proofSignals]);
-
-  // ── Weekly Momentum Summary ──────────────────────────────────────────────
-  const weeklySummary = useMemo(() => {
-    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const thisWeekReports = reports.filter((r) => new Date(r.created_at).getTime() > oneWeekAgo);
-    const thisWeekTasks = allTasks.filter((t) => new Date(t.created_at ?? 0).getTime() > oneWeekAgo);
-    const completedThisWeek = allTasks.filter((t) => t.status === "completed" && new Date(t.updated_at ?? t.created_at ?? 0).getTime() > oneWeekAgo);
-    const thisWeekSignals = proofSignals.filter((s) => new Date(s.created_at ?? 0).getTime() > oneWeekAgo);
-    const tasksTodo = allTasks.filter((t) => t.status === "todo").length;
-    const doctorReports = reports.filter((r) => r.tool === "doctor");
-    const lastDoctor = doctorReports[doctorReports.length - 1];
-    const redGates = lastDoctor?.payload ? ((lastDoctor.payload as Record<string, unknown>)?.data as Record<string, unknown>)?.red_gates as string[] ?? [] : [];
-    return {
-      tasksCompleted: completedThisWeek.length,
-      reportsGenerated: thisWeekReports.length,
-      signalsAdded: thisWeekSignals.length,
-      scansRun: thisWeekReports.filter((r) => r.tool === "doctor").length,
-      biggestBlocker: redGates.length > 0 ? `${redGates.length} red gate${redGates.length !== 1 ? "s" : ""} in Doctor report` : tasksTodo > 0 ? `${tasksTodo} open task${tasksTodo !== 1 ? "s" : ""} remaining` : "No blockers identified",
-    };
-  }, [reports, allTasks, proofSignals]);
 
   const recentTimeline = useMemo(() => buildTimeline({
     reports: reports as Array<{ id: string; tool: string; title: string; score?: number | null; summary?: string | null; created_at: string }>,
@@ -363,20 +286,6 @@ export default function DashboardPage() {
     reports as Array<{ id: string; tool: string; score?: number | null; created_at: string }>
   ), [reports]);
 
-  type SweepContradiction = { description: string; severity: string; resolution: string };
-  type SweepPattern = { pattern: string; implication: string };
-
-  const sweepData = sweep as Record<string, unknown> | null;
-  const sweepContradictions: SweepContradiction[] = Array.isArray(sweepData?.contradictions)
-    ? (sweepData!.contradictions as SweepContradiction[])
-    : [];
-  const sweepPatterns: SweepPattern[] = Array.isArray(sweepData?.patterns)
-    ? (sweepData!.patterns as SweepPattern[])
-    : [];
-  const sweepPriorities: string[] = Array.isArray(sweepData?.next_priorities)
-    ? (sweepData!.next_priorities as string[])
-    : [];
-
   const activeRoadmapItems = activeRoadmapTab === "now" ? (roadmap?.now ?? []) : activeRoadmapTab === "next" ? (roadmap?.next ?? []) : (roadmap?.later ?? []);
 
   return (
@@ -385,14 +294,10 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: "var(--noctra-text)" }}>Command Center</h1>
+            <h1 className="text-2xl font-bold" style={{ color: "var(--noctra-text)" }}>Dashboard</h1>
             <p className="text-sm mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
-              Founder intelligence hub
+              Your execution plan
             </p>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs" style={{ background: "rgba(61,216,255,0.08)", border: "1px solid rgba(61,216,255,0.2)", color: "var(--noctra-cyan)" }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-            Live
           </div>
         </div>
 
@@ -401,29 +306,95 @@ export default function DashboardPage() {
             <Loader2 size={24} className="animate-spin" style={{ color: "var(--noctra-cyan)" }} />
           </div>
         ) : (data?.reports.length ?? 0) === 0 ? (
-          <Panel>
-            <EmptyState
-              icon={<Zap size={24} />}
-              title="No intelligence yet"
-              body="Run your first tool to start building your founder intelligence stack. Start with Idea Checker — it takes 2 minutes and unlocks the full analysis pipeline."
-            />
-            <div className="flex flex-col sm:flex-row justify-center gap-2 mt-4">
+          <div className="space-y-8">
+            {/* Promise */}
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4" style={{ background: "var(--noctra-cyan)", boxShadow: "0 0 20px var(--noctra-cyan-glow)" }}>
+                <Zap size={20} className="text-black" />
+              </div>
+              <h2 className="text-xl font-bold mb-2" style={{ color: "var(--noctra-text)" }}>
+                Turn your idea and codebase into a launch-ready execution plan.
+              </h2>
+              <p className="text-sm max-w-lg mx-auto" style={{ color: "var(--noctra-text-muted)" }}>
+                Validate the idea, diagnose the repo, generate fix tasks, and get the exact build prompt to ship.
+              </p>
+            </div>
+
+            {/* Three starting paths */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button
                 onClick={() => navigate("/app/idea")}
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
-                style={{ background: "var(--noctra-cyan)", color: "#000" }}
+                className="rounded-xl border p-5 text-left transition-all hover:opacity-90 group"
+                style={{ background: "var(--noctra-surface)", borderColor: "var(--noctra-border)" }}
               >
-                Start with Idea Checker <ArrowRight size={14} />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: "rgba(149,117,255,0.12)" }}>
+                  <Lightbulb size={18} style={{ color: "var(--noctra-violet)" }} />
+                </div>
+                <p className="text-sm font-semibold mb-1" style={{ color: "var(--noctra-text)" }}>Start with an idea</p>
+                <p className="text-xs mb-3" style={{ color: "var(--noctra-text-muted)" }}>
+                  Paste your idea. Get a signal score, top risks, and a verdict. Know what to validate next.
+                </p>
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg" style={{ background: "var(--noctra-cyan)", color: "#000" }}>
+                  Check My Idea <ArrowRight size={11} />
+                </span>
               </button>
+
               <button
-                onClick={() => navigate("/app/twin")}
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm"
-                style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-muted)" }}
+                onClick={() => navigate("/app/doctor")}
+                className="rounded-xl border p-5 text-left transition-all hover:opacity-90 group relative"
+                style={{ background: "var(--noctra-surface)", borderColor: "var(--noctra-border)" }}
               >
-                <Brain size={14} /> Ask Product Twin first
+                <div className="absolute top-3 right-3 text-[10px] px-2 py-0.5 rounded font-semibold uppercase" style={{ background: "rgba(244,63,94,0.12)", color: "var(--noctra-rose)", letterSpacing: "0.05em" }}>
+                  Flagship
+                </div>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: "rgba(244,63,94,0.12)" }}>
+                  <Upload size={18} style={{ color: "var(--noctra-rose)" }} />
+                </div>
+                <p className="text-sm font-semibold mb-1" style={{ color: "var(--noctra-text)" }}>Start with a codebase</p>
+                <p className="text-xs mb-3" style={{ color: "var(--noctra-text-muted)" }}>
+                  Upload your repo ZIP. Get launch readiness, red/yellow/green gates, fix tasks, and a build prompt.
+                </p>
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg" style={{ background: "var(--noctra-rose)", color: "#fff" }}>
+                  Upload Project ZIP <ArrowRight size={11} />
+                </span>
+              </button>
+
+              <button
+                onClick={() => navigate("/app/projects")}
+                className="rounded-xl border p-5 text-left transition-all hover:opacity-90 group"
+                style={{ background: "var(--noctra-surface)", borderColor: "var(--noctra-border)" }}
+              >
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ background: "rgba(52,211,153,0.12)" }}>
+                  <FolderOpen size={18} style={{ color: "var(--noctra-emerald)" }} />
+                </div>
+                <p className="text-sm font-semibold mb-1" style={{ color: "var(--noctra-text)" }}>Create a project</p>
+                <p className="text-xs mb-3" style={{ color: "var(--noctra-text-muted)" }}>
+                  Set up a project to organize reports, tasks, and your execution plan in one place.
+                </p>
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-soft)" }}>
+                  Create Project <ArrowRight size={11} />
+                </span>
               </button>
             </div>
-          </Panel>
+
+            {/* Output preview */}
+            <div className="rounded-xl border p-5" style={{ background: "var(--noctra-surface)", borderColor: "var(--noctra-border)", borderStyle: "dashed" }}>
+              <p className="text-xs font-semibold mb-3" style={{ color: "var(--noctra-text-muted)" }}>What you'll get:</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: "Idea Score & Verdict", desc: "Signal strength, weak points, sharpest experiment" },
+                  { label: "Launch Readiness", desc: "Red/yellow/green gates, top blocker, fix tasks" },
+                  { label: "MVP Build Plan", desc: "Ruthless scope, milestones, architecture decisions" },
+                  { label: "Next Build Prompt", desc: "Copy-paste prompt for Cursor, Replit, or Windsurf" },
+                ].map(({ label, desc }) => (
+                  <div key={label} className="rounded-lg p-3" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+                    <p className="text-xs font-medium mb-0.5" style={{ color: "var(--noctra-text)" }}>{label}</p>
+                    <p className="text-[10px]" style={{ color: "var(--noctra-text-muted)" }}>{desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         ) : (
           <>
 
@@ -473,175 +444,99 @@ export default function DashboardPage() {
             </Panel>
 
             {/* ═══════════════════════════════════════════════
-               SECTION 2: ACTIVE PROJECT STATE
+               SECTION 2: PRODUCT STATE
             ═══════════════════════════════════════════════ */}
 
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { icon: FileText, label: "Reports", value: data?.reports.length ?? 0, route: "/app/reports", color: "var(--noctra-violet)" },
-                { icon: CheckSquare, label: "Tasks", value: data?.tasks.length ?? 0, route: "/app/tasks", color: "var(--noctra-emerald)" },
-                { icon: FolderOpen, label: "Projects", value: data?.projects.length ?? 0, route: "/app/projects", color: "var(--noctra-cyan)" },
-              ].map(({ icon: Icon, label, value, route, color }) => (
-                <Panel key={label}>
-                  <button onClick={() => navigate(route)} className="w-full text-left">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon size={14} style={{ color }} />
+            <Panel>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Map size={13} style={{ color: "var(--noctra-cyan)" }} />
+                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>
+                    Product State
+                  </p>
+                </div>
+                <span className="text-xs font-mono" style={{ color: pipelineProgress === 8 ? "var(--noctra-emerald)" : pipelineProgress >= 5 ? "var(--noctra-amber)" : "var(--noctra-text-muted)" }}>
+                  {pipelineProgress}/8
+                </span>
+              </div>
+              <div className="flex gap-1 items-center overflow-x-auto pb-3 mb-3 border-b" style={{ borderColor: "var(--noctra-border)" }}>
+                {pipeline.map((step, i) => (
+                  <div key={step.key} className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => navigate(step.href)}
+                      className="flex flex-col items-center gap-1 transition-opacity hover:opacity-90"
+                    >
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold"
+                        style={{
+                          background: step.done ? "rgba(52,211,153,0.15)" : step.active ? "rgba(61,216,255,0.12)" : "var(--noctra-surface2)",
+                          border: step.done ? "1px solid rgba(52,211,153,0.4)" : step.active ? "1px solid rgba(61,216,255,0.4)" : "1px solid var(--noctra-border)",
+                          color: step.done ? "var(--noctra-emerald)" : step.active ? "var(--noctra-cyan)" : "var(--noctra-text-muted)",
+                        }}
+                      >
+                        {step.done ? "\u2713" : i + 1}
+                      </div>
+                      <span className="text-[9px] font-medium" style={{ color: step.done ? "var(--noctra-emerald)" : step.active ? "var(--noctra-cyan)" : "var(--noctra-text-muted)" }}>
+                        {step.label}
+                      </span>
+                    </button>
+                    {i < pipeline.length - 1 ? (
+                      <div className="w-4 h-px shrink-0 mb-3" style={{ background: step.done ? "rgba(52,211,153,0.4)" : "var(--noctra-border)" }} />
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { icon: FileText, label: "Reports", value: data?.reports.length ?? 0, route: "/app/reports", color: "var(--noctra-violet)" },
+                  { icon: CheckSquare, label: "Tasks", value: data?.tasks.length ?? 0, route: "/app/tasks", color: "var(--noctra-emerald)" },
+                  { icon: FolderOpen, label: "Projects", value: data?.projects.length ?? 0, route: "/app/projects", color: "var(--noctra-cyan)" },
+                ].map(({ icon: Icon, label, value, route, color }) => (
+                  <button key={label} onClick={() => navigate(route)} className="text-left">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Icon size={13} style={{ color }} />
                       <span className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{label}</span>
                     </div>
-                    <p className="text-2xl font-bold" style={{ color }}>{value}</p>
+                    <p className="text-xl font-bold" style={{ color }}>{value}</p>
                   </button>
-                </Panel>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
-                <Panel>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Map size={13} style={{ color: "var(--noctra-cyan)" }} />
-                      <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>
-                        Founder Pipeline
-                      </p>
-                    </div>
-                    <span className="text-xs font-mono" style={{ color: pipelineProgress === 8 ? "var(--noctra-emerald)" : pipelineProgress >= 5 ? "var(--noctra-amber)" : "var(--noctra-text-muted)" }}>
-                      {pipelineProgress}/8
-                    </span>
-                  </div>
-                  <div className="flex gap-1 items-center overflow-x-auto pb-1">
-                    {pipeline.map((step, i) => (
-                      <div key={step.key} className="flex items-center gap-1 shrink-0">
-                        <button
-                          onClick={() => navigate(step.href)}
-                          className="flex flex-col items-center gap-1 transition-opacity hover:opacity-90"
-                        >
-                          <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold"
-                            style={{
-                              background: step.done ? "rgba(52,211,153,0.15)" : step.active ? "rgba(61,216,255,0.12)" : "var(--noctra-surface2)",
-                              border: step.done ? "1px solid rgba(52,211,153,0.4)" : step.active ? "1px solid rgba(61,216,255,0.4)" : "1px solid var(--noctra-border)",
-                              color: step.done ? "var(--noctra-emerald)" : step.active ? "var(--noctra-cyan)" : "var(--noctra-text-muted)",
-                            }}
-                          >
-                            {step.done ? "\u2713" : i + 1}
-                          </div>
-                          <span className="text-[9px] font-medium" style={{ color: step.done ? "var(--noctra-emerald)" : step.active ? "var(--noctra-cyan)" : "var(--noctra-text-muted)" }}>
-                            {step.label}
-                          </span>
-                        </button>
-                        {i < pipeline.length - 1 ? (
-                          <div className="w-4 h-px shrink-0 mb-3" style={{ background: step.done ? "rgba(52,211,153,0.4)" : "var(--noctra-border)" }} />
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                </Panel>
+                ))}
               </div>
-
-              {scoreEntries.length > 0 && (
-                <Panel>
-                  <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Scores</p>
-                  <div className="flex flex-wrap gap-4 justify-center">
-                    {scoreEntries.slice(0, 4).map(([tool, score]) => {
-                      const t = TOOL_BY_KEY[tool as keyof typeof TOOL_BY_KEY];
-                      return (
-                        <div key={tool} className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => t && navigate(t.route)}>
-                          <ScoreRing value={score as number} size={60} stroke={5} label={t?.short ?? tool} color={t?.accent ?? "var(--noctra-cyan)"} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </Panel>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Panel>
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle size={12} style={{ color: weeklySummary.biggestBlocker.includes("No blockers") ? "var(--noctra-emerald)" : "var(--noctra-amber)" }} />
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Blockers</p>
-                </div>
-                <p className="text-sm" style={{ color: "var(--noctra-text-soft)" }}>{weeklySummary.biggestBlocker}</p>
-              </Panel>
-
-              <Panel>
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp size={12} style={{ color: "var(--noctra-violet)" }} />
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Quick Stats</p>
-                </div>
-                <div className="flex gap-4">
-                  <div className="text-center">
-                    <p className="text-lg font-bold font-mono" style={{ color: "var(--noctra-violet)" }}>{data?.reports.length ?? 0}</p>
-                    <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Reports</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-lg font-bold font-mono" style={{ color: "var(--noctra-emerald)" }}>{data?.tasks.length ?? 0}</p>
-                    <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Tasks</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-lg font-bold font-mono" style={{ color: "var(--noctra-cyan)" }}>{proofSignals.length}</p>
-                    <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Proof</p>
-                  </div>
-                </div>
-              </Panel>
-            </div>
+            </Panel>
 
             {/* ═══════════════════════════════════════════════
-               SECTION 3: RISKS & CONTRADICTIONS
+               SECTION 3: RISKS & BLOCKERS
             ═══════════════════════════════════════════════ */}
 
-            {insightBrief && (
-              <div
-                className="rounded-xl px-4 py-4 flex flex-col gap-3"
-                style={{
-                  background: `${statusColor}08`,
-                  border: `1px solid ${statusColor}25`,
-                }}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <Shield size={16} style={{ color: statusColor, flexShrink: 0, marginTop: 2 }} />
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold leading-snug" style={{ color: "var(--noctra-text)" }}>
-                        {insightBrief.headline}
-                      </p>
-                      <p className="text-xs mt-1.5" style={{ color: "var(--noctra-text-muted)" }}>
-                        → {insightBrief.immediateAction}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge style={{
-                    background: `${statusColor}18`,
-                    color: statusColor,
-                    flexShrink: 0,
-                    fontSize: "10px",
-                    fontWeight: 600,
-                  }}>
-                    {STATUS_LABELS[insightBrief.status]}
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="px-3 py-2 rounded-lg" style={{ background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.15)" }}>
-                    <p className="text-xs font-medium mb-0.5" style={{ color: "var(--noctra-rose)" }}>Top Risk</p>
-                    <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{insightBrief.topRisk}</p>
-                  </div>
-                  <div className="px-3 py-2 rounded-lg" style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.15)" }}>
-                    <p className="text-xs font-medium mb-0.5" style={{ color: "var(--noctra-emerald)" }}>Top Opportunity</p>
-                    <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{insightBrief.topOpportunity}</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {(() => {
+              const doctorReports = reports.filter((r) => r.tool === "doctor");
+              const lastDoctor = doctorReports[doctorReports.length - 1];
+              const redGates: string[] = [];
+              if (lastDoctor?.payload) {
+                const p = lastDoctor.payload as Record<string, unknown>;
+                const data = (p.data ?? p) as Record<string, unknown>;
+                const gates = (data.gates ?? data.launch_gates ?? []) as Array<{ name: string; status: string }>;
+                const gateRed = gates.filter(g => g.status === "RED").map(g => g.name);
+                const redStrings = (data.red_gates ?? []) as string[];
+                redGates.push(...gateRed, ...redStrings.filter(s => typeof s === "string"));
+              }
+              const hasDoctor = doctorReports.length > 0;
+              const showFailedGates = redGates.length > 0;
+              const showNoDoctor = !hasDoctor && reports.length >= 2;
+              const showRisks = radarRisks.length > 0;
+              const showContradictions = contradictions.length > 0;
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {radarRisks.length > 0 && (
+              if (!showFailedGates && !showRisks && !showContradictions && !showNoDoctor) return null;
+
+              return (
                 <Panel>
                   <div className="flex items-center gap-2 mb-3">
                     <ShieldOff size={13} style={{ color: "var(--noctra-amber)" }} />
-                    <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-amber)" }}>Risk Radar</p>
-                    <span className="ml-auto text-xs font-mono" style={{ color: "var(--noctra-text-muted)" }}>top 3</span>
+                    <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-amber)" }}>
+                      Risks & Blockers
+                    </p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
+                    {/* Top risks */}
                     {radarRisks.slice(0, 3).map((risk) => (
                       <div key={risk.id} className="flex items-start gap-3 px-3 py-2 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
                         <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: RISK_SEV_COLOR[risk.severity] }} />
@@ -654,105 +549,91 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     ))}
-                  </div>
-                </Panel>
-              )}
 
-              {contradictions.length > 0 && (
-                <Panel>
-                  <div className="flex items-center gap-2 mb-3">
-                    <AlertTriangle size={14} style={{ color: "var(--noctra-rose)" }} />
-                    <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-rose)" }}>
-                      Contradictions
-                    </p>
-                    {alignmentScore !== null && (
-                      <span className="ml-auto text-xs font-mono" style={{ color: alignmentScore >= 70 ? "var(--noctra-emerald)" : alignmentScore >= 50 ? "var(--noctra-amber)" : "var(--noctra-rose)" }}>
-                        {alignmentScore}/100
-                      </span>
+                    {/* Failed gates */}
+                    {redGates.length > 0 && (
+                      <div className="px-3 py-2 rounded-lg" style={{ background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.2)" }}>
+                        <div className="flex items-center gap-2">
+                          <XCircle size={12} style={{ color: "var(--noctra-rose)" }} />
+                          <p className="text-xs font-semibold" style={{ color: "var(--noctra-rose)" }}>
+                            {redGates.length} Failed Gate{redGates.length !== 1 ? "s" : ""}
+                          </p>
+                          <button onClick={() => navigate("/app/doctor")} className="ml-auto text-xs px-2 py-1 rounded" style={{ background: "rgba(244,63,94,0.1)", color: "var(--noctra-rose)" }}>
+                            View
+                          </button>
+                        </div>
+                      </div>
                     )}
-                  </div>
-                  <div className="space-y-2">
-                    {contradictions.slice(0, 2).map((c) => (
+
+                    {/* No Doctor scan recommendation */}
+                    {showNoDoctor && (
                       <div
-                        key={c.id}
+                        className="px-3 py-2.5 rounded-lg flex items-start gap-3"
+                        style={{ background: "rgba(61,216,255,0.06)", border: "1px solid rgba(61,216,255,0.2)" }}
+                      >
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(244,63,94,0.12)" }}>
+                          <Stethoscope size={13} style={{ color: "var(--noctra-rose)" }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold" style={{ color: "var(--noctra-cyan)" }}>Project Doctor not run yet</p>
+                          <p className="text-xs mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
+                            Upload your repo ZIP to diagnose launch blockers, code risks, and generate a fix queue + build prompt.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => navigate("/app/doctor")}
+                          className="shrink-0 text-xs px-2 py-1 rounded font-medium"
+                          style={{ background: "var(--noctra-cyan)", color: "#000" }}
+                        >
+                          Run Scan
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Top contradiction */}
+                    {contradictions.length > 0 && (
+                      <div
                         className="px-3 py-2.5 rounded-lg"
                         style={{
-                          background: c.severity === "critical" || c.severity === "high" ? "rgba(244,63,94,0.06)" : "rgba(245,158,11,0.06)",
-                          border: `1px solid ${c.severity === "critical" || c.severity === "high" ? "rgba(244,63,94,0.2)" : "rgba(245,158,11,0.2)"}`,
+                          background: contradictions[0].severity === "critical" || contradictions[0].severity === "high" ? "rgba(244,63,94,0.06)" : "rgba(245,158,11,0.06)",
+                          border: `1px solid ${contradictions[0].severity === "critical" || contradictions[0].severity === "high" ? "rgba(244,63,94,0.2)" : "rgba(245,158,11,0.2)"}`,
                         }}
                       >
                         <div className="flex items-start gap-2 justify-between">
                           <div className="flex items-start gap-2 min-w-0">
                             <Badge style={{
-                              background: c.severity === "critical" ? "rgba(244,63,94,0.2)" : c.severity === "high" ? "rgba(244,63,94,0.15)" : "rgba(245,158,11,0.15)",
-                              color: c.severity === "critical" || c.severity === "high" ? "var(--noctra-rose)" : "var(--noctra-amber)",
+                              background: contradictions[0].severity === "critical" ? "rgba(244,63,94,0.2)" : contradictions[0].severity === "high" ? "rgba(244,63,94,0.15)" : "rgba(245,158,11,0.15)",
+                              color: contradictions[0].severity === "critical" || contradictions[0].severity === "high" ? "var(--noctra-rose)" : "var(--noctra-amber)",
                               fontSize: "10px",
                               flexShrink: 0,
-                            }}>{c.severity}</Badge>
-                            <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>{c.title}</p>
+                            }}>{contradictions[0].severity}</Badge>
+                            <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>{contradictions[0].title}</p>
                           </div>
                           <button
-                            onClick={() => createContradictionTask(c)}
+                            onClick={() => createContradictionTask(contradictions[0])}
                             className="shrink-0 text-[10px] px-2 py-0.5 rounded"
                             style={{ background: "var(--noctra-surface2)", color: "var(--noctra-text-muted)", border: "1px solid var(--noctra-border)" }}
                           >
                             + Task
                           </button>
                         </div>
-                        <p className="text-xs mt-1.5" style={{ color: "var(--noctra-text-muted)" }}>{c.explanation}</p>
-                        <div className="flex items-start gap-1.5 mt-2">
-                          <ChevronRight size={11} style={{ color: "var(--noctra-emerald)", marginTop: 1, flexShrink: 0 }} />
-                          <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{c.recommendedResolution}</p>
-                        </div>
+                        <p className="text-xs mt-1.5" style={{ color: "var(--noctra-text-muted)" }}>{contradictions[0].explanation}</p>
                       </div>
-                    ))}
-                  </div>
-                </Panel>
-              )}
-            </div>
-
-            {(() => {
-              const doctorReports = reports.filter((r) => r.tool === "doctor");
-              const lastDoctor = doctorReports[doctorReports.length - 1];
-              const redGates: string[] = lastDoctor?.payload
-                ? ((lastDoctor.payload as Record<string, unknown>)?.data as Record<string, unknown>)?.red_gates as string[] ?? []
-                : [];
-              if (redGates.length === 0) return null;
-              return (
-                <Panel>
-                  <div className="flex items-center gap-2">
-                    <XCircle size={12} style={{ color: "var(--noctra-rose)" }} />
-                    <p className="text-xs font-semibold" style={{ color: "var(--noctra-rose)" }}>
-                      {redGates.length} Failed Gate{redGates.length !== 1 ? "s" : ""} in Project Doctor
-                    </p>
-                    <button
-                      onClick={() => navigate("/app/doctor")}
-                      className="ml-auto text-xs px-2 py-1 rounded"
-                      style={{ background: "rgba(244,63,94,0.1)", color: "var(--noctra-rose)" }}
-                    >
-                      View
-                    </button>
+                    )}
                   </div>
                 </Panel>
               );
             })()}
 
             {/* ═══════════════════════════════════════════════
-               SECTION 4: EXECUTION PLAN
+               SECTION 4: EXECUTION
             ═══════════════════════════════════════════════ */}
 
             <Panel>
               <div className="flex items-center gap-2 mb-3">
                 <Zap size={14} style={{ color: "var(--noctra-amber)" }} />
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-amber)" }}>Execution Plan</p>
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-amber)" }}>Execution</p>
               </div>
-
-              {roadmap?.recommendedSprint?.goal && (
-                <div className="px-3 py-2 rounded-lg mb-3" style={{ background: "rgba(149,117,255,0.06)", border: "1px solid rgba(149,117,255,0.15)" }}>
-                  <p className="text-xs font-medium" style={{ color: "var(--noctra-violet)" }}>Sprint Goal</p>
-                  <p className="text-xs mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{roadmap.recommendedSprint.goal}</p>
-                </div>
-              )}
 
               {roadmap && roadmap.now.length > 0 && (
                 <div className="space-y-2 mb-3">
@@ -780,16 +661,10 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {executionPkg && (
-                <div className="space-y-2 mb-3">
-                  <div className="px-3 py-2.5 rounded-lg" style={{ background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.15)" }}>
-                    <p className="text-xs font-semibold" style={{ color: "var(--noctra-text)" }}>{executionPkg.title}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{executionPkg.goal}</p>
-                  </div>
-                  <div className="flex items-start gap-2 px-3 py-2 rounded-lg" style={{ background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.12)" }}>
-                    <CheckCircle size={11} style={{ color: "var(--noctra-emerald)", marginTop: 1, flexShrink: 0 }} />
-                    <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{executionPkg.expectedOutcome}</p>
-                  </div>
+              {roadmap?.recommendedSprint?.goal && (
+                <div className="px-3 py-2 rounded-lg mb-3" style={{ background: "rgba(149,117,255,0.06)", border: "1px solid rgba(149,117,255,0.15)" }}>
+                  <p className="text-xs font-medium" style={{ color: "var(--noctra-violet)" }}>Sprint Goal</p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{roadmap.recommendedSprint.goal}</p>
                 </div>
               )}
 
@@ -810,7 +685,7 @@ export default function DashboardPage() {
                   style={{ background: "rgba(61,216,255,0.08)", border: "1px solid rgba(61,216,255,0.2)", color: "var(--noctra-cyan)" }}
                 >
                   <Copy size={11} />
-                  Copy Prompt
+                  Copy Next Build Prompt
                 </button>
                 <button
                   onClick={() => navigate("/app/doctor")}
@@ -843,7 +718,7 @@ export default function DashboardPage() {
             </Panel>
 
             {/* ═══════════════════════════════════════════════
-               SECTION 5: RECENT ACTIVITY
+               SECTION 5: HISTORY & MEMORY
             ═══════════════════════════════════════════════ */}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -853,7 +728,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <Clock size={13} style={{ color: "var(--noctra-text-muted)" }} />
-                        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Recent Activity</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>History & Memory</p>
                       </div>
                       <button onClick={() => navigate("/app/reports")} className="text-xs" style={{ color: "var(--noctra-cyan)" }}>View all →</button>
                     </div>
@@ -881,22 +756,6 @@ export default function DashboardPage() {
               )}
 
               <div className="space-y-4">
-                <Panel>
-                  <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>This Week</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { label: "Done", value: weeklySummary.tasksCompleted, color: "var(--noctra-emerald)" },
-                      { label: "Reports", value: weeklySummary.reportsGenerated, color: "var(--noctra-violet)" },
-                      { label: "Signals", value: weeklySummary.signalsAdded, color: "var(--noctra-cyan)" },
-                      { label: "Scans", value: weeklySummary.scansRun, color: "var(--noctra-amber)" },
-                    ].map(({ label, value, color }) => (
-                      <div key={label} className="text-center px-2 py-1.5 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
-                        <p className="text-base font-bold font-mono" style={{ color: value > 0 ? color : "var(--noctra-text-muted)" }}>{value}</p>
-                        <p className="text-[9px] uppercase tracking-wider mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{label}</p>
-                      </div>
-                    ))}
-                  </div>
-                </Panel>
 
                 {(data?.reports.length ?? 0) > 0 && (
                   <Panel>
@@ -932,45 +791,6 @@ export default function DashboardPage() {
                     </div>
                   </Panel>
                 )}
-              </div>
-            </div>
-
-            {/* ═══════════════════════════════════════════════
-               SECTION 6: PRODUCT TWIN SHORTCUT
-            ═══════════════════════════════════════════════ */}
-            <div
-              className="rounded-xl px-4 py-4 space-y-3"
-              style={{
-                background: "rgba(149,117,255,0.04)",
-                border: "1px solid rgba(149,117,255,0.15)",
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <Brain size={15} style={{ color: "var(--noctra-violet)" }} />
-                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-violet)" }}>
-                  Product Twin
-                </p>
-              </div>
-              <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>
-                Your AI co-founder — ask about your current blocker, get strategic advice, or generate a build prompt for your next session.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => navigate("/app/twin")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                  style={{ background: "var(--noctra-violet)", color: "#fff" }}
-                >
-                  <Brain size={11} />
-                  Ask Product Twin
-                </button>
-                <button
-                  onClick={() => navigate("/app/twin")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                  style={{ background: "rgba(61,216,255,0.1)", border: "1px solid rgba(61,216,255,0.25)", color: "var(--noctra-cyan)" }}
-                >
-                  <Terminal size={11} />
-                  Generate Build Prompt
-                </button>
               </div>
             </div>
 

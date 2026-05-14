@@ -93,9 +93,15 @@ function extractFailedGates(reports: ReportLike[]): string[] {
   const doctorReport = latestReport(reports, "doctor");
   if (!doctorReport?.payload) return [];
   const p = doctorReport.payload as Record<string, unknown>;
-  const gates = p.gates ?? p.launch_gates ?? p.checks;
-  if (!Array.isArray(gates)) return [];
-  return gates
+  // Payload can be nested under { data: { ... }, markdown, scan }
+  const data = (p.data ?? p) as Record<string, unknown>;
+  const gates = (data.gates ?? data.launch_gates ?? p.gates ?? p.launch_gates ?? p.checks ?? []) as unknown[];
+  if (!Array.isArray(gates)) {
+    // Try red_gates as string array
+    const redGates = (data.red_gates ?? data.red_gates ?? []) as string[];
+    return Array.isArray(redGates) ? redGates.slice(0, 5) : [];
+  }
+  const failed = gates
     .filter(
       (g: unknown) =>
         typeof g === "object" &&
@@ -112,8 +118,15 @@ function extractFailedGates(reports: ReportLike[]): string[] {
           (g as Record<string, unknown>).gate ??
           "Unknown gate"
         )
-    )
-    .slice(0, 5);
+    );
+  // Also include red_gates string array from AI data
+  const redGateStrings = (data.red_gates ?? []) as string[];
+  if (Array.isArray(redGateStrings)) {
+    redGateStrings.forEach(name => {
+      if (typeof name === "string" && !failed.includes(name)) failed.push(name);
+    });
+  }
+  return failed.slice(0, 5);
 }
 
 function computePhase(covered: string[], tasks: TaskLike[]): ProjectPhase {

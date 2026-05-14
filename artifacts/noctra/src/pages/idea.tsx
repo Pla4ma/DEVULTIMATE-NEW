@@ -12,7 +12,7 @@ import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
 import { useToast } from "@/hooks/use-toast";
-import { ScanSearch, Wand2, Loader2, RotateCcw, CheckCircle, Zap, ExternalLink, ArrowRight } from "lucide-react";
+import { ScanSearch, Wand2, Loader2, RotateCcw, CheckCircle, Zap, ExternalLink, ArrowRight, AlertTriangle, CheckSquare, Rocket } from "lucide-react";
 
 const TOOL = TOOL_BY_KEY["idea"]!;
 type Phase = "idle" | "running" | "done" | "error";
@@ -229,15 +229,26 @@ export default function IdeaPage() {
             }}
           />
           {autoSaved && (
-            <div className="flex gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
-              {savedReportId && (
-                <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${savedReportId}`)} className="flex-1">
-                  <ExternalLink size={12} /> View Full Report
+            <div className="space-y-2 pt-3 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Next Actions</p>
+              <div className="grid grid-cols-2 gap-2">
+                {savedReportId && (
+                  <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${savedReportId}`)}>
+                    <ExternalLink size={11} /> View Full Report
+                  </NoctraButton>
+                )}
+                <NoctraButton variant="ghost" onClick={() => navigate("/app/mvp")}>
+                  <Rocket size={11} /> Generate MVP Plan
                 </NoctraButton>
-              )}
-              <NoctraButton variant="ghost" onClick={() => navigate("/app/reality")} className="flex-1">
-                Next: Reality Compiler <ArrowRight size={12} />
-              </NoctraButton>
+                <NoctraButton variant="ghost" onClick={() => navigate("/app/reality")}>
+                  <AlertTriangle size={11} /> Run Reality Compiler
+                </NoctraButton>
+                {savedReportId && (
+                  <NoctraButton variant="ghost" onClick={() => navigate(`/app/tasks?report=${savedReportId}`)}>
+                    <CheckSquare size={11} /> View Tasks
+                  </NoctraButton>
+                )}
+              </div>
             </div>
           )}
         </div>

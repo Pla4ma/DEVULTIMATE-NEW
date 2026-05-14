@@ -1,5 +1,5 @@
 import { ScoreRing, Badge, Panel, EmptyState, ProgressBar } from "@/components/Primitives";
-import { Users, ShieldAlert, ShieldCheck, TrendingUp, DollarSign, MessageCircle, Zap } from "lucide-react";
+import { Users, ShieldAlert, ShieldCheck, TrendingUp, DollarSign, MessageCircle, Zap, AlertTriangle } from "lucide-react";
 import { computeAIDefenseScore, DEFENSE_RISK_COLOR, DEFENSE_RISK_LABEL } from "@/lib/ai-defense";
 
 type Persona = { name: string; role: string; reaction: string; objections?: string[]; willingness_to_pay?: string; top_objection?: string; segment?: string };
@@ -64,6 +64,21 @@ export function SwarmReportView({ report, compact }: Props) {
           )}
         </div>
       </div>
+
+      {/* Simulated user count */}
+      {data.simulated_user_count != null && (
+        <div className="rounded-xl px-4 py-3 border flex items-center gap-3" style={{ background: "rgba(61,216,255,0.04)", borderColor: "rgba(61,216,255,0.15)" }}>
+          <Users size={16} style={{ color: "var(--noctra-cyan)" }} />
+          <p className="text-sm" style={{ color: "var(--noctra-text)" }}>
+            <span className="font-bold" style={{ color: "var(--noctra-cyan)" }}>{data.simulated_user_count.toLocaleString()}</span> simulated users
+          </p>
+          {data.best_segment && (
+            <span className="text-xs px-2 py-0.5 rounded ml-auto" style={{ background: "rgba(52,211,153,0.1)", color: "var(--noctra-emerald)" }}>
+              Best: {data.best_segment}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Metric cards — show when metric data is present */}
       {data.would_try_free_percent != null && (
@@ -205,21 +220,14 @@ export function SwarmReportView({ report, compact }: Props) {
         </Panel>
       )}
 
-      {data.segment_breakdown && (
-        <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Segment Breakdown</p>
-          <div className="flex gap-3">
-            {[
-              { label: "Enthusiasts", value: data.segment_breakdown.enthusiasts, color: "var(--noctra-emerald)" },
-              { label: "Neutrals", value: data.segment_breakdown.neutrals, color: "var(--noctra-amber)" },
-              { label: "Skeptics", value: data.segment_breakdown.skeptics, color: "var(--noctra-rose)" },
-            ].map(({ label, value, color }) => value != null ? (
-              <div key={label} className="flex-1 text-center px-2 py-3 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
-                <p className="text-xl font-bold" style={{ color }}>{value}%</p>
-                <p className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{label}</p>
-              </div>
-            ) : null)}
+      {/* Single top objection */}
+      {data.top_objection && (
+        <Panel style={{ border: "1px solid rgba(244,63,94,0.2)", background: "rgba(244,63,94,0.04)" }}>
+          <div className="flex items-center gap-2 mb-1">
+            <AlertTriangle size={12} style={{ color: "var(--noctra-rose)" }} />
+            <p className="text-xs font-semibold" style={{ color: "var(--noctra-rose)" }}>Top Objection</p>
           </div>
+          <p className="text-sm" style={{ color: "var(--noctra-text)" }}>{data.top_objection}</p>
         </Panel>
       )}
 

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { ToolScene } from "@/components/ToolScene";
 import { MvpReportView } from "@/components/reports/MvpReportView";
 import { EmptyState, NoctraButton, Badge } from "@/components/Primitives";
 import { callStructuredAI } from "@/lib/ai";
-import { saveReport, saveTasks } from "@/lib/repository";
+import { saveReport, saveTasks, getReports } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
@@ -35,6 +35,17 @@ export default function MvpPage() {
   const [exportingTasks, setExportingTasks] = useState(false);
   const [tasksExported, setTasksExported] = useState(false);
   const [downloadingPrd, setDownloadingPrd] = useState(false);
+  const [ideaContext, setIdeaContext] = useState<string | null>(null);
+  const [realityContext, setRealityContext] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([getReports("idea"), getReports("reality")]).then(([ideas, realities]) => {
+      const idea = (ideas as Array<{ summary?: string | null }>)?.[0];
+      const reality = (realities as Array<{ summary?: string | null }>)?.[0];
+      if (idea) setIdeaContext(idea.summary ?? null);
+      if (reality) setRealityContext(reality.summary ?? null);
+    }).catch(() => {});
+  }, []);
 
   async function run() {
     if (!input.trim()) return;
@@ -173,6 +184,16 @@ export default function MvpPage() {
       </div>
 
       <div className="flex gap-2">
+                {ideaContext && phase === "idle" && !input.trim() && (
+                  <NoctraButton variant="ghost" onClick={() => setInput(`Idea: ${ideaContext}`)}>
+                    Use from Idea
+                  </NoctraButton>
+                )}
+                {realityContext && phase === "idle" && !input.trim() && (
+                  <NoctraButton variant="ghost" onClick={() => setInput(`Reality: ${realityContext}`)}>
+                    Use from Reality
+                  </NoctraButton>
+                )}
         <NoctraButton onClick={run} disabled={phase === "running" || !input.trim()} className="flex-1">
           {phase === "running" ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
           {phase === "running" ? "Planning…" : "Plan MVP"}

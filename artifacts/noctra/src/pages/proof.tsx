@@ -234,7 +234,7 @@ export default function ProofPage() {
             {/* Output */}
             <Panel>
               {phase === "idle" && (
-                <EmptyState icon={<FlaskConical size={22} />} title="No analysis yet" body="Describe your validation progress and run the proof reactor." />
+                <EmptyState icon={<FlaskConical size={22} />} title="No analysis yet" body="Describe your validation progress and run the Proof Engine." />
               )}
               {phase === "running" && (
                 <div className="flex items-center justify-center h-40">

@@ -10,12 +10,13 @@ import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { Stethoscope, Loader2, RotateCcw, Upload, FileArchive,
   CheckCircle, AlertTriangle, XCircle, ArrowRight, ExternalLink, Bug,
+  Terminal, FileText, Rocket, FolderOpen,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const TOOL = TOOL_BY_KEY["doctor"]!;
 
-type Phase = "idle" | "uploading" | "analyzing" | "saving" | "done" | "error";
+type Phase = "idle" | "scanning" | "diagnosing" | "generating" | "done" | "error";
 type ScanFallbackMode = "none" | "ai-only";
 
 type ScanResult = {
@@ -82,14 +83,14 @@ const GATE_COLOR = {
 };
 
 const STEPS: Array<{ key: Phase; label: string }> = [
-  { key: "uploading", label: "Uploading & scanning" },
-  { key: "analyzing", label: "AI diagnostics" },
-  { key: "saving", label: "Saving report" },
-  { key: "done", label: "Complete" },
+  { key: "scanning", label: "Deep scanning codebase and evaluating gates" },
+  { key: "diagnosing", label: "AI diagnosing launch blockers and code risks" },
+  { key: "generating", label: "Generating fix tasks, build prompt, and saving report" },
+  { key: "done", label: "Diagnosis complete" },
 ];
 
 const PHASE_ORDER: Record<Phase, number> = {
-  idle: -1, uploading: 0, analyzing: 1, saving: 2, done: 3, error: -1,
+  idle: -1, scanning: 0, diagnosing: 1, generating: 2, done: 3, error: -1,
 };
 
 export default function DoctorPage() {
@@ -124,7 +125,7 @@ export default function DoctorPage() {
     let scan: ScanResult | null = null;
 
     // ── Step 1: Upload & scan ──────────────────────────────────────────────
-    setPhase("uploading");
+    setPhase("scanning");
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -159,13 +160,13 @@ export default function DoctorPage() {
 
     // ── Step 2: AI analysis ────────────────────────────────────────────────
     try {
-      setPhase("analyzing");
+      setPhase("diagnosing");
       const context = scan?.scan ? { scan: scan.scan, launchGates: scan.launchGates } : {};
       const result = await callStructuredAI("doctor", scan?.summaryMarkdown ?? "", context as Record<string, unknown>);
       setAiResult(result);
 
-      // ── Step 3: Save report ────────────────────────────────────────────────
-      setPhase("saving");
+      // ── Step 3: Save report and generate fix tasks ──────────────────────────
+      setPhase("generating");
       const report = await saveReport({
         tool: "doctor",
         title: result.title || `Project Doctor — ${file.name}`,
@@ -252,17 +253,17 @@ export default function DoctorPage() {
             <Loader2 size={22} className="animate-spin" style={{ color: TOOL.accent }} />
             <p className="text-sm font-medium" style={{ color: "var(--noctra-text)" }}>{zipFile?.name}</p>
             <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>
-              {phase === "uploading" ? "Scanning repository…" : phase === "analyzing" ? "Running AI diagnostics…" : "Saving report…"}
+              {phase === "scanning" ? "Deep scanning codebase…" : phase === "diagnosing" ? "AI diagnosing launch blockers…" : "Generating fix tasks and build prompt…"}
             </p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            <FileArchive size={22} style={{ color: "var(--noctra-text-muted)" }} />
-            <p className="text-sm font-medium" style={{ color: "var(--noctra-text)" }}>Drop repo .zip here</p>
-            <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>or click to browse · max 50MB</p>
-              <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "var(--noctra-text-muted)" }}>
-                <ArrowRight size={10} /> Run Deep Diagnostic — Noctra scans, diagnoses, and saves automatically
-              </p>
+            <Stethoscope size={26} style={{ color: TOOL.accent }} />
+            <p className="text-sm font-semibold" style={{ color: "var(--noctra-text)" }}>Run Deep Diagnostic</p>
+            <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>Drop your repo .zip here · or click to browse · max 50MB</p>
+            <div className="flex items-center gap-1.5 mt-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: `${TOOL.accent}14`, color: TOOL.accent }}>
+              <ArrowRight size={10} /> Scans · Diagnoses · Generates fix tasks & build prompt
+            </div>
           </div>
         )}
       </div>
@@ -309,8 +310,8 @@ export default function DoctorPage() {
       return (
         <EmptyState
           icon={<Stethoscope size={22} />}
-          title="No analysis yet"
-          body="Drop a .zip of your repository. Noctra scans, diagnoses with AI, saves the report, and generates a fix queue — automatically."
+          title="No diagnosis yet"
+          body="Drop your repo ZIP. Noctra diagnoses launch blockers, code risks, and generates the exact tasks and build prompt to fix them."
         />
       );
     }
@@ -488,15 +489,51 @@ export default function DoctorPage() {
               ))}
             </div>
           )}
-          <DoctorReportView report={{ id: "", payload: { data: aiResult.data, markdown: aiResult.markdown }, score: aiResult.score ?? null }} />
-          <div className="flex gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+          <DoctorReportView report={{ id: savedReportId ?? "", payload: { data: aiResult.data, markdown: aiResult.markdown }, score: aiResult.score ?? null }} />
+
+          {/* Next Build Prompt */}
+          <Panel>
+            <div className="flex items-center gap-2 mb-2">
+              <Terminal size={13} style={{ color: "var(--noctra-cyan)" }} />
+              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Next Build Prompt</p>
+            </div>
+            <p className="text-xs mb-2" style={{ color: "var(--noctra-text-muted)" }}>
+              Copy this prompt into Codex, Replit Agent, Cursor, or Windsurf to fix all identified issues.
+            </p>
+            <div className="flex gap-2 mb-2">
+              <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Codex</span>
+              <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Replit</span>
+              <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Cursor</span>
+              <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Windsurf</span>
+            </div>
+            <div className="flex gap-2">
+              {savedReportId && (
+                <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${savedReportId}`)}>
+                  <Terminal size={11} /> Open Build Prompt
+                </NoctraButton>
+              )}
+            </div>
+          </Panel>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
             {savedReportId && (
-              <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${savedReportId}`)} className="flex-1">
-                <ExternalLink size={12} /> View Full Report
-              </NoctraButton>
+              <>
+                <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${savedReportId}`)}>
+                  <FileText size={12} /> View Full Report
+                </NoctraButton>
+                <NoctraButton variant="ghost" onClick={() => navigate(`/app/tasks?report=${savedReportId}`)}>
+                  <CheckCircle size={12} /> View Fix Tasks
+                </NoctraButton>
+                <NoctraButton variant="ghost" onClick={() => navigate(`/app/projects`)}>
+                  <FolderOpen size={12} /> Link to Project
+                </NoctraButton>
+              </>
             )}
-            <NoctraButton variant="ghost" onClick={() => navigate("/app/launch")} className="flex-1">
-              Next: Launch Room <ArrowRight size={12} />
+            <NoctraButton variant="ghost" onClick={() => navigate("/app/launch")}>
+              <Rocket size={12} /> Launch Room
+            </NoctraButton>
+            <NoctraButton variant="ghost" onClick={() => navigate("/app/passport")}>
+              <ExternalLink size={12} /> Passport
             </NoctraButton>
           </div>
         </div>
@@ -508,9 +545,9 @@ export default function DoctorPage() {
         <div className="text-center">
           <Loader2 size={28} className="animate-spin mx-auto mb-3" style={{ color: TOOL.accent }} />
           <p className="text-sm font-medium" style={{ color: "var(--noctra-text)" }}>
-            {phase === "uploading" ? "Scanning repository structure…" : phase === "analyzing" ? "AI is diagnosing your codebase…" : "Saving report and generating fix queue…"}
+            {phase === "scanning" ? "Deep scanning repository structure and evaluating launch gates…" : phase === "diagnosing" ? "AI is diagnosing launch blockers, code risks, and missing requirements…" : "Generating fix tasks, next build prompt, and saving report…"}
           </p>
-          <p className="text-xs mt-1" style={{ color: "var(--noctra-text-muted)" }}>This takes 15–30 seconds</p>
+          <p className="text-xs mt-1" style={{ color: "var(--noctra-text-muted)" }}>This takes 20–40 seconds</p>
         </div>
 
         {/* Step progress */}

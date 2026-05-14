@@ -15,7 +15,7 @@ const TOOL = TOOL_BY_KEY["twin"]!;
 type Msg = { role: "user" | "assistant"; content: string };
 type Project = { id: string; name: string; stage?: string | null };
 
-const SYSTEM_PROMPT = `You are the Product Twin — the persistent digital twin of this founder. You have deep context about their product decisions, assumptions, experiments, and trajectory. Surface patterns, contradictions, strategic drift, and next moves. Be direct, analytical, and founder-grade honest. Reference specific tools and scores when available.`;
+const SYSTEM_PROMPT = `You are the Product Twin — the persistent memory of this project. You have deep context about product decisions, assumptions, experiments, and scores. Surface patterns, contradictions, blind spots, and next moves. Be direct and analytical. Reference specific tools and scores when available.`;
 
 export default function TwinPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -34,6 +34,7 @@ export default function TwinPage() {
 
   // Intelligence computed from reports
   const [contradictions, setContradictions] = useState<Contradiction[]>([]);
+  const [toolsCovered, setToolsCovered] = useState<string[]>([]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -49,17 +50,37 @@ export default function TwinPage() {
       if (cancelled) return;
       const formatted = TwinMemory.formatMemoryForPrompt(ctx);
       setMemCtx(formatted);
-      const greeting = [
-        `Context loaded. ${ctx.passport.totalReports} reports available.`,
-        ctx.passport.averageScore > 0 ? ` Average score: ${ctx.passport.averageScore.toFixed(0)}/100.` : "",
-        ctx.passport.openTasks > 0 ? ` ${ctx.passport.openTasks} tasks in queue.` : "",
-      ].join("");
-      setMessages([{ role: "assistant", content: greeting }]);
+      const reportsCount = ctx.passport.totalReports;
+      const tasksCount = ctx.passport.openTasks;
+      const avgScore = ctx.passport.averageScore;
+      const coveredTools = new Set(ctx.latestReports.map((r) => String(r.tool ?? "")));
+      const missingReports: string[] = [];
+      if (!coveredTools.has("idea")) missingReports.push("Idea Checker");
+      if (!coveredTools.has("doctor")) missingReports.push("Project Doctor");
+      if (!coveredTools.has("mvp")) missingReports.push("MVP Planner");
+      if (!coveredTools.has("swarm")) missingReports.push("Market Swarm");
+      if (!coveredTools.has("reality")) missingReports.push("Reality Compiler");
+      if (!coveredTools.has("launch")) missingReports.push("Launch Room");
+      const parts: string[] = [];
+      if (reportsCount > 0) {
+        parts.push(`**Context loaded.** ${reportsCount} report${reportsCount !== 1 ? "s" : ""} available.`);
+        if (avgScore > 0) parts.push(`Average score: **${avgScore.toFixed(0)}/100**.`);
+        if (tasksCount > 0) parts.push(`${tasksCount} task${tasksCount !== 1 ? "s" : ""} in queue.`);
+      } else {
+        parts.push("**No reports yet.** Run Idea Checker or Project Doctor to start building context.");
+      }
+      if (missingReports.length > 0) {
+        parts.push(`\nMissing context: ${missingReports.join(", ")}. Run these tools for deeper analysis.`);
+      }
+      if (ctx.passport.totalReports === 0 && missingReports.length > 0) {
+        parts.push("\nI can answer general questions, but specific analysis requires running tools first.");
+      }
+      setMessages([{ role: "assistant", content: parts.join(" ") }]);
     }).catch(() => {
       if (!cancelled) {
         setMessages([{
           role: "assistant",
-          content: "Ready. Run intelligence tools to build context for analysis.",
+          content: "**No project data found.** Run Idea Checker or Project Doctor to start building context. I can answer general product questions in the meantime.",
         }]);
       }
     });
@@ -82,6 +103,9 @@ export default function TwinPage() {
         setRecentReports(reps.slice(0, 8));
         if (reps.length > 0) {
           setContradictions(detectContradictions(reps));
+          setToolsCovered([...new Set(reps.map((r) => r.tool))]);
+        } else {
+          setToolsCovered([]);
         }
       })
       .catch(() => {
@@ -191,7 +215,7 @@ export default function TwinPage() {
           </div>
           <div className="flex-1">
             <h1 className="text-lg font-bold" style={{ color: "var(--noctra-text)" }}>{TOOL.label}</h1>
-            <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>Persistent founder intelligence — patterns, drift, and strategic moves</p>
+            <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>Ask about your project — patterns, blockers, and what to build next</p>
           </div>
           <NoctraButton variant="ghost" onClick={resetChat}><RotateCcw size={13} /> Reset</NoctraButton>
         </div>
@@ -310,6 +334,28 @@ export default function TwinPage() {
               </NoctraButton>
             </div>
           </div>
+
+          {/* Data Coverage — always visible */}
+          <Panel>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>Data Coverage</p>
+            <div className="space-y-1.5">
+              {(["idea", "reality", "proof", "swarm", "mvp", "doctor", "launch"] as const).map((toolKey) => {
+                const tool = TOOL_BY_KEY[toolKey];
+                const covered = toolsCovered.includes(toolKey);
+                const hasData = allReports.some((r) => r.tool === toolKey && r.score != null);
+                return (
+                  <div key={toolKey} className="flex items-center gap-2 text-xs">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${covered ? "" : "opacity-30"}`} style={{ background: covered ? tool.accent : "var(--noctra-text-muted)" }} />
+                    <span style={{ color: covered ? tool.accent : "var(--noctra-text-muted)", fontWeight: covered ? 500 : 400 }}>
+                      {tool.label}
+                    </span>
+                    {!covered && <span className="text-[9px] ml-auto" style={{ color: "var(--noctra-text-muted)" }}>No data</span>}
+                    {hasData && <span className="text-[9px] ml-auto" style={{ color: "var(--noctra-emerald)" }}>Loaded</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </Panel>
 
           {/* Synthesis + Score panel */}
           <div className="space-y-3">

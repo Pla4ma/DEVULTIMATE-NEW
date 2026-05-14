@@ -78,10 +78,10 @@ export default function LandingPage() {
   }
 
   const features = [
-    { icon: Target, label: "Idea Checker", desc: "Stress-test any idea in minutes" },
-    { icon: Brain, label: "Reality Compiler", desc: "Surface your blind spots" },
-    { icon: FlaskConical, label: "Proof Engine", desc: "Quantify validation depth" },
-    { icon: Rocket, label: "Launch Room", desc: "Go/no-go with full telemetry" },
+    { icon: Target, label: "Validate Your Idea", desc: "Score signal strength, find weak points, and get your next validation step" },
+    { icon: Brain, label: "Diagnose Your Codebase", desc: "Upload a repo ZIP — get launch blockers, fix tasks, and a build prompt" },
+    { icon: FlaskConical, label: "Generate Execution Plan", desc: "Turn analysis into prioritized tasks and an MVP build plan" },
+    { icon: Rocket, label: "Know What to Build Next", desc: "From idea validation to launch — one clear next action" },
   ];
 
   return (
@@ -94,7 +94,7 @@ export default function LandingPage() {
           </div>
           <span className="font-bold tracking-wide" style={{ color: "var(--noctra-text)" }}>NOCTRA</span>
         </div>
-        <span className="text-xs px-2 py-1 rounded" style={{ background: "var(--noctra-surface2)", color: "var(--noctra-text-muted)" }}>Developer Intelligence OS</span>
+            <span className="text-xs px-2 py-1 rounded" style={{ background: "var(--noctra-surface2)", color: "var(--noctra-text-muted)" }}>Idea → Execution Plan</span>
       </header>
 
       {/* Hero */}
@@ -103,14 +103,14 @@ export default function LandingPage() {
         <div className="flex-1 max-w-xl">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs mb-6" style={{ background: "rgba(61,216,255,0.08)", border: "1px solid rgba(61,216,255,0.2)", color: "var(--noctra-cyan)" }}>
             <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-            Intelligence OS — Live
+            Idea → Execution Plan
           </div>
           <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-4" style={{ color: "var(--noctra-text)" }}>
-            Build smarter.<br />
-            <span style={{ color: "var(--noctra-cyan)" }}>Ship with proof.</span>
+            Turn your idea and codebase<br />
+            <span style={{ color: "var(--noctra-cyan)" }}>into a launch-ready execution plan.</span>
           </h1>
           <p className="text-lg mb-8 leading-relaxed" style={{ color: "var(--noctra-text-soft)" }}>
-            Noctra is the AI intelligence OS that turns founder instinct into validated signal. From raw idea to launch-ready — fully instrumented.
+            Validate the idea, diagnose the repo, generate fix tasks, and get the exact build prompt to ship.
           </p>
           <div className="grid grid-cols-2 gap-3">
             {features.map(({ icon: Icon, label, desc }) => (

@@ -90,7 +90,7 @@ export default function ProjectsPage() {
           <div>
             <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Projects</h1>
             <p className="text-sm mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
-              Operations Map · {projects.length} project{projects.length !== 1 ? "s" : ""}
+              {projects.length} project{projects.length !== 1 ? "s" : ""}
             </p>
           </div>
           <NoctraButton onClick={() => setShowForm((v) => !v)}>

@@ -117,23 +117,30 @@ export default function LaunchPage() {
 
   const InputPanel = (
     <div className="space-y-4">
-      {/* Doctor RED gate warning */}
+      {/* Doctor RED gate warning — critical blocker */}
       {doctorRedGates.length > 0 && (
         <div
           className="px-4 py-3 rounded-xl flex items-start gap-3"
-          style={{ background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.25)" }}
+          style={{ background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.3)" }}
         >
-          <AlertTriangle size={14} style={{ color: "var(--noctra-rose)", flexShrink: 0, marginTop: 1 }} />
-          <div>
-            <p className="text-sm font-semibold" style={{ color: "var(--noctra-rose)" }}>
-              {doctorRedGates.length} RED gate{doctorRedGates.length !== 1 ? "s" : ""} from your last Doctor scan
+          <AlertTriangle size={16} style={{ color: "var(--noctra-rose)", flexShrink: 0, marginTop: 1 }} />
+          <div className="flex-1">
+            <p className="text-sm font-bold" style={{ color: "var(--noctra-rose)" }}>
+              {doctorRedGates.length} RED launch gate{doctorRedGates.length !== 1 ? "s" : ""} blocking GO signal
             </p>
             <p className="text-xs mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
               {doctorRedGates.join(" · ")}
             </p>
-            <p className="text-xs mt-1" style={{ color: "var(--noctra-text-muted)" }}>
-              These may block a GO signal. Fix them before running the launch sequence for best results.
+            <p className="text-xs mt-1" style={{ color: "var(--noctra-rose)" }}>
+              These gates must pass before launch. Run Project Doctor to fix them.
             </p>
+            <button
+              onClick={() => navigate("/app/doctor")}
+              className="flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg text-xs font-medium"
+              style={{ background: "var(--noctra-rose)", color: "#000" }}
+            >
+              Open Project Doctor <ArrowRight size={11} />
+            </button>
           </div>
         </div>
       )}
@@ -192,11 +199,18 @@ export default function LaunchPage() {
           className="w-full px-3 py-2.5 rounded-lg text-sm resize-none outline-none"
           style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
         />
-        {contextReports.length > 0 && (
-          <button onClick={() => loadProjectContext(selectedProjectId).catch((err) => toast({ title: "Failed to reload context", description: err?.message, variant: "destructive" }))} className="flex items-center gap-1 mt-1.5 text-xs" style={{ color: "var(--noctra-text-muted)" }}>
-            <RefreshCw size={10} /> Reload context into input
-          </button>
-        )}
+          {contextReports.length > 0 && (
+            <button onClick={() => loadProjectContext(selectedProjectId).catch((err) => toast({ title: "Failed to reload context", description: err?.message, variant: "destructive" }))} className="flex items-center gap-1 mt-1.5 text-xs" style={{ color: "var(--noctra-text-muted)" }}>
+              <RefreshCw size={10} /> Reload context into input
+            </button>
+          )}
+          {projects.length === 0 && phase === "idle" && !input.trim() && (
+            <div className="flex gap-2 mt-2">
+              <button onClick={() => setInput("I have validated my idea, planned the MVP, and scanned my codebase. Ready for launch assessment.")} className="text-xs px-2.5 py-1 rounded-full" style={{ background: "rgba(61,216,255,0.1)", border: "1px solid rgba(61,216,255,0.25)", color: "var(--noctra-cyan)" }}>
+                Use standard flow context
+              </button>
+            </div>
+          )}
       </div>
 
       <div className="flex gap-2">

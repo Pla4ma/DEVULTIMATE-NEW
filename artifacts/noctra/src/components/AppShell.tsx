@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
-import { TOOLS, TOOL_GROUPS, type Tool } from "@/lib/noctra-tools";
+import { TOOLS, TOOL_GROUPS, GROUP_DESCRIPTION, type Tool } from "@/lib/noctra-tools";
 import { LogOut, Menu, X, ChevronRight, Zap, Command } from "lucide-react";
 import { CommandPalette } from "@/components/CommandPalette";
 
@@ -13,7 +13,7 @@ function NavItem({ tool, collapsed, onClick }: { tool: Tool; collapsed: boolean;
   return (
     <Link href={tool.route} onClick={onClick}>
       <div
-        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all cursor-pointer group ${active ? "bg-white/5" : "hover:bg-white/3"}`}
+        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all cursor-pointer group relative ${active ? "bg-white/5" : "hover:bg-white/3"}`}
         style={active ? { borderLeft: `2px solid ${tool.accent}` } : { borderLeft: "2px solid transparent" }}
       >
         <Icon
@@ -23,10 +23,15 @@ function NavItem({ tool, collapsed, onClick }: { tool: Tool; collapsed: boolean;
         />
         {!collapsed && (
           <span
-            className={`text-sm font-medium truncate transition-colors ${active ? "" : "group-hover:text-[var(--noctra-text)]"}`}
+            className={`text-sm font-medium truncate transition-colors flex-1 ${active ? "" : "group-hover:text-[var(--noctra-text)]"}`}
             style={{ color: active ? tool.accent : "var(--noctra-text-soft)" }}
           >
             {tool.diegetic}
+          </span>
+        )}
+        {!collapsed && tool.isFlagship && (
+          <span className="text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0" style={{ background: "rgba(244,63,94,0.12)", color: "var(--noctra-rose)" }}>
+            Flagship
           </span>
         )}
       </div>
@@ -61,6 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {!collapsed && (
           <div className="px-3 pt-3 pb-1">
             <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--noctra-text-muted)" }}>Core</span>
+            <p className="text-[9px] mt-0.5" style={{ color: "var(--noctra-text-muted)", opacity: 0.6 }}>{GROUP_DESCRIPTION.Core}</p>
           </div>
         )}
         {coreTools.map((t) => <NavItem key={t.key} tool={t} collapsed={collapsed} onClick={onNav} />)}
@@ -73,6 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               {!collapsed && (
                 <div className="px-3 pt-3 pb-1">
                   <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--noctra-text-muted)" }}>{group}</span>
+                  <p className="text-[9px] mt-0.5" style={{ color: "var(--noctra-text-muted)", opacity: 0.6 }}>{GROUP_DESCRIPTION[group]}</p>
                 </div>
               )}
               {groupTools.map((t) => <NavItem key={t.key} tool={t} collapsed={collapsed} onClick={onNav} />)}

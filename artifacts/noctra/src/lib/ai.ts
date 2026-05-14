@@ -136,7 +136,7 @@ export async function streamAI(
         const delta = parsed.choices?.[0]?.delta?.content ?? "";
         if (delta) { full += delta; onChunk(delta); }
       } catch {
-        // skip malformed line
+        console.warn("Skipped malformed SSE line in streamAI:", data);
       }
     }
   }
