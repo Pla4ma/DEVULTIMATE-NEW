@@ -10,7 +10,7 @@ export default function NotFound() {
       </div>
       <div className="text-center">
         <p className="text-6xl font-bold mb-2" style={{ color: "var(--noctra-text)" }}>404</p>
-        <p className="text-sm" style={{ color: "var(--noctra-text-soft)" }}>This signal does not exist</p>
+        <p className="text-sm" style={{ color: "var(--noctra-text-soft)" }}>Page not found</p>
       </div>
       <button
         onClick={() => navigate("/app")}

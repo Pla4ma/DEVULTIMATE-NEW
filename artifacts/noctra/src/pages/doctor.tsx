@@ -8,10 +8,10 @@ import { callStructuredAI } from "@/lib/ai";
 import { saveReport, saveScan } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
-import {
-  Stethoscope, Loader2, RotateCcw, Upload, FileArchive,
-  CheckCircle, AlertTriangle, XCircle, ArrowRight, ExternalLink,
+import { Stethoscope, Loader2, RotateCcw, Upload, FileArchive,
+  CheckCircle, AlertTriangle, XCircle, ArrowRight, ExternalLink, Bug,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const TOOL = TOOL_BY_KEY["doctor"]!;
 
@@ -20,13 +20,51 @@ type ScanFallbackMode = "none" | "ai-only";
 
 type ScanResult = {
   summaryMarkdown: string;
-  launchGates?: Array<{ name: string; status: "GREEN" | "YELLOW" | "RED"; evidence?: string[] }>;
+  launchGates?: Array<{ name: string; status: "GREEN" | "YELLOW" | "RED"; evidence?: string[]; how_to_fix?: string; why?: string }>;
   warnings?: string[];
+  evidenceIndex?: Array<{ filePath: string; lineNumber?: number; snippet?: string; severity: string; explanation: string; signal: string }>;
+  repoMap?: {
+    components: string[];
+    routes: string[];
+    apiFiles: string[];
+    hooks: string[];
+    utilities: string[];
+    services: string[];
+    authFiles: string[];
+    dbFiles: string[];
+    aiFiles: string[];
+    paymentFiles: string[];
+    uploadFiles: string[];
+    configFiles: string[];
+    testFiles: string[];
+    deploymentFiles: string[];
+    docsFiles: string[];
+  };
   scan?: {
     fileCount?: number;
     framework?: string;
+    packageManager?: string;
     totalLines?: number;
+    totalSize?: number;
     languages?: Record<string, number>;
+    evidenceIndex?: Array<{ filePath: string; lineNumber?: number; snippet?: string; severity: string; explanation: string; signal: string }>;
+    repoMap?: {
+      components: string[];
+      routes: string[];
+      apiFiles: string[];
+      hooks: string[];
+      utilities: string[];
+      services: string[];
+      authFiles: string[];
+      dbFiles: string[];
+      aiFiles: string[];
+      paymentFiles: string[];
+      uploadFiles: string[];
+      configFiles: string[];
+      testFiles: string[];
+      deploymentFiles: string[];
+      docsFiles: string[];
+    };
   };
 };
 
@@ -56,6 +94,7 @@ const PHASE_ORDER: Record<Phase, number> = {
 
 export default function DoctorPage() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState("");
   const [zipFile, setZipFile] = useState<File | null>(null);
@@ -107,8 +146,10 @@ export default function DoctorPage() {
         fileName: file.name,
         summary: scan.summaryMarkdown ?? "",
         payload: scan as unknown as Record<string, unknown>,
-      }).catch(() => {});
-    } catch {
+      }).catch((scanErr) => {
+        toast({ title: "Scan save failed", description: "Scan results are visible but not stored.", variant: "destructive" });
+      });
+    } catch (scanErr) {
       // Scan failed — fall back to AI-only mode using file metadata
       setScanFallbackMode("ai-only");
       const fallbackSummary = `Repository file: ${file.name} (${(file.size / 1024).toFixed(0)} KB). Full static scan unavailable — running AI-only diagnostics based on file metadata.`;
@@ -127,7 +168,7 @@ export default function DoctorPage() {
       setPhase("saving");
       const report = await saveReport({
         tool: "doctor",
-        title: result.title || `Diagnostic Bay — ${file.name}`,
+        title: result.title || `Project Doctor — ${file.name}`,
         payload: { data: result.data, markdown: result.markdown, scan },
         score: result.score ?? undefined,
         summary: result.summary,
@@ -135,12 +176,18 @@ export default function DoctorPage() {
       const r = report as { id?: string } | null;
       setSavedReportId(r?.id ?? null);
       if (r?.id) {
-        await generateTasksFromReport({
+        const taskCount = await generateTasksFromReport({
           id: r.id,
           tool: "doctor",
           payload: { data: result.data },
           project_id: null,
-        }).catch(() => {});
+        }).catch((taskErr) => {
+          toast({ title: "Task generation failed", description: taskErr instanceof Error ? taskErr.message : "Could not generate fix tasks.", variant: "destructive" });
+          return 0;
+        });
+        if (taskCount > 0) {
+          toast({ title: `${taskCount} fix task${taskCount !== 1 ? "s" : ""} generated`, description: "Added to Task Queue." });
+        }
       }
 
       setPhase("done");
@@ -172,7 +219,7 @@ export default function DoctorPage() {
           e.preventDefault();
           setDragOver(false);
           const file = e.dataTransfer.files[0];
-          if (file && phase === "idle") handleFileSelect(file).catch(() => {});
+          if (file && phase === "idle") { handleFileSelect(file); }
         }}
         onClick={() => phase === "idle" && fileRef.current?.click()}
         className="border-2 border-dashed rounded-xl p-6 text-center transition-all"
@@ -213,9 +260,9 @@ export default function DoctorPage() {
             <FileArchive size={22} style={{ color: "var(--noctra-text-muted)" }} />
             <p className="text-sm font-medium" style={{ color: "var(--noctra-text)" }}>Drop repo .zip here</p>
             <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>or click to browse · max 50MB</p>
-            <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "var(--noctra-text-muted)" }}>
-              <ArrowRight size={10} /> Upload once — Noctra scans, diagnoses, and saves automatically
-            </p>
+              <p className="text-xs mt-1 flex items-center gap-1" style={{ color: "var(--noctra-text-muted)" }}>
+                <ArrowRight size={10} /> Run Deep Diagnostic — Noctra scans, diagnoses, and saves automatically
+              </p>
           </div>
         )}
       </div>
@@ -279,6 +326,18 @@ export default function DoctorPage() {
     }
 
     if (phase === "done" && aiResult) {
+      const aiData = aiResult.data as Record<string, unknown> | null;
+      const healthScore = typeof aiData?.health_score === "number" ? aiData.health_score
+        : typeof aiResult.score === "number" ? aiResult.score : null;
+      const launchReadiness = typeof aiData?.launch_readiness === "string" ? aiData.launch_readiness : "";
+      const redGates = (aiData?.red_gates as string[] ?? []);
+      const yellowGates = (aiData?.yellow_gates as string[] ?? []);
+      const topIssues = (aiData?.issues as string[] ?? []).slice(0, 5);
+      const repairQueue = (aiData?.repair_queue as string[] ?? []).slice(0, 5);
+      const healthColor = healthScore != null
+        ? (healthScore >= 70 ? "var(--noctra-emerald)" : healthScore >= 40 ? "var(--noctra-amber)" : "var(--noctra-rose)")
+        : "var(--noctra-text-muted)";
+
       return (
         <div className="space-y-4">
           {scanFallbackMode === "ai-only" && (
@@ -302,9 +361,133 @@ export default function DoctorPage() {
             <CheckCircle size={14} style={{ color: "var(--noctra-emerald)" }} />
             <div>
               <p className="text-sm font-medium" style={{ color: "var(--noctra-emerald)" }}>Diagnosis complete — report saved</p>
-              <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>Fix queue generated and added to Mission Queue</p>
+              <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>Fix queue generated and added to Task Queue</p>
             </div>
           </div>
+
+          {/* Health Score + Launch Readiness */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {healthScore != null && (
+              <Panel>
+                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-text-muted)" }}>Health Score</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl font-bold" style={{ color: healthColor }}>{healthScore}</span>
+                  <span className="text-xs mb-1" style={{ color: "var(--noctra-text-muted)" }}>/ 100</span>
+                </div>
+              </Panel>
+            )}
+            {launchReadiness && (
+              <Panel>
+                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-text-muted)" }}>Launch Readiness</p>
+                <p className="text-sm font-semibold" style={{
+                  color: launchReadiness === "GO" ? "var(--noctra-emerald)" :
+                         launchReadiness === "CONDITIONAL" ? "var(--noctra-amber)" : "var(--noctra-rose)"
+                }}>{launchReadiness}</p>
+              </Panel>
+            )}
+          </div>
+
+          {/* Red/Yellow Gates */}
+          {(redGates.length > 0 || yellowGates.length > 0) && (
+            <Panel>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-rose)" }}>Launch Gates</p>
+              <div className="space-y-1">
+                {redGates.map((g, i) => (
+                  <div key={`r-${i}`} className="flex items-center gap-2 text-xs px-2 py-1.5 rounded-lg" style={{ background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.2)" }}>
+                    <XCircle size={11} style={{ color: "var(--noctra-rose)" }} />
+                    <span style={{ color: "var(--noctra-text)" }}>{g}</span>
+                  </div>
+                ))}
+                {yellowGates.map((g, i) => (
+                  <div key={`y-${i}`} className="flex items-center gap-2 text-xs px-2 py-1.5 rounded-lg" style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
+                    <AlertTriangle size={11} style={{ color: "var(--noctra-amber)" }} />
+                    <span style={{ color: "var(--noctra-text)" }}>{g}</span>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          )}
+
+          {/* Top Issues */}
+          {topIssues.length > 0 && (
+            <Panel>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-rose)" }}>Top Issues</p>
+              <div className="space-y-1">
+                {topIssues.map((issue, i) => (
+                  <p key={i} className="text-xs flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
+                    <span style={{ color: "var(--noctra-rose)" }}>—</span>{issue}
+                  </p>
+                ))}
+              </div>
+            </Panel>
+          )}
+
+          {/* Repair Queue */}
+          {repairQueue.length > 0 && (
+            <Panel>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-amber)" }}>Repair Queue</p>
+              <div className="space-y-1">
+                {repairQueue.map((item, i) => (
+                  <p key={i} className="text-xs flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
+                    <span style={{ color: "var(--noctra-amber)" }}>→</span>{item}
+                  </p>
+                ))}
+              </div>
+            </Panel>
+          )}
+
+          {/* Evidence index from scan */}
+          {scanResult?.evidenceIndex && scanResult.evidenceIndex.length > 0 && (
+            <Panel>
+              <div className="flex items-center gap-2 mb-2">
+                <Bug size={13} style={{ color: "var(--noctra-amber)" }} />
+                <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Evidence Index</p>
+                <span className="ml-auto text-xs font-mono" style={{ color: "var(--noctra-text-muted)" }}>{scanResult.evidenceIndex.length} items</span>
+              </div>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                {scanResult.evidenceIndex.slice(0, 15).map((e, i) => (
+                  <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded-lg text-xs" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+                    <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: e.severity === "error" ? "var(--noctra-rose)" : e.severity === "warning" ? "var(--noctra-amber)" : "var(--noctra-cyan)" }} />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-mono text-[10px]" style={{ color: "var(--noctra-text-muted)" }}>{e.filePath}{e.lineNumber ? `:${e.lineNumber}` : ""}</span>
+                      <p className="mt-0.5" style={{ color: "var(--noctra-text-soft)" }}>{e.explanation || e.signal}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          )}
+          {scanResult?.scan && (
+            <Panel>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>Scan Summary</p>
+              <div className="flex flex-wrap gap-2 text-xs">
+                {scanResult.scan.fileCount != null && <Badge>{scanResult.scan.fileCount} files</Badge>}
+                {scanResult.scan.totalLines != null && <Badge>{scanResult.scan.totalLines} lines</Badge>}
+                {scanResult.scan.framework && <Badge>{scanResult.scan.framework}</Badge>}
+                {scanResult.scan.packageManager && <Badge>{scanResult.scan.packageManager}</Badge>}
+                {scanResult.scan.languages && Object.entries(scanResult.scan.languages).slice(0, 6).map(([lang, lines]) => (
+                  <Badge key={lang}>{lang} ({lines} lines)</Badge>
+                ))}
+              </div>
+              {scanResult.repoMap && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 mt-2">
+                  {Object.entries(scanResult.repoMap).map(([key, files]) => {
+                    if (!Array.isArray(files) || files.length === 0) return null;
+                    return <Badge key={key} style={{ fontSize: "10px", justifyContent: "flex-start" }}>{key}: {files.length}</Badge>;
+                  })}
+                </div>
+              )}
+            </Panel>
+          )}
+
+          {scanResult?.warnings && scanResult.warnings.length > 0 && (
+            <div className="px-3 py-2 rounded-lg" style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--noctra-amber)" }}>Scan Warnings</p>
+              {scanResult.warnings.slice(0, 3).map((w, i) => (
+                <p key={i} className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{w}</p>
+              ))}
+            </div>
+          )}
           <DoctorReportView report={{ id: "", payload: { data: aiResult.data, markdown: aiResult.markdown }, score: aiResult.score ?? null }} />
           <div className="flex gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
             {savedReportId && (
@@ -313,7 +496,7 @@ export default function DoctorPage() {
               </NoctraButton>
             )}
             <NoctraButton variant="ghost" onClick={() => navigate("/app/launch")} className="flex-1">
-              Next: Launch Control <ArrowRight size={12} />
+              Next: Launch Room <ArrowRight size={12} />
             </NoctraButton>
           </div>
         </div>

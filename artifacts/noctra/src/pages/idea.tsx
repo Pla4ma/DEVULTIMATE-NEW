@@ -11,6 +11,7 @@ import { saveReport } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
+import { useToast } from "@/hooks/use-toast";
 import { ScanSearch, Wand2, Loader2, RotateCcw, CheckCircle, Zap, ExternalLink, ArrowRight } from "lucide-react";
 
 const TOOL = TOOL_BY_KEY["idea"]!;
@@ -18,6 +19,7 @@ type Phase = "idle" | "running" | "done" | "error";
 
 export default function IdeaPage() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const [input, setInput] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [currentStage, setCurrentStage] = useState("");
@@ -93,8 +95,8 @@ export default function IdeaPage() {
       }
       setSaved(true);
       setAutoSaved(true);
-    } catch {
-      // Auto-save failed silently — user can still see results
+    } catch (e) {
+      toast({ title: "Auto-save failed", description: e instanceof Error ? e.message : "Report results visible but not stored.", variant: "destructive" });
     }
   }
 
@@ -186,7 +188,7 @@ export default function IdeaPage() {
           className="flex-1"
         >
           {phase === "running" ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
-          {phase === "running" ? currentStage || "Analyzing…" : "Run Signal Chamber"}
+          {phase === "running" ? currentStage || "Analyzing…" : "Run Idea Checker"}
         </NoctraButton>
         {phase !== "idle" && (
           <NoctraButton variant="ghost" onClick={reset}>
@@ -203,7 +205,7 @@ export default function IdeaPage() {
         <EmptyState
           icon={<ScanSearch size={24} />}
           title="Signal awaiting input"
-          body="Enter your idea above and run the chamber. Press ⌘↵ to start."
+          body="Enter your idea above and run the Idea Checker. Press ⌘↵ to start."
         />
       )}
       {phase === "running" && (
@@ -234,7 +236,7 @@ export default function IdeaPage() {
                 </NoctraButton>
               )}
               <NoctraButton variant="ghost" onClick={() => navigate("/app/reality")} className="flex-1">
-                Next: Pressure Matrix <ArrowRight size={12} />
+                Next: Reality Compiler <ArrowRight size={12} />
               </NoctraButton>
             </div>
           )}

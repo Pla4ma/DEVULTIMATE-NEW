@@ -10,6 +10,7 @@ import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
 import { Users, Wand2, Loader2, RotateCcw, CheckCircle, ExternalLink, ArrowRight } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const TOOL = TOOL_BY_KEY["swarm"]!;
 type Phase = "idle" | "running" | "done" | "error";
@@ -26,6 +27,7 @@ const PRICE_RANGES = [
 
 export default function SwarmPage() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const [input, setInput] = useState("");
   const [customPersonas, setCustomPersonas] = useState("");
   const [personaCount, setPersonaCount] = useState<typeof PERSONA_COUNTS[number]>(25);
@@ -69,7 +71,7 @@ export default function SwarmPage() {
     try {
       const report = await saveReport({
         tool: "swarm",
-        title: res.title || `Swarm Field — ${input.slice(0, 60)}`,
+        title: res.title || `Market Swarm — ${input.slice(0, 60)}`,
         payload: { data: res.data, markdown: res.markdown, personaCount, segment, priceRange },
         score: res.score ?? undefined,
         summary: res.summary,
@@ -78,8 +80,8 @@ export default function SwarmPage() {
       setSavedReportId(r?.id ?? null);
       if (r?.id) await generateTasksFromReport({ id: r.id, tool: "swarm", payload: { data: res.data }, project_id: null });
       setSaved(true);
-    } catch {
-      // silent — results still visible
+    } catch (err) {
+      toast({ title: "Save failed", description: err instanceof Error ? err.message : "Could not auto-save report.", variant: "destructive" });
     }
   }
 
@@ -103,7 +105,7 @@ export default function SwarmPage() {
 
       {/* Persona count selector */}
       <div>
-        <label className="block text-xs font-medium mb-2" style={{ color: "var(--noctra-text-muted)" }}>Swarm Size</label>
+        <label className="block text-xs font-medium mb-2" style={{ color: "var(--noctra-text-muted)" }}>Simulation depth</label>
         <div className="flex gap-2">
           {PERSONA_COUNTS.map((count) => (
             <button
@@ -122,7 +124,8 @@ export default function SwarmPage() {
           ))}
         </div>
         <p className="text-xs mt-1" style={{ color: "var(--noctra-text-muted)" }}>
-          Simulates {personaCount} distinct user personas reacting to your pitch
+          {/* Simulates {personaCount} distinct user personas reacting to your pitch */}
+          {personaCount}-user market signal simulation
         </p>
       </div>
 
@@ -188,7 +191,7 @@ export default function SwarmPage() {
       <div className="flex gap-2">
         <NoctraButton onClick={run} disabled={phase === "running" || !input.trim()} className="flex-1">
           {phase === "running" ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
-          {phase === "running" ? `Simulating ${personaCount} personas…` : `Run ${personaCount}-Persona Swarm`}
+          {phase === "running" ? `Analyzing ${personaCount} market signals…` : `Run ${personaCount}-Persona Market Swarm`}
         </NoctraButton>
         {phase === "done" && <NoctraButton variant="ghost" onClick={reset}><RotateCcw size={13} /></NoctraButton>}
       </div>
@@ -197,12 +200,12 @@ export default function SwarmPage() {
 
   const OutputPanel = (
     phase === "idle" ? (
-      <EmptyState icon={<Users size={22} />} title="Swarm not deployed" body={`Configure your swarm size and pitch, then deploy ${personaCount} personas to react.`} />
+      <EmptyState icon={<Users size={22} />} title="Swarm not deployed" body={`Configure market parameters and deploy a ${personaCount}-persona market signal simulation.`} />
     ) : phase === "running" ? (
       <div className="flex items-center justify-center h-40">
         <div className="text-center space-y-3">
           <Loader2 size={24} className="animate-spin mx-auto" style={{ color: TOOL.accent }} />
-          <p className="text-sm" style={{ color: "var(--noctra-text-muted)" }}>Deploying {personaCount} personas…</p>
+          <p className="text-sm" style={{ color: "var(--noctra-text-muted)" }}>Running {personaCount}-user market signal simulation…</p>
         </div>
       </div>
     ) : phase === "done" && result ? (
@@ -227,7 +230,7 @@ export default function SwarmPage() {
               </NoctraButton>
             )}
             <NoctraButton variant="ghost" onClick={() => navigate("/app/mvp")} className="flex-1">
-              Next: Blueprint Board <ArrowRight size={12} />
+              Next: MVP Planner <ArrowRight size={12} />
             </NoctraButton>
           </div>
         )}

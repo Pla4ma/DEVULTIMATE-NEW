@@ -64,18 +64,18 @@ const INTELLIGENCE_TOOLS = ["idea", "reality", "proof", "swarm", "mvp", "doctor"
 const SCORE_COLOR = (s: number) =>
   s >= 70 ? "var(--noctra-emerald)" : s >= 50 ? "var(--noctra-amber)" : "var(--noctra-rose)";
 
-type Tab = "overview" | "reports" | "tasks" | "proof" | "scans" | "twin" | "launch" | "passport" | "history";
+type Tab = "overview" | "reports" | "execution" | "proof" | "doctor" | "twin" | "launch" | "history";
 
 // ─── Passport stamps ──────────────────────────────────────────────────────────
 
 const PASSPORT_STAMPS = [
-  { key: "first-idea", label: "Idea Validated", description: "Ran Signal Chamber analysis", icon: Star, condition: (ps: ProjectState) => ps.ideaScore > 0, color: "var(--noctra-violet)", href: "/app/idea" },
+  { key: "first-idea", label: "Idea Validated", description: "Ran Idea Checker", icon: Star, condition: (ps: ProjectState) => ps.ideaScore > 0, color: "var(--noctra-violet)", href: "/app/idea" },
   { key: "idea-strong", label: "Strong Signal", description: "Idea scored 70+", icon: Zap, condition: (ps: ProjectState) => ps.ideaScore >= 70, color: "var(--noctra-violet)", href: "/app/idea" },
-  { key: "reality-check", label: "Reality Checked", description: "Ran Pressure Matrix", icon: Activity, condition: (ps: ProjectState) => ps.realityScore > 0, color: "var(--noctra-amber)", href: "/app/reality" },
+  { key: "reality-check", label: "Reality Checked", description: "Ran Reality Compiler", icon: Activity, condition: (ps: ProjectState) => ps.realityScore > 0, color: "var(--noctra-amber)", href: "/app/reality" },
   { key: "proof-started", label: "Proof Started", description: "First proof signal logged", icon: FlaskConical, condition: (ps: ProjectState) => ps.proofSignalCount > 0, color: "var(--noctra-emerald)", href: "/app/proof" },
   { key: "proof-strong", label: "Proof Validated", description: "Proof score 70+", icon: CheckSquare, condition: (ps: ProjectState) => ps.proofScore >= 70, color: "var(--noctra-emerald)", href: "/app/proof" },
   { key: "swarm-run", label: "Market Simulated", description: "Ran Market Swarm", icon: Brain, condition: (ps: ProjectState) => ps.swarmScore > 0, color: "var(--noctra-cyan)", href: "/app/swarm" },
-  { key: "mvp-planned", label: "MVP Planned", description: "Generated Blueprint Board", icon: FileText, condition: (ps: ProjectState) => ps.mvpScore > 0, color: "var(--noctra-cyan)", href: "/app/mvp" },
+  { key: "mvp-planned", label: "MVP Planned", description: "Ran MVP Planner", icon: FileText, condition: (ps: ProjectState) => ps.mvpScore > 0, color: "var(--noctra-cyan)", href: "/app/mvp" },
   { key: "tasks-created", label: "Tasks Created", description: "Built an execution task queue", icon: CheckSquare, condition: (ps: ProjectState) => ps.totalTasks >= 3, color: "var(--noctra-emerald)", href: "/app/tasks" },
   { key: "tasks-progress", label: "Building", description: "Completed 3+ tasks", icon: TrendingUp, condition: (ps: ProjectState) => ps.completedTasks >= 3, color: "var(--noctra-emerald)", href: "/app/tasks" },
   { key: "code-scanned", label: "Code Scanned", description: "Ran Project Doctor scan", icon: FileText, condition: (ps: ProjectState) => ps.doctorScore > 0, color: "var(--noctra-rose)", href: "/app/doctor" },
@@ -335,12 +335,11 @@ export default function ProjectDetailPage() {
   const TABS: Array<{ key: Tab; label: string; count?: number }> = [
     { key: "overview", label: "Overview" },
     { key: "reports", label: "Reports", count: reports.length },
-    { key: "tasks", label: "Tasks", count: tasks.filter((t) => t.status !== "completed").length },
+    { key: "execution", label: "Execution", count: tasks.filter((t) => t.status !== "completed").length },
     { key: "proof", label: "Proof", count: proofSignals.length },
-    { key: "scans", label: "Scans", count: doctorReports.length },
-    { key: "twin", label: "Twin" },
+    { key: "doctor", label: "Project Doctor", count: doctorReports.length },
+    { key: "twin", label: "Product Twin" },
     { key: "launch", label: "Launch", count: launchReports.length },
-    { key: "passport", label: "Passport", count: earnedStamps.length },
     { key: "history", label: "History", count: timeline.length },
   ];
 
@@ -476,7 +475,7 @@ export default function ProjectDetailPage() {
             <div className="grid grid-cols-3 gap-3">
               {[
                 { label: "Reports", value: reports.length, icon: FileText, color: "var(--noctra-violet)", onClick: () => setTab("reports") },
-                { label: "Tasks", value: tasks.length, icon: CheckSquare, color: "var(--noctra-emerald)", onClick: () => setTab("tasks") },
+                { label: "Tasks", value: tasks.length, icon: CheckSquare, color: "var(--noctra-emerald)", onClick: () => setTab("execution") },
                 { label: "Proof Signals", value: proofSignals.length, icon: FlaskConical, color: "var(--noctra-emerald)", onClick: () => setTab("proof") },
               ].map(({ label, value, icon: Icon, color, onClick }) => (
                 <Panel key={label}>
@@ -582,27 +581,6 @@ export default function ProjectDetailPage() {
               </Panel>
             ) : null}
 
-            {scoreHistory.length > 0 ? (
-              <Panel>
-                <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Score History</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {scoreHistory.map((entry) => {
-                    const t = TOOL_BY_KEY[entry.tool as keyof typeof TOOL_BY_KEY];
-                    return (
-                      <div key={entry.tool} className="rounded-lg p-3" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          {t ? <t.icon size={10} style={{ color: t.accent }} /> : null}
-                          <span className="text-[10px] uppercase tracking-wide font-medium" style={{ color: "var(--noctra-text-muted)" }}>{t?.short ?? entry.tool}</span>
-                        </div>
-                        <p className="text-xl font-bold font-mono leading-none" style={{ color: t?.accent ?? "var(--noctra-cyan)" }}>{entry.latestScore}</p>
-                        {entry.delta != null ? <p className="text-[10px] mt-1 font-medium" style={{ color: getDeltaColor(entry.direction) }}>{getDeltaLabel(entry)}</p> : <p className="text-[10px] mt-1" style={{ color: "var(--noctra-text-muted)" }}>first run</p>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </Panel>
-            ) : null}
-
             {projectState ? (
               <Panel>
                 <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Export & Handoff</p>
@@ -627,17 +605,35 @@ export default function ProjectDetailPage() {
               <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Run Intelligence Tool</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {[
-                  { label: "Signal Chamber", href: "/app/idea", color: "var(--noctra-violet)" },
-                  { label: "Pressure Matrix", href: "/app/reality", color: "var(--noctra-amber)" },
-                  { label: "Proof Reactor", href: "/app/proof", color: "var(--noctra-emerald)" },
-                  { label: "Blueprint Board", href: "/app/mvp", color: "var(--noctra-cyan)" },
+                  { label: "Idea Checker", href: "/app/idea", color: "var(--noctra-violet)" },
+                  { label: "Reality Compiler", href: "/app/reality", color: "var(--noctra-amber)" },
+                  { label: "Proof Engine", href: "/app/proof", color: "var(--noctra-emerald)" },
+                  { label: "MVP Planner", href: "/app/mvp", color: "var(--noctra-cyan)" },
                   { label: "Project Doctor", href: "/app/doctor", color: "var(--noctra-rose)" },
-                  { label: "Launch Control", href: "/app/launch", color: "var(--noctra-amber)" },
+                  { label: "Launch Room", href: "/app/launch", color: "var(--noctra-amber)" },
                 ].map(({ label, href, color }) => (
                   <button key={href} onClick={() => navigate(href)} className="px-3 py-2 rounded-lg text-xs font-medium text-left hover:opacity-80" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color }}>{label}</button>
                 ))}
               </div>
             </Panel>
+
+            {earnedStamps.length > 0 ? (
+              <Panel>
+                <div className="flex items-center gap-2 mb-3">
+                  <Award size={13} style={{ color: "var(--noctra-violet)" }} />
+                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Passport Stamps</p>
+                  <span className="ml-auto text-xs font-mono" style={{ color: "var(--noctra-text-muted)" }}>{earnedStamps.length}/{PASSPORT_STAMPS.length}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {earnedStamps.map((stamp) => (
+                    <div key={stamp.key} className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs" style={{ background: `${stamp.color}15`, border: `1px solid ${stamp.color}30`, color: stamp.color }}>
+                      <stamp.icon size={11} />
+                      <span>{stamp.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </Panel>
+            ) : null}
           </div>
         ) : null}
 
@@ -725,8 +721,8 @@ export default function ProjectDetailPage() {
           </div>
         ) : null}
 
-        {/* ── Tasks Tab ── */}
-        {tab === "tasks" ? (
+        {/* ── Execution Tab ── */}
+        {tab === "execution" ? (
           <div className="space-y-3">
             {tasks.length === 0 ? (
               <EmptyState icon={<CheckSquare size={22} />} title="No tasks yet" body="Generate tasks from any AI report to start building your sprint queue." />
@@ -842,12 +838,12 @@ export default function ProjectDetailPage() {
                 ))}
               </div>
             )}
-            <NoctraButton variant="ghost" onClick={() => navigate("/app/proof")}><FlaskConical size={13} /> Run Proof Reactor <ArrowRight size={11} /></NoctraButton>
+            <NoctraButton variant="ghost" onClick={() => navigate("/app/proof")}><FlaskConical size={13} /> Run Proof Engine <ArrowRight size={11} /></NoctraButton>
           </div>
         ) : null}
 
-        {/* ── Scans Tab ── */}
-        {tab === "scans" ? (
+        {/* ── Doctor Tab ── */}
+        {tab === "doctor" ? (
           <div className="space-y-3">
             {doctorReports.length === 0 ? (
               <>
@@ -859,16 +855,40 @@ export default function ProjectDetailPage() {
             ) : (
               <>
                 {latestDoctorReport ? (
-                  <Panel>
-                    <div className="flex items-center gap-3 mb-3">
-                      <FileText size={14} style={{ color: "var(--noctra-rose)" }} />
-                      <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Latest Scan</p>
-                      {latestDoctorReport.score != null ? <Badge style={{ marginLeft: "auto", background: `${SCORE_COLOR(latestDoctorReport.score)}18`, color: SCORE_COLOR(latestDoctorReport.score) }}>{latestDoctorReport.score}/100</Badge> : null}
+                  <>
+                    <Panel>
+                      <div className="flex items-center gap-3 mb-3">
+                        <FileText size={14} style={{ color: "var(--noctra-rose)" }} />
+                        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Latest Scan</p>
+                        {latestDoctorReport.score != null ? <Badge style={{ marginLeft: "auto", background: `${SCORE_COLOR(latestDoctorReport.score)}18`, color: SCORE_COLOR(latestDoctorReport.score) }}>{latestDoctorReport.score}/100</Badge> : null}
+                      </div>
+                      <p className="text-sm font-medium mb-1" style={{ color: "var(--noctra-text)" }}>{latestDoctorReport.title}</p>
+                      {latestDoctorReport.summary ? <p className="text-xs mb-2" style={{ color: "var(--noctra-text-muted)" }}>{latestDoctorReport.summary}</p> : null}
+                      <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{new Date(latestDoctorReport.created_at).toLocaleDateString()}</p>
+                    </Panel>
+
+                    {/* Health + Launch Readiness */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {latestDoctorReport.score != null && (
+                        <Panel>
+                          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>Health Score</p>
+                          <p className="text-2xl font-bold" style={{ color: SCORE_COLOR(latestDoctorReport.score) }}>{latestDoctorReport.score}/100</p>
+                        </Panel>
+                      )}
+                      {(() => {
+                        const p = latestDoctorReport.payload as Record<string, unknown>;
+                        const data = ((p?.data ?? p) ?? {}) as Record<string, unknown>;
+                        const lr = data.launch_readiness as string;
+                        if (!lr) return null;
+                        return (
+                          <Panel>
+                            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>Launch Readiness</p>
+                            <p className="text-lg font-bold" style={{ color: lr === "GO" ? "var(--noctra-emerald)" : lr === "CONDITIONAL" ? "var(--noctra-amber)" : "var(--noctra-rose)" }}>{lr}</p>
+                          </Panel>
+                        );
+                      })()}
                     </div>
-                    <p className="text-sm font-medium mb-1" style={{ color: "var(--noctra-text)" }}>{latestDoctorReport.title}</p>
-                    {latestDoctorReport.summary ? <p className="text-xs mb-2" style={{ color: "var(--noctra-text-muted)" }}>{latestDoctorReport.summary}</p> : null}
-                    <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{new Date(latestDoctorReport.created_at).toLocaleDateString()}</p>
-                  </Panel>
+                  </>
                 ) : null}
 
                 {openScanGates.length > 0 ? (
@@ -885,12 +905,17 @@ export default function ProjectDetailPage() {
                         </div>
                       ))}
                     </div>
-                    {latestDoctorReport ? (
-                      <button onClick={() => handleGenerateTasksFromReport(latestDoctorReport)} disabled={generatingTasks === latestDoctorReport.id} className="flex items-center gap-1.5 mt-3 text-xs hover:opacity-80 disabled:opacity-50" style={{ color: "var(--noctra-rose)" }}>
-                        {generatingTasks === latestDoctorReport.id ? <Loader2 size={11} className="animate-spin" /> : <CheckSquare size={11} />}
-                        Generate fix tasks from blockers
+                    <div className="flex gap-2 mt-3 flex-wrap">
+                      {latestDoctorReport ? (
+                        <button onClick={() => handleGenerateTasksFromReport(latestDoctorReport)} disabled={generatingTasks === latestDoctorReport.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-80 disabled:opacity-50" style={{ color: "var(--noctra-rose)", background: "rgba(244,63,94,0.1)" }}>
+                          {generatingTasks === latestDoctorReport.id ? <Loader2 size={11} className="animate-spin" /> : <CheckSquare size={11} />}
+                          Generate Fix Tasks
+                        </button>
+                      ) : null}
+                      <button onClick={() => navigate("/app/doctor")} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{ color: "var(--noctra-rose)", background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+                        <RefreshCw size={11} /> Re-scan
                       </button>
-                    ) : null}
+                    </div>
                   </Panel>
                 ) : latestDoctorReport ? (
                   <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.2)" }}>
@@ -899,7 +924,28 @@ export default function ProjectDetailPage() {
                   </div>
                 ) : null}
 
-                {latestDoctorReport ? <Panel><ReportRenderer report={latestDoctorReport} /></Panel> : null}
+                {latestDoctorReport ? <Panel><ReportRenderer report={latestDoctorReport} projectId={project?.id} /></Panel> : null}
+
+                {/* Fix tasks from doctor */}
+                {projectState && projectState.doctorScore > 0 && tasks.filter(t => t.source_report_id === latestDoctorReport?.id).length > 0 && (
+                  <Panel>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckSquare size={13} style={{ color: "var(--noctra-emerald)" }} />
+                      <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Doctor Fix Tasks</p>
+                      <span className="ml-auto text-xs font-mono" style={{ color: "var(--noctra-text-muted)" }}>{tasks.filter(t => t.source_report_id === latestDoctorReport?.id).length} tasks</span>
+                    </div>
+                    {tasks.filter(t => t.source_report_id === latestDoctorReport?.id).slice(0, 5).map(t => (
+                      <div key={t.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg mb-1 text-xs" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+                        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: PRIORITY_COLOR[t.priority] ?? "var(--noctra-text-muted)" }} />
+                        <span className="flex-1" style={{ color: "var(--noctra-text)" }}>{t.title}</span>
+                        <Badge style={{ fontSize: "9px" }}>{t.status}</Badge>
+                      </div>
+                    ))}
+                    <NoctraButton variant="ghost" onClick={() => navigate("/app/tasks")} className="mt-1">
+                      View All Tasks <ArrowRight size={11} />
+                    </NoctraButton>
+                  </Panel>
+                )}
 
                 {doctorReports.length > 1 ? (
                   <Panel>
@@ -997,78 +1043,15 @@ export default function ProjectDetailPage() {
                   <NoctraButton variant="ghost" onClick={() => handleGenerateTasksFromReport(latestLaunchReport)} disabled={generatingTasks === latestLaunchReport.id}>
                     {generatingTasks === latestLaunchReport.id ? <Loader2 size={12} className="animate-spin" /> : <CheckSquare size={12} />} Generate Launch Tasks
                   </NoctraButton>
-                  <NoctraButton variant="ghost" onClick={() => navigate("/app/launch")}><Rocket size={13} /> Re-run Launch Control</NoctraButton>
+                  <NoctraButton variant="ghost" onClick={() => navigate("/app/launch")}><Rocket size={13} /> Re-run Launch Room</NoctraButton>
                 </div>
               </>
             ) : (
               <>
-                <EmptyState icon={<Rocket size={22} />} title="No launch report yet" body="Run Launch Control to get your go/no-go signal with a full checklist and distribution plan." />
-                <div className="flex justify-center"><NoctraButton onClick={() => navigate("/app/launch")}><Rocket size={13} /> Run Launch Control</NoctraButton></div>
+                <EmptyState icon={<Rocket size={22} />} title="No launch report yet" body="Run Launch Room to get your go/no-go signal with a full checklist and distribution plan." />
+                <div className="flex justify-center"><NoctraButton onClick={() => navigate("/app/launch")}><Rocket size={13} /> Run Launch Room</NoctraButton></div>
               </>
             )}
-          </div>
-        ) : null}
-
-        {/* ── Passport Tab ── */}
-        {tab === "passport" ? (
-          <div className="space-y-4">
-            <Panel>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.25)" }}>
-                  <Award size={18} style={{ color: "var(--noctra-violet)" }} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: "var(--noctra-text)" }}>Founder Passport</p>
-                  <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{earnedStamps.length}/{PASSPORT_STAMPS.length} stamps earned</p>
-                </div>
-                <div className="w-24">
-                  <ProgressBar value={earnedStamps.length} max={PASSPORT_STAMPS.length} color="var(--noctra-violet)" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {PASSPORT_STAMPS.map((stamp) => {
-                  const earned = earnedStamps.some((s) => s.key === stamp.key);
-                  return (
-                    <div key={stamp.key} className="flex flex-col items-center gap-2 p-3 rounded-xl text-center" style={{ background: earned ? `${stamp.color}10` : "var(--noctra-surface2)", border: `1px solid ${earned ? `${stamp.color}30` : "var(--noctra-border)"}`, opacity: earned ? 1 : 0.45 }}>
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: earned ? `${stamp.color}20` : "transparent", border: `1px solid ${earned ? stamp.color : "var(--noctra-border)"}` }}>
-                        <stamp.icon size={14} style={{ color: earned ? stamp.color : "var(--noctra-text-muted)" }} />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold" style={{ color: earned ? "var(--noctra-text)" : "var(--noctra-text-muted)" }}>{stamp.label}</p>
-                        <p className="text-[10px] mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{stamp.description}</p>
-                      </div>
-                      {earned ? <span className="text-[10px] font-medium" style={{ color: stamp.color }}>Earned</span> : <span className="text-[10px]" style={{ color: "var(--noctra-text-muted)" }}>Locked</span>}
-                    </div>
-                  );
-                })}
-              </div>
-            </Panel>
-
-            {projectState ? (
-              <Panel>
-                <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Project Readiness Checklist</p>
-                <div className="space-y-2">
-                  {[
-                    { label: "Idea Validated", done: projectState.ideaScore > 0, href: "/app/idea" },
-                    { label: "Reality Checked", done: projectState.realityScore > 0, href: "/app/reality" },
-                    { label: "Proof Signals (3+)", done: projectState.proofSignalCount >= 3, href: "/app/proof" },
-                    { label: "Market Simulated", done: projectState.swarmScore > 0, href: "/app/swarm" },
-                    { label: "MVP Planned", done: projectState.mvpScore > 0, href: "/app/mvp" },
-                    { label: "Tasks Created (3+)", done: projectState.totalTasks >= 3, href: "/app/tasks" },
-                    { label: "Code Scanned", done: projectState.doctorScore > 0, href: "/app/doctor" },
-                    { label: "Launch Plan Generated", done: projectState.launchScore > 0, href: "/app/launch" },
-                  ].map(({ label, done, href }) => (
-                    <div key={label} className="flex items-center gap-3">
-                      {done ? <CheckCircle2 size={14} style={{ color: "var(--noctra-emerald)" }} /> : <Circle size={14} style={{ color: "var(--noctra-text-muted)" }} />}
-                      <span className="text-xs flex-1" style={{ color: done ? "var(--noctra-text)" : "var(--noctra-text-muted)" }}>{label}</span>
-                      {!done ? (
-                        <button onClick={() => navigate(href)} className="text-xs hover:opacity-80" style={{ color: "var(--noctra-cyan)" }}>Go <ArrowRight size={10} className="inline" /></button>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              </Panel>
-            ) : null}
           </div>
         ) : null}
 
@@ -1105,6 +1088,26 @@ export default function ProjectDetailPage() {
             ) : (
               <EmptyState icon={<History size={22} />} title="No history yet" body="Run intelligence tools and add proof signals to build your project timeline." />
             )}
+            {scoreHistory.length > 0 ? (
+              <Panel>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Score History</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {scoreHistory.map((entry) => {
+                    const t = TOOL_BY_KEY[entry.tool as keyof typeof TOOL_BY_KEY];
+                    return (
+                      <div key={entry.tool} className="rounded-lg p-3" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          {t ? <t.icon size={10} style={{ color: t.accent }} /> : null}
+                          <span className="text-[10px] uppercase tracking-wide font-medium" style={{ color: "var(--noctra-text-muted)" }}>{t?.short ?? entry.tool}</span>
+                        </div>
+                        <p className="text-xl font-bold font-mono leading-none" style={{ color: t?.accent ?? "var(--noctra-cyan)" }}>{entry.latestScore}</p>
+                        {entry.delta != null ? <p className="text-[10px] mt-1 font-medium" style={{ color: getDeltaColor(entry.direction) }}>{getDeltaLabel(entry)}</p> : <p className="text-[10px] mt-1" style={{ color: "var(--noctra-text-muted)" }}>first run</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </Panel>
+            ) : null}
             {risks.length > 0 ? (
               <Panel>
                 <div className="flex items-center gap-2 mb-3">

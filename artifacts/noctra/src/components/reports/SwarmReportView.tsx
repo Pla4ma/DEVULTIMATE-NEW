@@ -1,5 +1,5 @@
 import { ScoreRing, Badge, Panel, EmptyState, ProgressBar } from "@/components/Primitives";
-import { Users, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Users, ShieldAlert, ShieldCheck, TrendingUp, DollarSign, MessageCircle, Zap } from "lucide-react";
 import { computeAIDefenseScore, DEFENSE_RISK_COLOR, DEFENSE_RISK_LABEL } from "@/lib/ai-defense";
 
 type Persona = { name: string; role: string; reaction: string; objections?: string[]; willingness_to_pay?: string; top_objection?: string; segment?: string };
@@ -20,6 +20,19 @@ type SwarmData = {
   pricing_signal?: string;
   next_actions?: string[];
   segment_breakdown?: SegmentBreakdown;
+  // Metric-driven fields
+  simulated_user_count?: number;
+  would_try_free_percent?: number;
+  would_pay_percent?: number;
+  understood_value_percent?: number;
+  chatgpt_objection_percent?: number;
+  churn_risk_percent?: number;
+  best_segment?: string;
+  winning_positioning?: string;
+  top_objection?: string;
+  segment_clusters?: Record<string, number>;
+  feature_demand?: Record<string, number>;
+  objection_heatmap?: Record<string, number>;
 };
 
 type Props = {
@@ -52,7 +65,119 @@ export function SwarmReportView({ report, compact }: Props) {
         </div>
       </div>
 
-      {data.personas && data.personas.length > 0 && (
+      {/* Metric cards — show when metric data is present */}
+      {data.would_try_free_percent != null && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {[
+            { label: "Would Try Free", value: data.would_try_free_percent, icon: TrendingUp, color: "var(--noctra-cyan)" },
+            { label: "Would Pay", value: data.would_pay_percent, icon: DollarSign, color: "var(--noctra-emerald)" },
+            { label: "Understood Value", value: data.understood_value_percent, icon: Zap, color: "var(--noctra-violet)" },
+            { label: "ChatGPT Objection", value: data.chatgpt_objection_percent, icon: MessageCircle, color: "var(--noctra-rose)" },
+            { label: "Churn Risk", value: data.churn_risk_percent, icon: ShieldAlert, color: "var(--noctra-amber)" },
+          ].map(({ label, value, icon: Icon, color }) => value != null ? (
+            <div key={label} className="rounded-xl px-3 py-3 text-center" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+              <Icon size={14} className="mx-auto mb-1" style={{ color }} />
+              <p className="text-lg font-bold" style={{ color }}>{value}%</p>
+              <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>{label}</p>
+            </div>
+          ) : null)}
+        </div>
+      )}
+
+      {/* Best segment + winning positioning */}
+      {data.best_segment && (
+        <div className="grid grid-cols-2 gap-3">
+          <Panel>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-text-muted)" }}>Best Segment</p>
+            <p className="text-sm font-semibold" style={{ color: "var(--noctra-emerald)" }}>{data.best_segment}</p>
+          </Panel>
+          {data.winning_positioning ? (
+            <Panel>
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-text-muted)" }}>Winning Positioning</p>
+              <p className="text-sm" style={{ color: "var(--noctra-cyan)" }}>{data.winning_positioning}</p>
+            </Panel>
+          ) : null}
+        </div>
+      )}
+
+      {/* Feature demand ranking */}
+      {data.feature_demand && Object.keys(data.feature_demand).length > 0 && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-cyan)" }}>Feature Demand</p>
+          <div className="space-y-1.5">
+            {Object.entries(data.feature_demand)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 8)
+              .map(([feature, pct]) => (
+                <div key={feature} className="flex items-center gap-2">
+                  <span className="text-xs flex-1" style={{ color: "var(--noctra-text-soft)" }}>{feature}</span>
+                  <span className="text-xs font-mono" style={{ color: "var(--noctra-cyan)" }}>{pct}%</span>
+                  <div className="w-20 h-1.5 rounded-full" style={{ background: "var(--noctra-surface2)" }}>
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--noctra-cyan)" }} />
+                  </div>
+                </div>
+              ))}
+          </div>
+        </Panel>
+      )}
+
+      {/* Objection heatmap */}
+      {data.objection_heatmap && Object.keys(data.objection_heatmap).length > 0 && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-rose)" }}>Objection Heatmap</p>
+          <div className="space-y-1.5">
+            {Object.entries(data.objection_heatmap)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 6)
+              .map(([obj, pct]) => (
+                <div key={obj} className="flex items-center gap-2">
+                  <span className="text-xs flex-1" style={{ color: "var(--noctra-text-soft)" }}>{obj}</span>
+                  <span className="text-xs font-mono" style={{ color: pct > 40 ? "var(--noctra-rose)" : "var(--noctra-amber)" }}>{pct}%</span>
+                  <div className="w-20 h-1.5 rounded-full" style={{ background: "var(--noctra-surface2)" }}>
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: pct > 40 ? "var(--noctra-rose)" : "var(--noctra-amber)" }} />
+                  </div>
+                </div>
+              ))}
+          </div>
+        </Panel>
+      )}
+
+      {/* Next experiments */}
+      {data.next_experiments && data.next_experiments.length > 0 && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-emerald)" }}>Next Experiments</p>
+          <div className="space-y-1">
+            {data.next_experiments.map((e, i) => (
+              <p key={i} className="text-xs flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
+                <span style={{ color: "var(--noctra-emerald)" }}>→</span>
+                {typeof e === "string" ? e : e.title}
+              </p>
+            ))}
+          </div>
+        </Panel>
+      )}
+
+      {/* Segment breakdown */}
+      {data.segment_breakdown && (
+        <Panel>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Segment Breakdown</p>
+          <div className="flex gap-3">
+            {[
+              { label: "Enthusiasts", value: data.segment_breakdown.enthusiasts, color: "var(--noctra-emerald)" },
+              { label: "Neutrals", value: data.segment_breakdown.neutrals, color: "var(--noctra-amber)" },
+              { label: "Skeptics", value: data.segment_breakdown.skeptics, color: "var(--noctra-rose)" },
+            ].map(({ label, value, color }) => value != null ? (
+              <div key={label} className="flex-1 text-center px-2 py-3 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+                <p className="text-xl font-bold" style={{ color }}>{value}%</p>
+                <p className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{label}</p>
+              </div>
+            ) : null)}
+          </div>
+        </Panel>
+      )}
+
+      {/* Persona reactions — shown only if metric data is not present (old format fallback) */}
+      {!data.would_try_free_percent && data.personas && data.personas.length > 0 && (
         <Panel>
           <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-cyan)" }}>Persona Reactions</p>
           <div className="space-y-3">

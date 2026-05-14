@@ -93,7 +93,22 @@ export async function generateTasksFromReport(input: {
           detail: test || `Test assumption: ${assumption}`,
           priority: normalizePriority(a.risk),
           category: "validation",
+          acceptance_criteria: test ? [`Assumption "${assumption}" is tested and validated`] : undefined,
         });
+      });
+      // Errors and warnings in idea analysis
+      asArray(data.errors).slice(0, 4).forEach((e) => {
+        const title = str(e);
+        if (title) push({ title: truncate(`Fix error: ${title}`), priority: "high", category: "strategy" });
+      });
+      asArray(data.warnings).slice(0, 4).forEach((w) => {
+        const title = str(w);
+        if (title) push({ title: truncate(`Address: ${title}`), priority: "medium", category: "strategy" });
+      });
+      // Product patch from idea
+      asArray(data.product_patch).slice(0, 3).forEach((p) => {
+        const patch = str(p);
+        if (patch) push({ title: truncate(`Apply patch: ${patch}`), priority: "high", category: "development" });
       });
       // Sharpest experiment as a standalone task
       const experiment = str(data.sharpest_experiment);
@@ -104,7 +119,7 @@ export async function generateTasksFromReport(input: {
     }
 
     case "reality": {
-      // Patch plan items — these are the actual actionable fixes (field exists in AI schema)
+      // Patch plan items — these are the actual actionable fixes
       asArray(data.patch_plan).slice(0, 8).forEach((raw) => {
         const p = asObj(raw);
         const problem = str(p.problem);
@@ -117,6 +132,24 @@ export async function generateTasksFromReport(input: {
           category: "strategy",
         });
       });
+      // Errors from reality check — these are critical issues to address
+      asArray(data.errors).slice(0, 6).forEach((e) => {
+        const title = str(e);
+        if (title) push({ title: truncate(`Fix: ${title}`), priority: "high", category: "strategy" });
+      });
+      // Warnings from reality check
+      asArray(data.warnings).slice(0, 4).forEach((w) => {
+        const title = str(w);
+        if (title) push({ title: truncate(`Address: ${title}`), priority: "medium", category: "strategy" });
+      });
+      // Product patch items from reality
+      asArray(data.product_patch).slice(0, 5).forEach((p) => {
+        const patch = str(p);
+        if (patch) push({ title: truncate(`Apply patch: ${patch}`), priority: "high", category: "development" });
+      });
+      // Decisive move
+      const decisiveMove = str(data.decisive_move);
+      if (decisiveMove) push({ title: truncate(`Decisive move: ${decisiveMove}`), priority: "high", category: "strategy" });
       // High/critical risk items become mitigation tasks
       asArray(data.risk_items).slice(0, 6).forEach((raw) => {
         const r = asObj(raw);
@@ -203,6 +236,11 @@ export async function generateTasksFromReport(input: {
         const title = str(e);
         if (title) push({ title: truncate(`Experiment: ${title}`), priority: "high", category: "validation" });
       });
+      // Feature demand items — features customers want built
+      asArray(data.feature_demand).slice(0, 5).forEach((f) => {
+        const feat = str(f);
+        if (feat) push({ title: truncate(`Build (demand): ${feat}`), priority: "high", category: "development" });
+      });
       asArray(data.next_actions).slice(0, 3).forEach((a) => {
         const title = str(a);
         if (title) push({ title: truncate(title), priority: "medium", category: "strategy" });
@@ -216,6 +254,11 @@ export async function generateTasksFromReport(input: {
       asArray(scope.build_now).slice(0, 8).forEach((f) => {
         const title = str(f);
         if (title) push({ title: truncate(`Build: ${title}`), priority: "high", category: "development" });
+      });
+      // Architecture decisions as tasks
+      asArray(data.architecture).slice(0, 5).forEach((a) => {
+        const arch = str(a);
+        if (arch) push({ title: truncate(`Architecture: ${arch}`), priority: "high", category: "development" });
       });
       // Feature ROI: only BUILD decisions
       asArray(data.feature_roi).slice(0, 6).forEach((raw) => {
@@ -255,6 +298,23 @@ export async function generateTasksFromReport(input: {
     }
 
     case "doctor": {
+      // Evidence items from scan
+      const evidence = asArray(data.evidence ?? data.evidenceIndex ?? data.scan_evidence);
+      evidence.slice(0, 8).forEach((raw) => {
+        const e = asObj(raw);
+        const title = str(e.explanation ?? e.signal ?? e.snippet);
+        const filePath = str(e.filePath);
+        const sev = str(e.severity);
+        if (!title) return;
+        const detail = filePath ? `File: ${filePath}${e.lineNumber ? `:${e.lineNumber}` : ""}` : undefined;
+        push({
+          title: truncate(`${sev === "error" ? "Fix" : "Address"}: ${title.slice(0, 80)}`),
+          detail: detail || undefined,
+          priority: sev === "error" || sev === "CRITICAL" ? "high" : sev === "warning" || sev === "HIGH" ? "medium" : "low",
+          category: "technical",
+          acceptance_criteria: detail ? [`Issue in ${filePath} is resolved`] : undefined,
+        });
+      });
       // CRITICAL and HIGH issues first
       asArray(data.issues).slice(0, 8).forEach((raw) => {
         const issue = asObj(raw);
@@ -273,20 +333,125 @@ export async function generateTasksFromReport(input: {
       });
       // Repair queue items
       asArray(data.repair_queue).slice(0, 6).forEach((item) => {
-        const title = str(item);
+        const title = str(typeof item === "string" ? item : asObj(item).title ?? item);
         if (title) push({ title: truncate(title), priority: "high", category: "technical" });
       });
-      // Fix plan for medium items not already covered
-      asArray(data.fix_plan).slice(0, 4).forEach((raw) => {
+      // Fix plan items
+      asArray(data.fix_plan).slice(0, 6).forEach((raw) => {
         const f = asObj(raw);
-        if (str(f.priority) !== "high") return;
         const title = str(f.title);
+        if (!title) return;
+        const files = asArray(f.files).map((x) => str(x)).filter(Boolean);
+        const criteria = asArray(f.acceptance_criteria).map((x) => str(x)).filter(Boolean);
+        push({
+          title: truncate(title),
+          detail: files.length > 0 ? `Files: ${files.join(", ")}` : str(f.code_hint) || undefined,
+          priority: normalizePriority(f.priority ?? "medium"),
+          category: "technical",
+          acceptance_criteria: criteria.length > 0 ? criteria : undefined,
+        });
+      });
+      // Gates from doctor data (gates array with objects)
+      const gatesData = asArray(data.gates ?? data.launch_gates);
+      gatesData.slice(0, 6).forEach((raw) => {
+        const g = asObj(raw);
+        const name = str(g.name ?? g.gate);
+        const status = str(g.status);
+        if (!name || status === "GREEN") return;
+        const howToFix = str(g.how_to_fix ?? g.fix);
+        push({
+          title: truncate(`Gate (${status}): ${name}`),
+          detail: howToFix ? `Fix: ${howToFix}` : `Status: ${status}`,
+          priority: status === "RED" ? "high" : "medium",
+          category: "technical",
+          acceptance_criteria: howToFix ? [`${name} gate is GREEN or PASSING`] : undefined,
+        });
+      });
+      // RED/YELLOW gate names as strings
+      asArray(data.red_gates).slice(0, 5).forEach((raw) => {
+        if (typeof raw === "string") {
+          push({ title: truncate(`Fix RED gate: ${raw}`), priority: "high", category: "technical" });
+        } else {
+          const g = asObj(raw);
+          const name = str(g.name ?? g.gate);
+          const howToFix = str(g.how_to_fix ?? g.fix);
+          if (!name) return;
+          push({
+            title: truncate(`Gate (RED): ${name}`),
+            detail: howToFix ? `Fix: ${howToFix}` : undefined,
+            priority: "high",
+            category: "technical",
+            acceptance_criteria: howToFix ? [`${name} gate is GREEN or PASSING`] : undefined,
+          });
+        }
+      });
+      asArray(data.yellow_gates).slice(0, 3).forEach((raw) => {
+        if (typeof raw === "string") {
+          push({ title: truncate(`Fix YELLOW gate: ${raw}`), priority: "medium", category: "technical" });
+        } else {
+          const g = asObj(raw);
+          const name = str(g.name ?? g.gate);
+          const howToFix = str(g.how_to_fix ?? g.fix);
+          if (!name) return;
+          push({
+            title: truncate(`Gate (YELLOW): ${name}`),
+            detail: howToFix ? `Fix: ${howToFix}` : undefined,
+            priority: "medium",
+            category: "technical",
+          });
+        }
+      });
+      // Security findings
+      asArray(data.security_findings).slice(0, 5).forEach((raw) => {
+        const s = asObj(raw);
+        const title = str(s.finding ?? s.issue ?? s.description);
+        const fix = str(s.fix ?? s.recommendation);
+        if (!title) return;
+        push({
+          title: truncate(`Security: ${title}`),
+          detail: fix || undefined,
+          priority: "high",
+          category: "technical",
+          acceptance_criteria: fix ? [`Security issue "${title}" is resolved and verified`] : undefined,
+        });
+      });
+      // Testing gaps
+      asArray(data.testing_gaps).slice(0, 4).forEach((t) => {
+        const title = str(t);
+        if (title) push({ title: truncate(`Test gap: ${title}`), priority: "medium", category: "technical" });
+      });
+      // Deployment gaps
+      asArray(data.deployment_gaps).slice(0, 4).forEach((d) => {
+        const title = str(d);
+        if (title) push({ title: truncate(`Deploy: ${title}`), priority: "medium", category: "technical" });
+      });
+      // Evidence gaps from alignment
+      const alignment = asObj(data.alignment ?? {});
+      const alignmentTasks = asArray(alignment.recommendedCodeTasks);
+      alignmentTasks.slice(0, 6).forEach((raw) => {
+        const t = asObj(raw);
+        const title = str(t.title);
+        const reason = str(t.reason);
         if (!title) return;
         push({
           title: truncate(title),
-          detail: str(f.code_hint) || undefined,
-          priority: "medium",
+          detail: reason || undefined,
+          priority: normalizePriority(t.priority ?? "high"),
           category: "technical",
+          acceptance_criteria: reason ? [`${title} is done and verified`] : undefined,
+        });
+      });
+      // Missing product requirements from alignment
+      const missingReqs = asArray(alignment.missingProductRequirements);
+      missingReqs.slice(0, 4).forEach((raw) => {
+        const m = asObj(raw);
+        const title = str(m.title);
+        if (!title) return;
+        push({
+          title: truncate(`Product gap: ${title}`),
+          detail: str(m.description) || undefined,
+          priority: "high",
+          category: "development",
         });
       });
       // Critical issues as separate tasks
@@ -322,17 +487,38 @@ export async function generateTasksFromReport(input: {
         if (title) push({ title: truncate(`Day 1: ${title}`), priority: "high", category: "launch" });
       });
       // High-probability, high-impact risks need mitigation tasks
-      asArray(data.risks).slice(0, 4).forEach((raw) => {
+      asArray(data.risks).slice(0, 6).forEach((raw) => {
         const r = asObj(raw);
-        const risk = str(r.risk);
-        const mitigation = str(r.mitigation);
-        if (!mitigation || (str(r.probability) !== "high" && str(r.impact) !== "high")) return;
-        push({
-          title: truncate(`Mitigate: ${risk || mitigation}`),
-          detail: mitigation,
-          priority: "high",
-          category: "launch",
-        });
+        const risk = str(r.risk ?? r.description);
+        const mitigation = str(r.mitigation ?? r.mitigate);
+        const probability = str(r.probability ?? r.likelihood);
+        const impact = str(r.impact ?? r.severity);
+        if (!risk) return;
+        if (mitigation) {
+          push({
+            title: truncate(`Mitigate: ${risk}`),
+            detail: mitigation,
+            priority: probability === "high" || impact === "high" ? "high" : "medium",
+            category: "launch",
+          });
+        } else {
+          push({ title: truncate(`Risk: ${risk}`), priority: "medium", category: "launch" });
+        }
+      });
+      // Distribution channels
+      asArray(data.distribution_channels ?? data.channels).slice(0, 4).forEach((c) => {
+        const channel = str(c);
+        if (channel) push({ title: truncate(`Launch via: ${channel}`), priority: "medium", category: "launch" });
+      });
+      // Analytics plan
+      asArray(data.analytics_plan ?? data.analytics).slice(0, 3).forEach((a) => {
+        const item = str(a);
+        if (item) push({ title: truncate(`Setup: ${item}`), priority: "medium", category: "launch" });
+      });
+      // Copy items
+      asArray(data.copy ?? data.messaging).slice(0, 3).forEach((c) => {
+        const item = str(c);
+        if (item) push({ title: truncate(`Copy: ${item}`), priority: "low", category: "launch" });
       });
       asArray(data.next_actions).slice(0, 3).forEach((a) => {
         const title = str(a);
@@ -388,8 +574,9 @@ export async function generateTasksFromReport(input: {
       })),
     );
     return Array.isArray(saved) ? saved.length : unique.length;
-  } catch {
-    return 0;
+  } catch (e) {
+    console.error("Failed to save tasks from report:", e);
+    throw new Error(`Task generation failed: ${e instanceof Error ? e.message : "Unknown error"}`);
   }
 }
 

@@ -28,6 +28,9 @@ function computeStamps(data: PassportData): Stamp[] {
   const doctorCount = reports.filter((r) => r.tool === "doctor").length;
   const launchCount = reports.filter((r) => r.tool === "launch").length;
   const swarmCount = reports.filter((r) => r.tool === "swarm").length;
+  const proofCount = reports.filter((r) => r.tool === "proof").length;
+  const scanCount = reports.filter((r) => r.tool === "doctor").length;
+  const taskCompletionRate = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
 
   return [
     {
@@ -56,14 +59,29 @@ function computeStamps(data: PassportData): Stamp[] {
       earned: signals.length >= 5, progress: signals.length, total: 5,
     },
     {
+      id: "proof_analysis", label: "Proof Analyzed", emoji: "🔬",
+      description: "Run a Proof Analysis report",
+      earned: proofCount >= 1,
+    },
+    {
       id: "task_master", label: "Task Master", emoji: "✅",
       description: "Complete 10 tasks",
       earned: completedTasks >= 10, progress: completedTasks, total: 10,
     },
     {
+      id: "task_commander", label: "Task Commander", emoji: "📋",
+      description: "Complete 80% of all tasks",
+      earned: taskCompletionRate >= 80 && tasks.length >= 5, progress: taskCompletionRate, total: 80,
+    },
+    {
       id: "code_doctor", label: "Code Doctor", emoji: "🏥",
-      description: "Run a Project Doctor analysis",
-      earned: doctorCount >= 1,
+      description: "Scan a repo with Project Doctor",
+      earned: scanCount >= 1,
+    },
+    {
+      id: "mvp_planner", label: "Blueprint Builder", emoji: "📋",
+      description: "Run the MVP Planner",
+      earned: reports.some((r) => r.tool === "mvp"),
     },
     {
       id: "launch_ready", label: "Launch Ready", emoji: "🚀",
@@ -86,20 +104,25 @@ function computeStamps(data: PassportData): Stamp[] {
       earned: reports.length >= 10, progress: reports.length, total: 10,
     },
     {
-      id: "mvp_planner", label: "Blueprint Builder", emoji: "📋",
-      description: "Run the MVP Planner",
-      earned: reports.some((r) => r.tool === "mvp"),
+      id: "multi_scanner", label: "Multi Scanner", emoji: "🔍",
+      description: "Scan 3 different repos",
+      earned: scanCount >= 3, progress: scanCount, total: 3,
+    },
+    {
+      id: "ship_it", label: "Shipped!", emoji: "🚢",
+      description: "Generate a launch pack",
+      earned: launchCount >= 1 && reports.some((r) => r.tool === "launch"),
     },
   ];
 }
 
-function getFounderLevel(reports: number, tasks: number, signals: number): { level: number; title: string; nextAt: number } {
-  const score = reports * 10 + tasks * 2 + signals * 3;
-  if (score >= 200) return { level: 5, title: "Operator", nextAt: Infinity };
-  if (score >= 100) return { level: 4, title: "Builder", nextAt: 200 };
-  if (score >= 50) return { level: 3, title: "Validator", nextAt: 100 };
-  if (score >= 20) return { level: 2, title: "Explorer", nextAt: 50 };
-  return { level: 1, title: "Pioneer", nextAt: 20 };
+function getFounderLevel(reports: number, tasks: number, signals: number, scans: number): { level: number; title: string; nextAt: number } {
+  const score = reports * 10 + tasks * 2 + signals * 3 + scans * 15;
+  if (score >= 300) return { level: 5, title: "Operator", nextAt: Infinity };
+  if (score >= 150) return { level: 4, title: "Builder", nextAt: 300 };
+  if (score >= 75) return { level: 3, title: "Validator", nextAt: 150 };
+  if (score >= 30) return { level: 2, title: "Explorer", nextAt: 75 };
+  return { level: 1, title: "Pioneer", nextAt: 30 };
 }
 
 export default function PassportPage() {
@@ -150,10 +173,11 @@ export default function PassportPage() {
   const toolsUsed = [...new Set(data.reports.map((r) => r.tool as string))];
   const stamps = computeStamps(data);
   const earnedStamps = stamps.filter((s) => s.earned).length;
-  const { level, title: levelTitle, nextAt } = getFounderLevel(data.reports.length, data.tasks.length, data.signals.length);
+  const scanCount = data.reports.filter((r) => r.tool === "doctor").length;
+  const { level, title: levelTitle, nextAt } = getFounderLevel(data.reports.length, data.tasks.length, data.signals.length, scanCount);
 
-  const levelScore = data.reports.length * 10 + data.tasks.length * 2 + data.signals.length * 3;
-  const prevLevelAt = level === 1 ? 0 : level === 2 ? 20 : level === 3 ? 50 : level === 4 ? 100 : 200;
+  const levelScore = data.reports.length * 10 + data.tasks.length * 2 + data.signals.length * 3 + scanCount * 15;
+  const prevLevelAt = level === 1 ? 0 : level === 2 ? 30 : level === 3 ? 75 : level === 4 ? 150 : 300;
   const levelProgress = nextAt === Infinity ? 100 : Math.round(((levelScore - prevLevelAt) / (nextAt - prevLevelAt)) * 100);
 
   return (

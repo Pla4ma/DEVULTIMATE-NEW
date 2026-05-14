@@ -62,7 +62,7 @@ export default function LaunchPage() {
       if (summary && !input.trim()) {
         setInput(summary);
       }
-    } catch { setContextReports([]); } finally { setLoadingContext(false); }
+    } catch (e) { setContextReports([]); toast({ title: "Failed to load project context", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" }); } finally { setLoadingContext(false); }
   }
 
   async function run() {
@@ -90,7 +90,7 @@ export default function LaunchPage() {
     try {
       const report = await saveReport({
         tool: "launch",
-        title: res.title || `Launch Control — ${input.slice(0, 60)}`,
+        title: res.title || `Launch Room — ${input.slice(0, 60)}`,
         payload: { data: res.data, markdown: res.markdown },
         score: res.score ?? undefined,
         summary: res.summary,
@@ -100,8 +100,8 @@ export default function LaunchPage() {
       setSavedReportId(r?.id ?? null);
       if (r?.id) await generateTasksFromReport({ id: r.id, tool: "launch", payload: { data: res.data }, project_id: selectedProjectId || null });
       setSaved(true);
-    } catch {
-      // silent
+    } catch (e) {
+      toast({ title: "Auto-save failed", description: e instanceof Error ? e.message : "Report results visible but not stored.", variant: "destructive" });
     }
   }
 
@@ -247,7 +247,7 @@ export default function LaunchPage() {
               </NoctraButton>
             )}
             <NoctraButton variant="ghost" onClick={() => navigate("/app/twin")} className="flex-1">
-              Next: Memory Constellation <ArrowRight size={12} />
+              Next: Product Twin <ArrowRight size={12} />
             </NoctraButton>
           </div>
         )}

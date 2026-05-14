@@ -65,7 +65,7 @@ const TOOL_STAGES: Record<string, string[]> = {
     "Compiling launch assessment…",
   ],
   twin: [
-    "Loading memory constellation…",
+    "Loading project context…",
     "Detecting patterns across reports…",
     "Scanning for contradictions…",
     "Identifying drift signals…",

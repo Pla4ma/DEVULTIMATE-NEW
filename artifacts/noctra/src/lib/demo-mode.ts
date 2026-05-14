@@ -15,7 +15,7 @@ export function enableDemoMode(): { id: string; email: string } {
   const existing = localStorage.getItem(USER_KEY);
   if (existing) {
     try { user = JSON.parse(existing); }
-    catch { user = { id: crypto.randomUUID(), email: "demo@noctra.app" }; }
+    catch (e) { console.warn("Corrupt demo user data, regenerating:", e); user = { id: crypto.randomUUID(), email: "demo@noctra.app" }; }
   } else {
     user = { id: crypto.randomUUID(), email: "demo@noctra.app" };
   }
@@ -35,5 +35,5 @@ export function getDemoUser(): { id: string; email: string } | null {
   if (!isDemoMode()) return null;
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return enableDemoMode();
-  try { return JSON.parse(raw); } catch { return enableDemoMode(); }
+  try { return JSON.parse(raw); } catch (e) { console.warn("Corrupt demo user data, re-initializing:", e); return enableDemoMode(); }
 }

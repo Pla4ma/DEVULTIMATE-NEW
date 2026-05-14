@@ -68,8 +68,8 @@ export default function MvpPage() {
       setSavedReportId(r?.id ?? null);
       if (r?.id) await generateTasksFromReport({ id: r.id, tool: "mvp", payload: { data: res.data }, project_id: null });
       setSaved(true);
-    } catch {
-      // silent
+    } catch (e) {
+      toast({ title: "Auto-save failed", description: e instanceof Error ? e.message : "Report results visible but not stored.", variant: "destructive" });
     }
   }
 
@@ -218,7 +218,7 @@ export default function MvpPage() {
               </NoctraButton>
             )}
             <NoctraButton variant="ghost" onClick={() => navigate("/app/doctor")} className="flex-1">
-              Next: Diagnostic Bay <ArrowRight size={12} />
+              Next: Project Doctor <ArrowRight size={12} />
             </NoctraButton>
           </div>
         )}

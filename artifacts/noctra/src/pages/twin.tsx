@@ -15,7 +15,7 @@ const TOOL = TOOL_BY_KEY["twin"]!;
 type Msg = { role: "user" | "assistant"; content: string };
 type Project = { id: string; name: string; stage?: string | null };
 
-const SYSTEM_PROMPT = `You are the Memory Constellation — the persistent digital twin of this founder. You have deep context about their product decisions, assumptions, experiments, and trajectory. Surface patterns, contradictions, strategic drift, and next moves. Be direct, analytical, and founder-grade honest. Reference specific tools and scores when available.`;
+const SYSTEM_PROMPT = `You are the Product Twin — the persistent digital twin of this founder. You have deep context about their product decisions, assumptions, experiments, and trajectory. Surface patterns, contradictions, strategic drift, and next moves. Be direct, analytical, and founder-grade honest. Reference specific tools and scores when available.`;
 
 export default function TwinPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -50,16 +50,16 @@ export default function TwinPage() {
       const formatted = TwinMemory.formatMemoryForPrompt(ctx);
       setMemCtx(formatted);
       const greeting = [
-        `Memory constellation loaded. ${ctx.passport.totalReports} reports in intelligence vault.`,
+        `Context loaded. ${ctx.passport.totalReports} reports available.`,
         ctx.passport.averageScore > 0 ? ` Average score: ${ctx.passport.averageScore.toFixed(0)}/100.` : "",
-        ctx.passport.openTasks > 0 ? ` ${ctx.passport.openTasks} tasks in the queue.` : "",
+        ctx.passport.openTasks > 0 ? ` ${ctx.passport.openTasks} tasks in queue.` : "",
       ].join("");
       setMessages([{ role: "assistant", content: greeting }]);
     }).catch(() => {
       if (!cancelled) {
         setMessages([{
           role: "assistant",
-          content: "Memory constellation initialized. Run intelligence tools to build your founder context.",
+          content: "Ready. Run intelligence tools to build context for analysis.",
         }]);
       }
     });
@@ -109,7 +109,7 @@ export default function TwinPage() {
   async function runSynthesis() {
     if (recentReports.length === 0) return;
     setSyntheticPhase("running");
-    setSynthesisStage("Loading memory constellation…");
+    setSynthesisStage("Loading project context…");
 
     const reportSummary = recentReports
       .map((r) => `${r.tool}: "${r.title}" score=${r.score ?? "?"} — ${r.summary ?? "no summary"}`)
@@ -121,7 +121,8 @@ export default function TwinPage() {
       });
       setSynthesis(res.data);
       setSyntheticPhase("done");
-    } catch {
+    } catch (e) {
+      console.warn("Synthesis failed (non-critical):", e);
       setSyntheticPhase("idle");
     }
   }
@@ -149,15 +150,15 @@ export default function TwinPage() {
         fullSystem
       );
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Memory read failed. Check your API configuration." }]);
+    } catch (e) {
+      setMessages((prev) => [...prev, { role: "assistant", content: `Analysis failed: ${e instanceof Error ? e.message : "Check your API configuration."}` }]);
     } finally {
       setLoading(false);
     }
   }
 
   function resetChat() {
-    setMessages([{ role: "assistant", content: "Memory cleared. What should I help you think through?" }]);
+    setMessages([{ role: "assistant", content: "Context cleared. What would you like to analyze?" }]);
     setSynthesis(null);
     setSyntheticPhase("idle");
   }

@@ -38,7 +38,8 @@ async function getCurrentUserId(): Promise<string | null> {
   try {
     const { data } = await (supabase.auth.getUser() as Promise<{ data: { user: { id: string } | null } }>);
     return data?.user?.id ?? null;
-  } catch {
+  } catch (e) {
+    console.warn("getCurrentUserId failed:", e);
     return null;
   }
 }
@@ -47,14 +48,17 @@ async function safeQuery<T>(p: Promise<{ data: T | null }>): Promise<T | null> {
   try {
     const { data } = await p;
     return data;
-  } catch { return null; }
+  } catch (e) {
+    console.warn("safeQuery failed:", e);
+    return null;
+  }
 }
 
 function extractPayload(report: Record<string, unknown>): Record<string, unknown> {
   const raw = (report.payload ?? report.data) as unknown;
   if (raw && typeof raw === "object") return raw as Record<string, unknown>;
   if (typeof raw === "string") {
-    try { return JSON.parse(raw) as Record<string, unknown>; } catch { return {}; }
+    try { return JSON.parse(raw) as Record<string, unknown>; } catch (e) { console.warn("extractPayload JSON parse failed:", e); return {}; }
   }
   return {};
 }
@@ -190,7 +194,8 @@ export class TwinMemory {
         latestScores,
         passport,
       };
-    } catch {
+    } catch (e) {
+      console.warn("TwinMemory.loadMemoryContext failed:", e);
       return EMPTY;
     }
   }

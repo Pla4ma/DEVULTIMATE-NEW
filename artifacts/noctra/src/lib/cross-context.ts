@@ -139,7 +139,8 @@ export async function loadCrossToolContext(
       .join("\n\n");
 
     return { hasContext: true, summary, reports: contextReports };
-  } catch {
+  } catch (e) {
+    console.warn("Cross-context load failed (non-critical):", e);
     return { hasContext: false, summary: "", reports: [] };
   }
 }

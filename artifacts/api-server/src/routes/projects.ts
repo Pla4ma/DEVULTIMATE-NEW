@@ -52,6 +52,7 @@ router.post("/scan-upload", upload.single("file"), async (req, res) => {
       summaryMarkdown: scan.summaryMarkdown,
       launchGates,
       evidenceIndex: scan.evidenceIndex,
+      repoMap: scan.repoMap,
       warnings: [...warnings, ...scan.warnings],
     });
   } catch (err) {

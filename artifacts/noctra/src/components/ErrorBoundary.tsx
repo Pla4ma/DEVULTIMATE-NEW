@@ -20,8 +20,8 @@ export class ErrorBoundary extends Component<Props, State> {
     return { error };
   }
 
-  componentDidCatch(_error: Error, _info: ErrorInfo) {
-    // In production, forward to an error reporting service here
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("ErrorBoundary caught an error:", error, info.componentStack);
   }
 
   render() {
