@@ -18,9 +18,9 @@ function getSupabaseConfig(): { url: string; anonKey: string } | null {
 
 const config = getSupabaseConfig();
 
-export const supabase: SupabaseClient = config
+export const supabase: SupabaseClient | null = config
   ? createClient(config.url, config.anonKey)
-  : createClient("https://placeholder.supabase.co", "placeholder-key-do-not-use");
+  : null;
 
 export function isSupabaseConfigured(): boolean {
   return supabaseConfigError === null && config !== null;

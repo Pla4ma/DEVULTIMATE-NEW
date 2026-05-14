@@ -129,7 +129,7 @@ export function generateRoadmap(params: {
         now.push({
           id: uid("doctor"),
           title: `Fix ${failedGates.length} failed Project Doctor gate${failedGates.length > 1 ? "s" : ""}`,
-          reason: `Diagnostic Bay score is ${doctorScore}/100. Failed: ${failedGates.slice(0, 2).join(", ")}${failedGates.length > 2 ? "…" : ""}`,
+          reason: `Project Doctor score is ${doctorScore}/100. Failed: ${failedGates.slice(0, 2).join(", ")}${failedGates.length > 2 ? "…" : ""}`,
           priority: "critical",
           tool: "doctor",
           isBlocker: true,
@@ -140,7 +140,7 @@ export function generateRoadmap(params: {
         now.push({
           id: uid("doctor"),
           title: `Improve codebase health from ${doctorScore}/100`,
-          reason: "Low Diagnostic Bay score signals critical technical risks before launch",
+          reason: "Low Project Doctor score signals critical technical risks before launch",
           priority: "high",
           tool: "doctor",
           isBlocker: doctorScore < 40,
@@ -177,7 +177,7 @@ export function generateRoadmap(params: {
         id: uid("reality"),
         title: blockingErrors.length > 0
           ? `Resolve ${blockingErrors.length} blocking Reality Compiler error${blockingErrors.length > 1 ? "s" : ""}`
-          : "Address Pressure Matrix failures before building",
+          : "Address Reality Compiler failures before building",
         reason: `Reality score is ${realityScore}/100${goSignal ? ` — ${goSignal}` : ""}. Building on failing assumptions wastes runway.`,
         priority: "critical",
         tool: "reality",
@@ -207,13 +207,13 @@ export function generateRoadmap(params: {
   const toolSequence = ["idea", "reality", "proof", "swarm", "mvp", "doctor", "launch"];
   const coveredTools = new Set(reports.map((r) => r.tool));
   const toolDescriptions: Record<string, string> = {
-    idea: "Run Signal Chamber — validate your core idea before building anything",
-    reality: "Run Pressure Matrix — stress-test your top assumptions",
-    proof: "Run Proof Reactor — track and score real validation evidence",
-    swarm: "Run Swarm Field — simulate 25+ user personas reacting to your product",
-    mvp: "Run Blueprint Board — create a week-by-week build plan",
-    doctor: "Run Diagnostic Bay — scan codebase for launch blockers",
-    launch: "Run Launch Control — final go/no-go assessment",
+    idea: "Run Idea Checker — validate your core idea before building anything",
+    reality: "Run Reality Compiler — stress-test your top assumptions",
+    proof: "Run Proof Engine — track and score real validation evidence",
+    swarm: "Run Market Swarm — simulate user personas reacting to your product",
+    mvp: "Run MVP Planner — create a week-by-week build plan",
+    doctor: "Run Project Doctor — scan codebase for launch blockers",
+    launch: "Run Launch Room — final go/no-go assessment",
   };
 
   for (const tool of toolSequence) {
@@ -240,7 +240,7 @@ export function generateRoadmap(params: {
       next.push({
         id: uid("swarm-pricing"),
         title: "Run pricing experiment before building payment flow",
-        reason: `Swarm Field shows ${wtp}% willingness to pay — too low to build a paid product without validation`,
+        reason: `Market Swarm shows ${wtp}% willingness to pay — too low to build a paid product without validation`,
         priority: "high",
         tool: "swarm",
         isBlocker: false,
@@ -259,7 +259,7 @@ export function generateRoadmap(params: {
       next.push({
         id: uid("mvp-cut"),
         title: "Cut MVP scope — too many features for a first ship",
-        reason: `Blueprint Board lists ${featureList.length > 0 ? featureList.length + " features" : "too many features"}${weekCount > 8 ? ` across ${weekCount} weeks` : ""}. Ship the smallest version first.`,
+        reason: `MVP Planner lists ${featureList.length > 0 ? featureList.length + " features" : "too many features"}${weekCount > 8 ? ` across ${weekCount} weeks` : ""}. Ship the smallest version first.`,
         priority: "high",
         tool: "mvp",
         isBlocker: false,
@@ -282,7 +282,7 @@ export function generateRoadmap(params: {
       later.push({
         id: uid("launch-checklist"),
         title: `Complete ${incomplete.length} launch checklist item${incomplete.length > 1 ? "s" : ""}`,
-        reason: "Launch Control checklist has incomplete items — required before shipping",
+        reason: "Launch Room checklist has incomplete items — required before shipping",
         priority: "medium",
         tool: "launch",
         isBlocker: false,
@@ -331,12 +331,12 @@ export function generateRoadmap(params: {
   // ── Critical path ───────────────────────────────────────────────────────
 
   const criticalPath: string[] = [];
-  if (!coveredTools.has("idea")) criticalPath.push("Run Signal Chamber to establish baseline idea score");
-  if (!coveredTools.has("reality")) criticalPath.push("Run Pressure Matrix to validate core assumptions");
+  if (!coveredTools.has("idea")) criticalPath.push("Run Idea Checker to establish baseline idea score");
+  if (!coveredTools.has("reality")) criticalPath.push("Run Reality Compiler to validate core assumptions");
   if (proofSignals.length < 3) criticalPath.push("Collect 3+ proof signals to justify build investment");
-  if (!coveredTools.has("mvp")) criticalPath.push("Run Blueprint Board to scope the MVP");
-  if (doctor && getScore(doctor) < 60) criticalPath.push("Fix all Diagnostic Bay failures before shipping");
-  if (!coveredTools.has("launch")) criticalPath.push("Run Launch Control for final go/no-go");
+  if (!coveredTools.has("mvp")) criticalPath.push("Run MVP Planner to scope the MVP");
+  if (doctor && getScore(doctor) < 60) criticalPath.push("Fix all Project Doctor failures before shipping");
+  if (!coveredTools.has("launch")) criticalPath.push("Run Launch Room for final go/no-go");
 
   if (criticalPath.length === 0) {
     criticalPath.push("All critical intelligence tools have been run — focus on execution");
@@ -346,12 +346,12 @@ export function generateRoadmap(params: {
   // ── Launch minimum ──────────────────────────────────────────────────────
 
   const launchMinimum: string[] = [
-    "Signal Chamber run with score ≥ 60",
-    "Pressure Matrix returns GO or WARNING (not FAILED)",
+    "Idea Checker run with score ≥ 60",
+    "Reality Compiler returns GO or WARNING (not FAILED)",
     "At least 5 proof signals collected",
-    "Blueprint Board MVP scope finalized",
-    "Diagnostic Bay score ≥ 70 with 0 critical gate failures",
-    "Launch Control score ≥ 65",
+    "MVP Planner scope finalized",
+    "Project Doctor score ≥ 70 with 0 critical gate failures",
+    "Launch Room score ≥ 65",
   ];
 
   // ── Recommended sprint ──────────────────────────────────────────────────

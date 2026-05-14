@@ -116,7 +116,7 @@ export function analyzeRetention(reports: ReportSummary[]): RetentionIntelligenc
   // Loop weakness
   let loopWeakness = "No clear mechanism to strengthen investment over time — users can leave without losing value";
   if (retentionRate !== null && retentionRate < 40) {
-    loopWeakness = `Swarm Field simulated ${retentionRate}% retention rate — users are churning before forming a habit (takes ~7 sessions minimum)`;
+    loopWeakness = `Market Swarm simulated ${retentionRate}% retention rate — users are churning before forming a habit (takes ~7 sessions minimum)`;
   } else if (churnReasons.length > 0) {
     loopWeakness = `Swarm churn reasons: ${churnReasons.slice(0, 2).join("; ")}`;
   } else if (isAIProduct) {
@@ -178,7 +178,7 @@ export function analyzeRetention(reports: ReportSummary[]): RetentionIntelligenc
   // Tasks
   const retentionTasks: RetentionIntelligence["retentionTasks"] = [];
   if (!swarm) {
-    retentionTasks.push({ title: "Run Swarm Field to simulate retention rate and churn reasons", priority: "critical" });
+    retentionTasks.push({ title: "Run Market Swarm to simulate retention rate and churn reasons", priority: "critical" });
   }
   if (retentionRate !== null && retentionRate < 40) {
     retentionTasks.push({ title: "Redesign core action to be faster and more rewarding (session quality fix)", priority: "critical" });

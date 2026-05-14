@@ -65,7 +65,7 @@ export default function ProofPage() {
   useEffect(() => {
     getProofSignals()
       .then((s) => setSignals((s as ProofSignalRow[]) ?? []))
-      .catch(() => setSignals([]))
+      .catch((e) => { console.warn("Failed to load proof signals:", e); setSignals([]); })
       .finally(() => setSignalsLoading(false));
   }, []);
 
@@ -90,7 +90,7 @@ export default function ProofPage() {
     try {
       const report = await saveReport({
         tool: "proof",
-        title: res.title || `Proof Reactor — ${input.slice(0, 60)}`,
+        title: res.title || `Proof Engine — ${input.slice(0, 60)}`,
         payload: { data: res.data, markdown: res.markdown },
         score: res.score ?? undefined,
         summary: res.summary,
@@ -99,8 +99,8 @@ export default function ProofPage() {
       setSavedReportId(r?.id ?? null);
       if (r?.id) await generateTasksFromReport({ id: r.id, tool: "proof", payload: { data: res.data }, project_id: null });
       setSaved(true);
-    } catch {
-      // silent
+    } catch (err) {
+      toast({ title: "Save failed", description: err instanceof Error ? err.message : "Could not auto-save report.", variant: "destructive" });
     }
   }
 
@@ -139,14 +139,26 @@ export default function ProofPage() {
   const conversionCount = signals.filter((s) => s.kind === "demo_request" || s.kind === "signup").length;
   const negativeCount = signals.filter((s) => s.kind === "objection" || s.kind === "churn_risk").length;
   const diversityBonus = new Set(signals.map((s) => s.kind)).size >= 3 ? 5 : 0;
+
+  const paymentPoints = Math.min(24, paymentIntentCount * 12);
+  const interviewPoints = Math.min(20, interviewCount * 5);
+  const volumePoints = Math.min(30, Math.round((signals.length / 10) * 30));
+  const conversionPoints = Math.min(10, conversionCount * 3);
+  const positivePoints = volumePoints + paymentPoints + interviewPoints + conversionPoints;
+  const negativePoints = negativeCount * 3;
+
   const signalScore = signals.length === 0 ? 0 : Math.max(0, Math.min(100, Math.round(
-    Math.min(30, (signals.length / 10) * 30) +
-    Math.min(24, paymentIntentCount * 12) +
-    Math.min(20, interviewCount * 5) +
-    Math.min(10, conversionCount * 3) -
-    negativeCount * 3 +
-    diversityBonus
+    positivePoints - negativePoints + diversityBonus
   )));
+
+  const kindCounts = signals.reduce((acc, s) => { acc[s.kind] = (acc[s.kind] ?? 0) + 1; return acc; }, {} as Record<string, number>);
+  const strongestSignal = signals.length > 0
+    ? Object.entries(kindCounts).sort((a, b) => b[1] - a[1])[0][0]
+    : "none";
+  const weakestArea = !paymentIntentCount ? "payment_intent (0)"
+    : interviewCount < 3 ? "interviews (need 3+)"
+    : signals.length < 10 ? "total volume (need 10+)"
+    : "n/a — strong coverage";
 
   return (
     <AppShell>
@@ -297,7 +309,7 @@ export default function ProofPage() {
                         </NoctraButton>
                       )}
                       <NoctraButton variant="ghost" onClick={() => navigate("/app/swarm")} className="flex-1">
-                        Next: Swarm Field <ArrowRight size={12} />
+                        Next: Market Swarm <ArrowRight size={12} />
                       </NoctraButton>
                     </div>
                   )}
@@ -418,27 +430,75 @@ export default function ProofPage() {
               <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Score Formula</p>
               <div className="space-y-2 text-xs" style={{ color: "var(--noctra-text-muted)" }}>
                 {[
-                  { label: "Signal volume (×3/signal, max 30)", points: Math.min(30, Math.round((signals.length / 10) * 30)), max: 30 },
-                  { label: "Payment intent (×12 each, max 24)", points: Math.min(24, paymentIntentCount * 12), max: 24 },
-                  { label: "Interviews (×5 each, max 20)", points: Math.min(20, interviewCount * 5), max: 20 },
-                  { label: "Demo requests + signups (×3, max 10)", points: Math.min(10, conversionCount * 3), max: 10 },
-                  { label: "Diversity bonus (3+ kinds)", points: diversityBonus, max: 5 },
+                  { label: "Signal volume (max 30)", points: volumePoints, max: 30 },
+                  { label: "Payment intent (×12 each, max 24)", points: paymentPoints, max: 24 },
+                  { label: "Interviews (×5 each, max 20)", points: interviewPoints, max: 20 },
+                  { label: "Demo requests + signups (×3, max 10)", points: conversionPoints, max: 10 },
                 ].map(({ label, points, max }) => (
                   <div key={label}>
                     <div className="flex justify-between mb-1">
                       <span>{label}</span>
-                      <span style={{ color: "var(--noctra-text)" }}>{points}/{max}</span>
+                      <span style={{ color: "var(--noctra-text)" }}>+{points}/{max}</span>
                     </div>
                     <div className="h-1.5 rounded-full" style={{ background: "var(--noctra-surface2)" }}>
                       <div className="h-full rounded-full" style={{ width: `${max > 0 ? (points / max) * 100 : 0}%`, background: TOOL.accent }} />
                     </div>
                   </div>
                 ))}
-                {negativeCount > 0 && (
-                  <p className="text-xs pt-1" style={{ color: "var(--noctra-rose)" }}>
-                    −{negativeCount * 3} pts: {negativeCount} objection / churn-risk signal{negativeCount !== 1 ? "s" : ""}
-                  </p>
+                {diversityBonus > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span>Diversity bonus (3+ kinds)</span>
+                    <span style={{ color: "var(--noctra-emerald)" }}>+{diversityBonus}</span>
+                  </div>
                 )}
+                {negativeCount > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span style={{ color: "var(--noctra-rose)" }}>Objection/churn penalty</span>
+                    <span style={{ color: "var(--noctra-rose)" }}>−{negativePoints}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-xs font-bold pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+                  <span style={{ color: "var(--noctra-text)" }}>Total</span>
+                  <span style={{ color: "var(--noctra-text)" }}>{signalScore}/100</span>
+                </div>
+              </div>
+            </Panel>
+
+            <Panel>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Signal Analysis</p>
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span style={{ color: "var(--noctra-text-muted)" }}>Positive points</span>
+                  <span style={{ color: "var(--noctra-emerald)" }}>+{positivePoints}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span style={{ color: "var(--noctra-text-muted)" }}>Negative points</span>
+                  <span style={{ color: "var(--noctra-rose)" }}>−{negativePoints}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span style={{ color: "var(--noctra-text-muted)" }}>Payment bonus</span>
+                  <span style={{ color: "var(--noctra-gold)" }}>+{paymentPoints}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span style={{ color: "var(--noctra-text-muted)" }}>Diversity bonus</span>
+                  <span style={{ color: "var(--noctra-emerald)" }}>+{diversityBonus}</span>
+                </div>
+                <div className="flex justify-between pt-1">
+                  <span style={{ color: "var(--noctra-text-muted)" }}>Strongest signal</span>
+                  <span className="capitalize" style={{ color: "var(--noctra-text)" }}>{strongestSignal}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span style={{ color: "var(--noctra-text-muted)" }}>Weakest area</span>
+                  <span style={{ color: "var(--noctra-amber)" }}>{weakestArea}</span>
+                </div>
+                <div className="pt-2 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+                  <span style={{ color: "var(--noctra-text-muted)" }}>Recommendation</span>
+                  <p className="mt-1" style={{ color: signalScore >= 75 ? "var(--noctra-emerald)" : signalScore >= 40 ? "var(--noctra-amber)" : "var(--noctra-rose)" }}>
+                    {signalScore >= 75 ? "Strong evidence base — proceed with confidence" :
+                     signalScore >= 40 ? "Building evidence — run more experiments, especially for payment intent" :
+                     "Weak evidence — prioritize customer interviews and payment signals"}
+                  </p>
+                </div>
               </div>
             </Panel>
 

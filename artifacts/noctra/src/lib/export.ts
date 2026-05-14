@@ -19,7 +19,8 @@ export function reportToMarkdown(report: {
   const output = p.output as string | null;
   if (data) lines.push(objToMarkdown(data));
   else if (output) lines.push(output);
-  else lines.push(JSON.stringify(p, null, 2));
+  else if (report.summary) lines.push(report.summary);
+  else lines.push("This report's structured data was not available in a formatted export. Please view the report on the Noctra platform for the full output.");
 
   return lines.join("\n");
 }
@@ -105,6 +106,9 @@ export function downloadJson(filename: string, data: unknown): void {
 }
 
 export async function copyText(content: string): Promise<void> {
+  if (typeof navigator?.clipboard?.writeText !== "function") {
+    throw new Error("Clipboard API not available");
+  }
   await navigator.clipboard.writeText(content);
 }
 

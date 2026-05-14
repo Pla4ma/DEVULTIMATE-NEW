@@ -1,17 +1,32 @@
 import { useEffect, useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { Panel, EmptyState, Badge, NoctraButton } from "@/components/Primitives";
-import { getTasks, updateTaskStatus, deleteTask, createTask } from "@/lib/repository";
+import { getTasks, updateTaskStatus, deleteTask, createTask, getProjects } from "@/lib/repository";
+import { tasksToGithubMarkdown } from "@/lib/export";
+import { generateSprintFromTasks } from "@/lib/sprint";
 import {
   CheckSquare, Loader2, Trash2, Plus, CheckCircle, Circle,
-  Search, Download, Filter
+  Search, Download, Filter, Copy, Check, X, Calendar, ChevronDown
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type Task = {
   id: string; title: string; detail?: string | null;
   priority: string; category?: string | null; status: string; created_at: string;
+  source_report_id?: string | null;
+  project_id?: string | null;
+  acceptance_criteria?: string[] | null;
 };
+
+const STATUS_MAP: Record<string, string> = {
+  open: "todo", "in-progress": "in-progress", completed: "completed",
+  todo: "todo", doing: "in-progress", done: "completed",
+};
+
+function normalizeStatus(s: string): string {
+  return STATUS_MAP[s] ?? "todo";
+}
 
 const STATUS_CYCLE: Record<string, string> = {
   todo: "in-progress", "in-progress": "completed", completed: "todo",
@@ -43,6 +58,7 @@ function exportToCSV(tasks: Task[]) {
 
 export default function TasksPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusTab>("todo");
@@ -56,44 +72,161 @@ export default function TasksPage() {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [projectMap, setProjectMap] = useState<Record<string, string>>({});
+
+  const [projectFilter, setProjectFilter] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showProjectMenu, setShowProjectMenu] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    getTasks()
-      .then((t) => { if (!cancelled) setTasks((t as Task[]) ?? []); })
-      .catch((err) => { if (!cancelled) toast({ title: "Failed to load tasks", description: err?.message ?? "Unknown error", variant: "destructive" }); })
+    Promise.all([getTasks(), getProjects().catch(() => [])])
+      .then(([t, p]) => {
+        if (cancelled) return;
+        setTasks(((t as Task[]) ?? []).map(task => ({
+          ...task,
+          status: normalizeStatus(task.status),
+        })));
+        const map: Record<string, string> = {};
+        (p as Array<{ id: string; name: string }>).forEach((proj) => { map[proj.id] = proj.name; });
+        setProjectMap(map);
+      })
+      .catch((err) => {
+        if (!cancelled) toast({ title: "Failed to load tasks", description: err?.message ?? "Unknown error", variant: "destructive" });
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = useMemo(() => {
     let list = tasks;
-    if (statusFilter !== "all") list = list.filter((t) => t.status === statusFilter);
+    if (statusFilter !== "all") list = list.filter((t) => normalizeStatus(t.status) === statusFilter);
     if (priorityFilter !== "all") list = list.filter((t) => t.priority === priorityFilter);
+    if (projectFilter !== "all") list = list.filter((t) => t.project_id === projectFilter);
     if (search.trim()) list = list.filter((t) => t.title.toLowerCase().includes(search.toLowerCase()) || (t.detail ?? "").toLowerCase().includes(search.toLowerCase()));
     return list;
-  }, [tasks, statusFilter, priorityFilter, search]);
+  }, [tasks, statusFilter, priorityFilter, projectFilter, search]);
+
+  const selectedTasks = useMemo(() => filtered.filter(t => selectedIds.has(t.id)), [filtered, selectedIds]);
+
+  function toggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    setSelectedIds(new Set(filtered.map(t => t.id)));
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  async function copyVisibleMarkdown() {
+    const md = tasksToGithubMarkdown(filtered);
+    try {
+      await navigator.clipboard.writeText(md);
+      toast({ title: "Tasks copied to clipboard", description: `${filtered.length} task${filtered.length !== 1 ? "s" : ""} copied as markdown.` });
+    } catch (e) {
+      toast({ title: "Failed to copy", description: e instanceof Error ? e.message : "Clipboard access denied.", variant: "destructive" });
+    }
+  }
+
+  async function copySelectedMarkdown() {
+    const md = tasksToGithubMarkdown(selectedTasks);
+    try {
+      await navigator.clipboard.writeText(md);
+      toast({ title: "Selected tasks copied", description: `${selectedTasks.length} task${selectedTasks.length !== 1 ? "s" : ""} copied as markdown.` });
+    } catch (e) {
+      toast({ title: "Failed to copy", description: e instanceof Error ? e.message : "Clipboard access denied.", variant: "destructive" });
+    }
+  }
+
+  function exportMarkdown() {
+    const md = tasksToGithubMarkdown(filtered);
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "noctra-tasks.md"; a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Tasks exported", description: `${filtered.length} task${filtered.length !== 1 ? "s" : ""} exported as markdown.` });
+  }
+
+  function exportGitHub() {
+    const md = tasksToGithubMarkdown(filtered);
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "noctra-tasks-github.md"; a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "GitHub Issues exported", description: `${filtered.length} task${filtered.length !== 1 ? "s" : ""} formatted as GitHub Issues.` });
+  }
+
+  async function generateSprintFromSelected() {
+    if (selectedTasks.length === 0) {
+      toast({ title: "No tasks selected", description: "Select tasks to generate a sprint.", variant: "destructive" });
+      return;
+    }
+    try {
+const sprintTasks = selectedTasks.map(t => ({
+        id: t.id,
+        title: t.title,
+        detail: t.detail ?? undefined,
+        priority: t.priority as "high" | "medium" | "low",
+        category: t.category ?? "development",
+        status: normalizeStatus(t.status),
+        created_at: t.created_at,
+        source_report_id: t.source_report_id ?? undefined,
+        project_id: t.project_id ?? null,
+        acceptance_criteria: t.acceptance_criteria ?? undefined,
+      }));
+      const sprint = generateSprintFromTasks(sprintTasks, { title: "Sprint Plan" });
+      const md = `# ${sprint.title}\n\n## Goal\n${sprint.days.length > 0 ? sprint.days[0].goal : "Complete selected tasks"}\n\n## Days\n${sprint.days.map(d => `### ${d.day}\n**Goal:** ${d.goal}\n${d.tasks.map(t => `- ${t}`).join("\n")}\n**Acceptance:** ${d.acceptance_criteria.join("; ")}`).join("\n\n")}\n\n## Risks\n${sprint.risks.map(r => `- ${r}`).join("\n")}\n\n## Demo Checklist\n${sprint.demo_checklist.map(c => `- [ ] ${c}`).join("\n")}`;
+      const blob = new Blob([md], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "noctra-sprint.md"; a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "Sprint generated and downloaded", description: `${selectedTasks.length} task${selectedTasks.length !== 1 ? "s" : ""} → sprint plan.` });
+      clearSelection();
+    } catch (err) {
+      toast({ title: "Failed to generate sprint", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+    }
+  }
 
   const counts = useMemo(() => ({
     all: tasks.length,
-    todo: tasks.filter((t) => t.status === "todo").length,
-    "in-progress": tasks.filter((t) => t.status === "in-progress").length,
-    completed: tasks.filter((t) => t.status === "completed").length,
+    todo: tasks.filter((t) => normalizeStatus(t.status) === "todo").length,
+    "in-progress": tasks.filter((t) => normalizeStatus(t.status) === "in-progress").length,
+    completed: tasks.filter((t) => normalizeStatus(t.status) === "completed").length,
   }), [tasks]);
 
   async function toggleStatus(task: Task) {
     const next = STATUS_CYCLE[task.status] ?? "todo";
     setTogglingId(task.id);
-    await updateTaskStatus(task.id, next);
-    setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, status: next } : t));
-    setTogglingId(null);
+    try {
+      await updateTaskStatus(task.id, next);
+      setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, status: next } : t));
+    } catch (err) {
+      toast({ title: "Failed to update status", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setTogglingId(null);
+    }
   }
 
   async function handleDelete(id: string) {
     setDeletingId(id);
-    await deleteTask(id);
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-    setDeletingId(null);
+    try {
+      await deleteTask(id);
+      setTasks((prev) => prev.filter((t) => t.id !== id));
+    } catch (err) {
+      toast({ title: "Failed to delete task", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function handleAdd() {
@@ -114,20 +247,62 @@ export default function TasksPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Mission Queue</h1>
+            <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Tasks</h1>
             <p className="text-sm mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
-              {tasks.length} task{tasks.length !== 1 ? "s" : ""} · {completedPct}% done
+              Task Queue · {tasks.length} task{tasks.length !== 1 ? "s" : ""} · {completedPct}% done
             </p>
           </div>
           <div className="flex gap-2">
-            <NoctraButton variant="ghost" onClick={() => exportToCSV(filtered)} disabled={filtered.length === 0}>
-              <Download size={13} /> Export CSV
-            </NoctraButton>
+            {selectedIds.size > 0 ? (
+              <>
+                <NoctraButton variant="ghost" onClick={copySelectedMarkdown} disabled={selectedTasks.length === 0}>
+                  <Copy size={13} /> Copy ({selectedIds.size})
+                </NoctraButton>
+                <NoctraButton variant="ghost" onClick={generateSprintFromSelected} disabled={selectedTasks.length === 0}>
+                  <Calendar size={13} /> Sprint ({selectedIds.size})
+                </NoctraButton>
+                <NoctraButton variant="ghost" onClick={clearSelection}>
+                  <X size={13} /> Clear
+                </NoctraButton>
+              </>
+            ) : (
+              <>
+                <NoctraButton variant="ghost" onClick={copyVisibleMarkdown} disabled={filtered.length === 0}>
+                  <Copy size={13} /> Copy
+                </NoctraButton>
+                <div className="relative">
+                  <NoctraButton variant="ghost" onClick={() => {}} disabled={filtered.length === 0}>
+                    <Download size={13} /> Export
+                    <ChevronDown size={11} />
+                  </NoctraButton>
+                </div>
+              </>
+            )}
             <NoctraButton onClick={() => setShowAdd((v) => !v)}>
               <Plus size={13} /> Add Task
             </NoctraButton>
           </div>
         </div>
+
+        {/* Export dropdown */}
+        {selectedIds.size === 0 && filtered.length > 0 && (
+          <div className="flex gap-2 p-2 rounded-lg" style={{ background: "var(--noctra-surface)" }}>
+            <button onClick={exportMarkdown} className="text-xs px-3 py-1.5 rounded-md transition-all" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}>
+              Markdown
+            </button>
+            <button onClick={exportGitHub} className="text-xs px-3 py-1.5 rounded-md transition-all" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}>
+              GitHub Issues
+            </button>
+            <button onClick={() => exportToCSV(filtered)} className="text-xs px-3 py-1.5 rounded-md transition-all" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}>
+              CSV
+            </button>
+            {filtered.length > 0 && (
+              <button onClick={selectAll} className="text-xs px-3 py-1.5 rounded-md transition-all ml-auto" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-muted)" }}>
+                Select all ({filtered.length})
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Add task form */}
         {showAdd && (
@@ -180,6 +355,26 @@ export default function TasksPage() {
               style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
             />
           </div>
+          {Object.keys(projectMap).length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowProjectMenu(!showProjectMenu)}
+                className="px-3 py-2 rounded-lg text-xs flex items-center gap-2 transition-all"
+                style={{ background: projectFilter !== "all" ? "rgba(61,216,255,0.1)" : "var(--noctra-surface)", border: `1px solid ${projectFilter !== "all" ? "var(--noctra-cyan)" : "var(--noctra-border)"}`, color: projectFilter !== "all" ? "var(--noctra-cyan)" : "var(--noctra-text-muted)" }}
+              >
+                {projectFilter === "all" ? "All Projects" : (projectMap[projectFilter] || projectFilter)}
+                <ChevronDown size={11} />
+              </button>
+              {showProjectMenu && (
+                <div className="absolute top-full left-0 mt-1 py-1 rounded-lg shadow-lg z-10 min-w-[160px]" style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)" }}>
+                  <button onClick={() => { setProjectFilter("all"); setShowProjectMenu(false); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-noctra-surface2" style={{ color: projectFilter === "all" ? "var(--noctra-cyan)" : "var(--noctra-text)" }}>All Projects</button>
+                  {Object.entries(projectMap).map(([id, name]) => (
+                    <button key={id} onClick={() => { setProjectFilter(id); setShowProjectMenu(false); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-noctra-surface2" style={{ color: projectFilter === id ? "var(--noctra-cyan)" : "var(--noctra-text)" }}>{name}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-1.5">
             <Filter size={12} style={{ color: "var(--noctra-text-muted)" }} />
             {(["all", "high", "medium", "low"] as const).map((p) => (
@@ -228,15 +423,61 @@ export default function TasksPage() {
                       )}
                     </button>
 
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(task.id)}
+                      onChange={() => toggleSelect(task.id)}
+                      className="mt-1 shrink-0 accent-cyan-400"
+                    />
+
                     <div className="flex-1 min-w-0">
                       <button onClick={() => setExpandedId(expandedId === task.id ? null : task.id)} className="w-full text-left">
                         <p className="text-sm" style={{ color: task.status === "completed" ? "var(--noctra-text-muted)" : "var(--noctra-text)", textDecoration: task.status === "completed" ? "line-through" : "none" }}>
                           {task.title}
                         </p>
-                        {expandedId === task.id && task.detail && (
-                          <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--noctra-text-muted)" }}>{task.detail}</p>
-                        )}
                       </button>
+                      {expandedId === task.id && (task.detail || task.acceptance_criteria) && (
+                        <div className="mt-2 space-y-2">
+                          {task.detail && (
+                            <p className="text-xs leading-relaxed" style={{ color: "var(--noctra-text-muted)" }}>{task.detail}</p>
+                          )}
+                          {task.acceptance_criteria && task.acceptance_criteria.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-cyan)" }}>Acceptance Criteria</p>
+                              <ul className="space-y-1">
+                                {task.acceptance_criteria.map((c, i) => (
+                                  <li key={i} className="text-[11px] flex items-start gap-1.5" style={{ color: "var(--noctra-text-muted)" }}>
+                                    <CheckCircle size={10} className="mt-0.5 shrink-0" style={{ color: "var(--noctra-emerald)" }} />
+                                    {c}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {expandedId === task.id && (task.source_report_id || task.project_id) && (
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          {task.source_report_id && (
+                            <button
+                              onClick={() => navigate(`/app/reports/${task.source_report_id}`)}
+                              className="text-[11px] px-2 py-1 rounded-full"
+                              style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-cyan)" }}
+                            >
+                              View source report
+                            </button>
+                          )}
+                          {task.project_id && (
+                            <button
+                              onClick={() => navigate(`/app/projects/${task.project_id}`)}
+                              className="text-[11px] px-2 py-1 rounded-full"
+                              style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-muted)" }}
+                            >
+                              {projectMap[task.project_id] ? `Project: ${projectMap[task.project_id]}` : "View project"}
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">

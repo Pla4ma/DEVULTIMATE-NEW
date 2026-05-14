@@ -113,7 +113,7 @@ export function analyzeCodebaseAlignment(params: {
     if (!hasAuth) {
       missingProductRequirements.push({
         title: "Authentication not found in codebase",
-        description: "MVP or idea requires user accounts but no auth files were detected in the Diagnostic Bay scan.",
+        description: "MVP or idea requires user accounts but no auth files were detected in the Project Doctor scan.",
         severity: "critical",
         category: "missing-requirement",
       });
@@ -152,7 +152,7 @@ export function analyzeCodebaseAlignment(params: {
     if (!hasAnalytics) {
       missingProductRequirements.push({
         title: "No analytics integration found",
-        description: "Launch Control expects analytics for post-launch monitoring, but no analytics SDK was found in the codebase scan.",
+        description: "Launch Room expects analytics for post-launch monitoring, but no analytics SDK was found in the codebase scan.",
         severity: "high",
         category: "missing-requirement",
       });
@@ -171,7 +171,7 @@ export function analyzeCodebaseAlignment(params: {
   ).slice(0, 4)) {
     riskyImplementationChoices.push({
       title: String(finding.title ?? finding.type ?? "Implementation risk").slice(0, 80),
-      description: String(finding.description ?? finding.detail ?? "High-severity finding from Diagnostic Bay").slice(0, 200),
+      description: String(finding.description ?? finding.detail ?? "High-severity finding from Project Doctor").slice(0, 200),
       severity: (String(finding.severity ?? "high").toLowerCase() as "critical" | "high" | "medium"),
       category: "risky-implementation",
     });
@@ -179,9 +179,9 @@ export function analyzeCodebaseAlignment(params: {
 
   // Doctor gates → launch blockers
   for (const gate of failedGateNames.slice(0, 5)) {
-    launchBlockers.push(`${gate} gate failed in Diagnostic Bay — must pass before launch`);
+    launchBlockers.push(`${gate} gate failed in Project Doctor — must pass before launch`);
     recommendedCodeTasks.push({
-      title: `Fix Diagnostic Bay gate: ${gate}`,
+      title: `Fix Project Doctor gate: ${gate}`,
       priority: "critical",
       reason: "Failed gate is a hard launch blocker",
     });
@@ -195,7 +195,7 @@ export function analyzeCodebaseAlignment(params: {
     if (hasTestGate && mvpScore >= 65) {
       riskyImplementationChoices.push({
         title: "Testing gate failed but MVP plan assumes production-ready",
-        description: "Diagnostic Bay flagged test coverage failure while Blueprint Board scores the MVP as production-ready. This is a dangerous misalignment.",
+        description: "Project Doctor flagged test coverage failure while MVP Planner scores the MVP as production-ready. This is a dangerous misalignment.",
         severity: "critical",
         category: "risky-implementation",
       });
@@ -204,7 +204,7 @@ export function analyzeCodebaseAlignment(params: {
     // Doctor low, launch high
     const launchReport = byTool.get("launch");
     if (doctorScore < 50 && launchReport && getScore(launchReport) >= 65) {
-      launchBlockers.push("Launch Control says ready but Diagnostic Bay health is critical — launch risk is high");
+      launchBlockers.push("Launch Room says ready but Project Doctor health is critical — launch risk is high");
     }
   }
 
@@ -229,7 +229,7 @@ export function analyzeCodebaseAlignment(params: {
     if (wtp !== null && wtp < 30 && hasPayment) {
       builtButUnnecessary.push({
         title: "Payment infrastructure built for a low-WTP market",
-        description: `Swarm Field shows only ${wtp}% willingness to pay, but the codebase has payment logic. This adds complexity before proving demand.`,
+        description: `Market Swarm shows only ${wtp}% willingness to pay, but the codebase has payment logic. This adds complexity before proving demand.`,
         severity: "high",
         category: "unnecessary-complexity",
       });

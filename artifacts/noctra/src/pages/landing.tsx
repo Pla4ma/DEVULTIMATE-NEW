@@ -78,10 +78,10 @@ export default function LandingPage() {
   }
 
   const features = [
-    { icon: Target, label: "Signal Chamber", desc: "Stress-test any idea in minutes" },
-    { icon: Brain, label: "Pressure Matrix", desc: "Surface your blind spots" },
-    { icon: FlaskConical, label: "Proof Reactor", desc: "Quantify validation depth" },
-    { icon: Rocket, label: "Launch Control", desc: "Go/no-go with full telemetry" },
+    { icon: Target, label: "Idea Checker", desc: "Stress-test any idea in minutes" },
+    { icon: Brain, label: "Reality Compiler", desc: "Surface your blind spots" },
+    { icon: FlaskConical, label: "Proof Engine", desc: "Quantify validation depth" },
+    { icon: Rocket, label: "Launch Room", desc: "Go/no-go with full telemetry" },
   ];
 
   return (

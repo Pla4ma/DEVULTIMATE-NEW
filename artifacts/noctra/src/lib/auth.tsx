@@ -8,7 +8,7 @@ const ANON_KEY = "noctra_anon_creds";
 function getOrCreateAnonCreds(): { email: string; password: string } {
   const stored = localStorage.getItem(ANON_KEY);
   if (stored) {
-    try { return JSON.parse(stored); } catch { /* fall through */ }
+    try { return JSON.parse(stored); } catch (e) { console.warn("Stored anon creds corrupted, generating new:", e); }
   }
   const id = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
   const creds = {
@@ -65,12 +65,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-    supabase.auth.getSession().then(({ data }) => {
+    supabase!.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setLoading(false);
-    }).catch(() => setLoading(false));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => {
+    }).catch((e) => { console.warn("Session fetch failed:", e); setLoading(false); });
+    const { data: { subscription } } = supabase!.auth.onAuthStateChange((_, s) => {
       setSession(s);
       setUser(s?.user ?? null);
     });
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured()) {
       throw new Error(supabaseConfigError ?? "Supabase is not configured.");
     }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase!.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
 
@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured()) {
       throw new Error(supabaseConfigError ?? "Supabase is not configured.");
     }
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabase!.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: `${window.location.origin}/app` },
@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured()) {
       throw new Error(supabaseConfigError ?? "Supabase is not configured.");
     }
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase!.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/app` },
     });
@@ -121,28 +121,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       return;
     }
-    await supabase.auth.signOut();
+    await supabase!.auth.signOut();
   };
 
   const signInDemo = async () => {
-    const u = enableDemoMode();
+    enableDemoMode();
     setUser(buildDemoUser());
     setSession(null);
-    void u;
   };
 
   const signInAnon = async () => {
     if (!isSupabaseConfigured()) {
       throw new Error(supabaseConfigError ?? "Supabase is not configured.");
     }
-    const { error: anonErr } = await supabase.auth.signInAnonymously();
+    const { error: anonErr } = await supabase!.auth.signInAnonymously();
     if (!anonErr) return;
 
     const creds = getOrCreateAnonCreds();
-    const { error: signInErr } = await supabase.auth.signInWithPassword(creds);
+    const { error: signInErr } = await supabase!.auth.signInWithPassword(creds);
     if (!signInErr) return;
 
-    const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpErr } = await supabase!.auth.signUp({
       email: creds.email,
       password: creds.password,
       options: { data: { display_name: "Anonymous Founder" } },
@@ -150,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (signUpErr) throw signUpErr;
     if (signUpData.session) return;
 
-    const { error: finalErr } = await supabase.auth.signInWithPassword(creds);
+    const { error: finalErr } = await supabase!.auth.signInWithPassword(creds);
     if (finalErr) {
       throw new Error(
         "Anonymous access is disabled in Supabase. Sign up with email or use Demo Mode.",

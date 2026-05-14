@@ -193,7 +193,7 @@ export function buildProductBrain(params: {
           id,
           type: "assumption",
           label: String(a).slice(0, 60),
-          description: "Assumption extracted from Pressure Matrix",
+          description: "Assumption extracted from Reality Compiler",
           severity: score < 50 ? "high" : "medium",
           sourceTool: "reality",
           sourceReportId: reality.id,
@@ -210,7 +210,7 @@ export function buildProductBrain(params: {
         id,
         type: "assumption",
         label: `Reality signal: ${goSignal}`,
-        description: `Pressure Matrix returned ${goSignal} with score ${score}/100`,
+        description: `Reality Compiler returned ${goSignal} with score ${score}/100`,
         severity: goSignal === "NO-GO" || goSignal === "FAILED" ? "critical" : score < 50 ? "high" : "medium",
         score,
         sourceTool: "reality",
@@ -221,7 +221,7 @@ export function buildProductBrain(params: {
     if (score >= 70 && ideaNodeId) {
       insights.push({
         id: nid("insight"),
-        title: "Pressure Matrix validates core assumptions",
+        title: "Reality Compiler validates core assumptions",
         description: `Reality score ${score}/100 — your core assumptions are holding under stress testing.`,
         severity: "low",
         actionLabel: "View report",
@@ -232,7 +232,7 @@ export function buildProductBrain(params: {
       insights.push({
         id: nid("insight"),
         title: "Critical assumption failures detected",
-        description: `Pressure Matrix score is ${score}/100${errors.length > 0 ? ` with ${errors.filter((e) => Boolean(e.blocks_build)).length} build-blocking errors` : ""}. Address before building.`,
+        description: `Reality Compiler score is ${score}/100${errors.length > 0 ? ` with ${errors.filter((e) => Boolean(e.blocks_build)).length} build-blocking errors` : ""}. Address before building.`,
         severity: "critical",
         actionLabel: "Run Reality Compiler",
         actionHref: "/app/reality",
@@ -275,7 +275,7 @@ export function buildProductBrain(params: {
       title: `${proofSignals.length} proof signals collected`,
       description: "Strong evidence base — your Product Brain has external validation anchoring the idea.",
       severity: "low",
-      actionLabel: "View Proof Reactor",
+      actionLabel: "View Proof Engine",
       actionHref: "/app/proof",
       sourceTool: "proof",
     });
@@ -312,7 +312,7 @@ export function buildProductBrain(params: {
         id,
         type: "code-issue",
         label: String(issue.title ?? issue.type ?? "Code issue").slice(0, 60),
-        description: String(issue.description ?? issue.detail ?? "Identified in Diagnostic Bay scan").slice(0, 200),
+        description: String(issue.description ?? issue.detail ?? "Identified in Project Doctor scan").slice(0, 200),
         severity: String(issue.severity ?? "medium") as BrainNode["severity"],
         sourceTool: "doctor",
         sourceReportId: doctor.id,
@@ -323,7 +323,7 @@ export function buildProductBrain(params: {
       insights.push({
         id: nid("insight"),
         title: `Codebase health is ${doctorScore}/100 — launch risk`,
-        description: `${failedGates.length} gate${failedGates.length !== 1 ? "s" : ""} failed in Diagnostic Bay. This is a hard blocker for launch.`,
+        description: `${failedGates.length} gate${failedGates.length !== 1 ? "s" : ""} failed in Project Doctor. This is a hard blocker for launch.`,
         severity: "critical",
         actionLabel: "View Doctor report",
         actionHref: doctor.id ? `/app/reports/${doctor.id}` : "/app/doctor",
@@ -375,7 +375,7 @@ export function buildProductBrain(params: {
         insights.push({
           id: nid("insight"),
           title: `Low willingness to pay: ${wtp}%`,
-          description: "Swarm Field simulated low market payment willingness. Reconsider pricing model or strengthen value proposition.",
+          description: "Market Swarm simulated low market payment willingness. Reconsider pricing model or strengthen value proposition.",
           severity: "high",
           actionLabel: "View Swarm results",
           actionHref: swarm.id ? `/app/reports/${swarm.id}` : "/app/swarm",
@@ -385,7 +385,7 @@ export function buildProductBrain(params: {
         insights.push({
           id: nid("insight"),
           title: `Strong willingness to pay: ${wtp}%`,
-          description: "Swarm Field shows high market payment willingness — your pricing model is supported.",
+          description: "Market Swarm shows high market payment willingness — your pricing model is supported.",
           severity: "low",
           actionLabel: "View Swarm results",
           actionHref: swarm.id ? `/app/reports/${swarm.id}` : "/app/swarm",
@@ -442,7 +442,7 @@ export function buildProductBrain(params: {
         id,
         type: "monetization-idea",
         label: `Monetization: ${pricingModel.slice(0, 50)}`,
-        description: "Pricing model from Blueprint Board",
+        description: "Pricing model from MVP Planner",
         severity: "neutral",
         sourceTool: "mvp",
         sourceReportId: mvp.id,
@@ -463,9 +463,9 @@ export function buildProductBrain(params: {
       insights.push({
         id: nid("insight"),
         title: "Launch readiness looks strong",
-        description: `Launch Control scores ${launchScore}/100${goNoGo ? ` — ${goNoGo}` : ""}. Proceed to final checks.`,
+        description: `Launch Room scores ${launchScore}/100${goNoGo ? ` — ${goNoGo}` : ""}. Proceed to final checks.`,
         severity: "low",
-        actionLabel: "View Launch Control",
+        actionLabel: "View Launch Room",
         actionHref: launch.id ? `/app/reports/${launch.id}` : "/app/launch",
         sourceTool: "launch",
       });
@@ -473,9 +473,9 @@ export function buildProductBrain(params: {
       insights.push({
         id: nid("insight"),
         title: `Launch readiness at ${launchScore}/100`,
-        description: "Launch Control signals are not ready. Resolve blockers before shipping.",
+        description: "Launch Room signals are not ready. Resolve blockers before shipping.",
         severity: "high",
-        actionLabel: "View Launch Control",
+        actionLabel: "View Launch Room",
         actionHref: launch.id ? `/app/reports/${launch.id}` : "/app/launch",
         sourceTool: "launch",
       });
@@ -488,9 +488,9 @@ export function buildProductBrain(params: {
     insights.push({
       id: nid("insight"),
       title: "Product Brain is empty",
-      description: "No intelligence tools have been run yet. Start with Signal Chamber to build your first intelligence layer.",
+      description: "No intelligence tools have been run yet. Start with Idea Checker to build your first intelligence layer.",
       severity: "critical",
-      actionLabel: "Run Signal Chamber",
+      actionLabel: "Run Idea Checker",
       actionHref: "/app/idea",
       sourceTool: "idea",
     });

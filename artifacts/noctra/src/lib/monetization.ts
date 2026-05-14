@@ -99,12 +99,12 @@ export function analyzeMonetization(reports: ReportSummary[]): MonetizationIntel
       : wtp >= 40
       ? `Start at $9-$29/month. Willingness to pay at ${wtp}% supports a modest price point with room to grow through proven value.`
       : `Consider a free-first model. With ${wtp}% simulated WTP, charging upfront creates high friction. Prove retention, then introduce pricing.`
-    : "Run Swarm Field to simulate willingness-to-pay before committing to a pricing model. Pricing without WTP data is guessing.";
+    : "Run Market Swarm to simulate willingness-to-pay before committing to a pricing model. Pricing without WTP data is guessing.";
 
   // Willingness to pay evidence
   const wtpEvidence = wtp !== null
-    ? `Swarm Field simulation shows ${wtp}% of simulated users expressed willingness to pay${swarmScore > 0 ? ` (Swarm score: ${swarmScore}/100)` : ""}.`
-    : "No willingness-to-pay data collected yet — run Swarm Field and Proof Reactor to gather evidence.";
+    ? `Market Swarm simulation shows ${wtp}% of simulated users expressed willingness to pay${swarmScore > 0 ? ` (Swarm score: ${swarmScore}/100)` : ""}.`
+    : "No willingness-to-pay data collected yet — run Market Swarm and Proof Engine to gather evidence.";
 
   // Upgrade triggers
   const upgradeTriggers: string[] = [];
@@ -171,7 +171,7 @@ export function analyzeMonetization(reports: ReportSummary[]): MonetizationIntel
   // Tasks
   const monetizationTasks: MonetizationIntelligence["monetizationTasks"] = [];
   if (!swarm) {
-    monetizationTasks.push({ title: "Run Swarm Field to measure simulated willingness to pay", priority: "critical" });
+    monetizationTasks.push({ title: "Run Market Swarm to measure simulated willingness to pay", priority: "critical" });
   }
   if (wtp !== null && wtp < 30) {
     monetizationTasks.push({ title: "Redesign value proposition to justify paid pricing", priority: "high" });

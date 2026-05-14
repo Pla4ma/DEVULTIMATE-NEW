@@ -5,6 +5,7 @@ export interface LaunchGate {
   status: GateStatus;
   evidence: string[];
   how_to_fix: string;
+  why?: string;
 }
 
 export interface StaticSignals {
@@ -80,6 +81,7 @@ export function evaluateLaunchGates(signals: StaticSignals): LaunchGate[] {
         : warning
         ? "Review localStorage token storage and possible hardcoded secrets"
         : "Security looks acceptable for launch",
+      why: "Security breaches are the #1 cause of production incidents. Secrets in code, eval(), and missing .gitignore put your users and data at immediate risk.",
     });
   }
 
@@ -100,6 +102,7 @@ export function evaluateLaunchGates(signals: StaticSignals): LaunchGate[] {
       how_to_fix: noTests
         ? "Add basic tests for critical paths. Consider Vitest or Jest."
         : "Testing setup looks acceptable",
+      why: "Without tests, regressions go undetected. One broken production path can undo months of user acquisition.",
     });
   }
 
@@ -124,6 +127,7 @@ export function evaluateLaunchGates(signals: StaticSignals): LaunchGate[] {
         : !signals.hasDeploymentConfig
         ? "Consider adding a Dockerfile or deployment config (Render, Fly.io, etc.)"
         : "Deployment config looks ready",
+      why: "Without build/start scripts or deployment config, your app cannot be deployed to production. Every deploy will require manual intervention.",
     });
   }
 
@@ -147,6 +151,7 @@ export function evaluateLaunchGates(signals: StaticSignals): LaunchGate[] {
         : yellow
         ? "Improve README quality and add .env.example"
         : "Documentation looks acceptable",
+      why: "New contributors (or your future self) cannot onboard without docs. Missing README and .env.example cause setup friction that kills momentum.",
     });
   }
 
@@ -172,6 +177,7 @@ export function evaluateLaunchGates(signals: StaticSignals): LaunchGate[] {
         : warning
         ? "Review and resolve TODO/FIXME items"
         : "Product appears feature-complete",
+      why: "Users judge your product instantly. Stubs, empty states, and incomplete features erode trust and drive churn before you get a second chance.",
     });
   }
 
@@ -196,6 +202,7 @@ export function evaluateLaunchGates(signals: StaticSignals): LaunchGate[] {
         : warning
         ? "Remove console.log statements and refactor large files"
         : "No major performance concerns detected",
+      why: "Debugger statements block production execution. console.log bloat and 600+ line files degrade runtime performance and maintainability.",
     });
   }
 

@@ -294,6 +294,9 @@ export async function scanZip(buffer: Buffer, fileName: string): Promise<ScanRes
         // Detect framework
         const allDeps = { ...dependencies, ...devDependencies };
         if (allDeps.next) framework = "Next.js";
+        else if (allDeps["@remix-run/react"] || allDeps["@remix-run/node"]) framework = "Remix";
+        else if (allDeps["@sveltejs/kit"]) framework = "SvelteKit";
+        else if (allDeps["nuxt"] || allDeps["nuxt3"]) framework = "Nuxt";
         else if (allDeps.vite || allDeps["@vitejs/plugin-react"]) framework = "Vite + React";
         else if (allDeps.react) framework = "React";
         else if (allDeps.vue) framework = "Vue";
@@ -301,6 +304,11 @@ export async function scanZip(buffer: Buffer, fileName: string): Promise<ScanRes
         else if (allDeps.angular || allDeps["@angular/core"]) framework = "Angular";
         else if (allDeps.express) framework = "Express";
         else if (allDeps.fastify) framework = "Fastify";
+        else if (allDeps.hono) framework = "Hono";
+        else if (allDeps.django) framework = "Django";
+        else if (allDeps.flask) framework = "Flask";
+        else if (allDeps.rails) framework = "Rails";
+        else if (allDeps.spring) framework = "Spring";
 
         // Detect package manager
         if (parts.some(p => p === "pnpm-lock.yaml")) packageManager = "pnpm";
@@ -355,11 +363,11 @@ export async function scanZip(buffer: Buffer, fileName: string): Promise<ScanRes
         repoMap.components.push(path);
         staticSignals.componentCount++;
       }
-      if (lowerPath.includes("/pages/") || lowerPath.includes("/routes/") || lowerPath.includes("/app/")) {
+      if (lowerPath.includes("/pages/") || lowerPath.includes("/routes/") || lowerPath.includes("/app/") || lowerPath.includes("/views/") || lowerPath.includes("/screens/")) {
         repoMap.routes.push(path);
         staticSignals.routeCount++;
       }
-      if (lowerPath.includes("/api/") || lowerName.includes("route") || lowerName.includes("handler")) {
+      if (lowerPath.includes("/api/") || lowerName.includes("route") || lowerName.includes("handler") || lowerPath.includes("/api-")) {
         repoMap.apiFiles.push(path);
         staticSignals.apiRouteCount++;
         staticSignals.hasApiRoutes = true;

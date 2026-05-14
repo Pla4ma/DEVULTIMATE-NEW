@@ -100,21 +100,153 @@ export function generatePromptPackFromReport(
 
   if (report.tool === "doctor" && data) {
     const repairQueue = data.repair_queue as string[] | null;
-    const issues = data.issues as Array<{ severity: string; issue: string; fix: string }> | null;
+    const issues = data.issues as Array<{ severity: string; issue: string; fix: string; file?: string }> | null;
     const gates = data.launch_gates as Array<{ name: string; status: string; how_to_fix: string }> | null;
+    const allGates = data.gates as Array<{ name: string; status: string; how_to_fix: string }> | null;
+    const effectiveGates = gates ?? allGates ?? [];
     const critIssues = issues?.filter((i) => i.severity === "CRITICAL" || i.severity === "HIGH") ?? [];
-    const redGates = gates?.filter((g) => g.status === "RED") ?? [];
+    const redGates = effectiveGates.filter((g) => g.status === "RED") ?? [];
+    const yellowGates = effectiveGates.filter((g) => g.status === "YELLOW") ?? [];
+    const healthScore = data.health_score ?? data.score ?? 0;
+    const launchReadiness = data.launch_readiness as string ?? (redGates.length === 0 ? "CONDITIONAL" : "NO-GO");
+    const topBlocker = data.top_blocker as string ?? (redGates.length > 0 ? `${redGates[0].name} gate failed` : "");
+    const evidence = data.evidence as Array<{ filePath: string; lineNumber?: number; explanation: string; severity: string }> | null;
+    const alignment = data.alignment as Record<string, unknown> | null;
+    const alignmentTasks = (alignment?.recommendedCodeTasks as Array<{ title: string }> | undefined) ?? [];
+
+    // Comprehensive next build prompt as first phase
+    const diagnosisLines: string[] = [
+      `## Project Context`,
+      `This is a diagnostic repair session for a project that has been scanned by Project Doctor.`,
+      ``,
+      `## Diagnosis Summary`,
+      `Health Score: ${healthScore}/100`,
+      `Launch Readiness: ${launchReadiness}`,
+      topBlocker ? `Top Blocker: ${topBlocker}` : "",
+      ``,
+    ];
     if (redGates.length > 0) {
-      const gatesPrompt = `${preamble}\nThese launch gates are RED and must be fixed before launch:\n${redGates.map((g, i) => `${i + 1}. ${g.name}: ${g.how_to_fix}`).join("\n")}\n\nFix all RED gates. Do not deploy until they are GREEN. Show me what changed for each fix.`;
-      prompts.push({ tool: targetTool, phase: "1. Fix Launch Blockers (RED gates)", prompt: adaptPromptForTool(gatesPrompt, targetTool), acceptance_criteria: redGates.map((g) => `${g.name} gate is GREEN`), estimated_time: "4 hours", difficulty: "hard" });
+      diagnosisLines.push(`## Critical Blockers (RED Gates)`);
+      redGates.forEach((g) => {
+        diagnosisLines.push(`- ${g.name}: ${g.how_to_fix}`);
+      });
+      diagnosisLines.push("", "These are launch-blocking issues. Fix them before any other work.");
+      diagnosisLines.push("");
+    }
+    if (yellowGates.length > 0) {
+      diagnosisLines.push(`## Warnings (YELLOW Gates)`);
+      yellowGates.forEach((g) => {
+        diagnosisLines.push(`- ${g.name}: ${g.how_to_fix}`);
+      });
+      diagnosisLines.push("");
     }
     if (critIssues.length > 0) {
-      const issuesPrompt = `${preamble}\nCritical issues to fix:\n${critIssues.slice(0, 5).map((i, n) => `${n + 1}. ${i.issue}\nFix: ${i.fix}`).join("\n\n")}\n\nFix each issue and explain what was changed.`;
-      prompts.push({ tool: targetTool, phase: "2. Critical Issues", prompt: adaptPromptForTool(issuesPrompt, targetTool), acceptance_criteria: critIssues.slice(0, 3).map((i) => `Fixed: ${truncate(i.issue, 50)}`), estimated_time: "2 hours", difficulty: "medium", dependencies: redGates.length > 0 ? ["1. Fix Launch Blockers (RED gates)"] : [] });
+      diagnosisLines.push(`## Critical Issues`);
+      critIssues.slice(0, 5).forEach((issue) => {
+        const parts = [`- ${issue.issue}`];
+        if (issue.file) parts.push(` (${issue.file})`);
+        if (issue.fix) parts.push(` → Fix: ${issue.fix}`);
+        diagnosisLines.push(parts.join(""));
+      });
+      diagnosisLines.push("");
+    }
+    if (evidence && evidence.length > 0) {
+      diagnosisLines.push(`## Files Likely Affected`);
+      evidence.slice(0, 8).forEach((e) => {
+        diagnosisLines.push(`- \`${e.filePath}\`${e.lineNumber ? `:${e.lineNumber}` : ""} — ${e.explanation}`);
+      });
+      diagnosisLines.push("");
+    }
+    if (repairQueue && repairQueue.length > 0) {
+      diagnosisLines.push(`## Repair Queue (Priority Order)`);
+      repairQueue.slice(0, 8).forEach((r, i) => diagnosisLines.push(`${i + 1}. ${r}`));
+      diagnosisLines.push("");
+    }
+    diagnosisLines.push(`## Exact Requirements`);
+    diagnosisLines.push(`1. Fix all RED gates — they are launch blockers`);
+    diagnosisLines.push(`2. Address all CRITICAL and HIGH severity issues`);
+    diagnosisLines.push(`3. Remove console.log statements (${data.consoleLogCount ?? "?"} found)`);
+    diagnosisLines.push(`4. Resolve TODO/FIXME comments (${data.todoCount ?? "?"} found)`);
+    diagnosisLines.push(`5. Ensure no debugger statements remain in production code`);
+    diagnosisLines.push(`6. Refactor files over 600 lines`);
+    diagnosisLines.push(`7. Remove hardcoded secrets or move to environment variables`);
+    diagnosisLines.push("");
+    diagnosisLines.push(`## Do Not Break Rules`);
+    diagnosisLines.push(`- Do NOT modify project architecture or framework`);
+    diagnosisLines.push(`- Do NOT change package.json dependencies unless explicitly required`);
+    diagnosisLines.push(`- Do NOT remove existing functionality`);
+    diagnosisLines.push(`- Do NOT add new features — this is a repair session only`);
+    diagnosisLines.push(`- Do NOT change database schemas`);
+    diagnosisLines.push(`- Preserve all existing API contracts`);
+    diagnosisLines.push("");
+    diagnosisLines.push(`## Acceptance Criteria`);
+    diagnosisLines.push(`- All RED gates are GREEN`);
+    diagnosisLines.push(`- All CRITICAL issues resolved`);
+    diagnosisLines.push(`- No new TypeScript errors introduced`);
+    diagnosisLines.push(`- Each change is minimal and focused`);
+    diagnosisLines.push(`- No console.log or debugger statements remain in production code`);
+    diagnosisLines.push(`- All secrets moved to environment variables`);
+    diagnosisLines.push("");
+    diagnosisLines.push(`## Test Commands`);
+    diagnosisLines.push(`\`\`\``);
+    diagnosisLines.push(`pnpm run typecheck`);
+    diagnosisLines.push(`pnpm run build`);
+    diagnosisLines.push(`\`\`\``);
+    diagnosisLines.push("");
+    diagnosisLines.push(`## Security Reminders`);
+    diagnosisLines.push(`- Never commit .env files or real secrets`);
+    diagnosisLines.push(`- Never use eval() or new Function()`);
+    diagnosisLines.push(`- Never expose API keys in client-side code`);
+    diagnosisLines.push(`- Always validate and sanitize user input`);
+    diagnosisLines.push("");
+    diagnosisLines.push(`## Build / Typecheck Instructions`);
+    diagnosisLines.push(`1. Run \`pnpm run typecheck\` after changes`);
+    diagnosisLines.push(`2. Fix all TypeScript errors before proceeding`);
+    diagnosisLines.push(`3. Run \`pnpm run build\` to verify the build`);
+    diagnosisLines.push(`4. Re-upload to Project Doctor to confirm health score improvement`);
+    diagnosisLines.push(`5. Verify no regressions in existing features`);
+    diagnosisLines.push("");
+    diagnosisLines.push(`## Final Expected Outcome`);
+    diagnosisLines.push(`- Health score improves from ${healthScore}/100 to 70+/100`);
+    diagnosisLines.push(`- All launch gates pass (GREEN)`);
+    diagnosisLines.push(`- Codebase is production-ready`);
+    diagnosisLines.push(`- Zero critical or high-severity issues`);
+    diagnosisLines.push(`- Project can be deployed without manual fixes`);
+
+    const mainPrompt = diagnosisLines.join("\n");
+    prompts.push({
+      tool: targetTool,
+      phase: "1. Full Diagnostic Repair",
+      prompt: adaptPromptForTool(mainPrompt, targetTool),
+      acceptance_criteria: [
+        "Health score improves to 70+",
+        "All RED gates become GREEN",
+        "All CRITICAL/HIGH issues resolved",
+        "TypeScript build passes with 0 errors",
+        "No console.log or debugger in production code",
+        "All secrets moved to environment variables",
+      ],
+      estimated_time: redGates.length > 0 ? "4 hours" : "2 hours",
+      difficulty: redGates.length > 0 ? "hard" : "medium",
+    });
+
+    if (redGates.length > 0) {
+      const gatesPrompt = `${preamble}\nThese launch gates are RED and must be fixed before launch:\n${redGates.map((g, i) => `${i + 1}. ${g.name}: ${g.how_to_fix}`).join("\n")}\n\nFix all RED gates. Do not deploy until they are GREEN. Show me what changed for each fix.`;
+      prompts.push({ tool: targetTool, phase: "2. Fix Launch Blockers (RED gates)", prompt: adaptPromptForTool(gatesPrompt, targetTool), acceptance_criteria: redGates.map((g) => `${g.name} gate is GREEN`), estimated_time: "4 hours", difficulty: "hard", dependencies: ["1. Full Diagnostic Repair"] });
+    }
+    if (critIssues.length > 0) {
+      const issuesPrompt = `${preamble}\nCritical issues to fix:\n${critIssues.slice(0, 5).map((i, n) => `${n + 1}. ${i.issue}${i.file ? ` (${i.file})` : ""}\nFix: ${i.fix}`).join("\n\n")}\n\nFix each issue and explain what was changed.`;
+      prompts.push({ tool: targetTool, phase: redGates.length > 0 ? "3. Critical Issues" : "2. Critical Issues", prompt: adaptPromptForTool(issuesPrompt, targetTool), acceptance_criteria: critIssues.slice(0, 3).map((i) => `Fixed: ${truncate(i.issue, 50)}`), estimated_time: "2 hours", difficulty: "medium", dependencies: redGates.length > 0 ? ["1. Full Diagnostic Repair"] : [] });
     }
     if (repairQueue?.length) {
+      const phaseLabel = redGates.length > 0 ? "4" : critIssues.length > 0 ? "3" : "2";
       const repairPrompt = `${preamble}\nRepair queue (in priority order):\n${repairQueue.slice(0, 8).map((r, i) => `${i + 1}. ${r}`).join("\n")}\n\nWork through this list in order. Show progress.`;
-      prompts.push({ tool: targetTool, phase: "3. Repair Queue", prompt: adaptPromptForTool(repairPrompt, targetTool), acceptance_criteria: repairQueue.slice(0, 3).map((r) => truncate(r, 50)), estimated_time: "2 hours", difficulty: "medium" });
+      prompts.push({ tool: targetTool, phase: `${phaseLabel}. Repair Queue`, prompt: adaptPromptForTool(repairPrompt, targetTool), acceptance_criteria: repairQueue.slice(0, 3).map((r) => truncate(r, 50)), estimated_time: "2 hours", difficulty: "medium" });
+    }
+    if (alignmentTasks.length > 0) {
+      const alignPhase = redGates.length + critIssues.length + (repairQueue?.length ?? 0) > 0 ? String(Math.max(2, redGates.length + (critIssues.length > 0 ? 1 : 0) + ((repairQueue?.length ?? 0) > 0 ? 1 : 0) + 1)) : "2";
+      const alignPrompt = `${preamble}\nCodebase alignment tasks:\n${alignmentTasks.map((t, i) => `${i + 1}. ${t.title}`).join("\n")}\n\nImplement each alignment fix.`;
+      prompts.push({ tool: targetTool, phase: `${alignPhase}. Codebase Alignment`, prompt: adaptPromptForTool(alignPrompt, targetTool), acceptance_criteria: alignmentTasks.map((t) => truncate(t.title, 50)), estimated_time: "1 hour", difficulty: "medium" });
     }
   }
 

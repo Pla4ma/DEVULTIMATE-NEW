@@ -62,7 +62,12 @@ export function GenericReportView({ report }: Props) {
 
       {!data && !markdown && !output && (
         <Panel>
-          <pre className="text-xs overflow-auto" style={{ color: "var(--noctra-text-soft)" }}>{JSON.stringify(report.payload, null, 2)}</pre>
+          <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>
+            Some structured fields were missing, so this report is shown in summary mode.
+          </p>
+          {report.summary && (
+            <p className="text-sm mt-2" style={{ color: "var(--noctra-text-soft)" }}>{report.summary}</p>
+          )}
         </Panel>
       )}
     </div>

@@ -14,6 +14,7 @@ import {
   ArrowRight, ExternalLink, Zap, Terminal, XCircle, AlertCircle, ChevronRight,
   CheckSquare, Cpu, Play,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const TOOL = TOOL_BY_KEY["reality"]!;
 
@@ -54,6 +55,7 @@ const STATUS_CONFIG = {
 
 export default function RealityPage() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const [input, setInput] = useState("");
   const [compileMode, setCompileMode] = useState<CompileMode>("full");
   const [phase, setPhase] = useState<Phase>("idle");
@@ -137,7 +139,8 @@ export default function RealityPage() {
           project_id: null,
         });
       }
-    } catch {
+    } catch (e) {
+      console.warn("Auto-save failed:", e);
       setAutoSaveError(true);
     }
   }
@@ -162,7 +165,10 @@ export default function RealityPage() {
     const d = result.data as Record<string, unknown>;
     const patchedIdea = typeof d.patched_idea === "string" ? d.patched_idea : "";
     const productPatch = typeof d.product_patch === "string" ? d.product_patch : "";
-    if (!patchedIdea && !productPatch) return;
+    if (!patchedIdea && !productPatch) {
+      toast({ title: "Nothing to patch", description: "No patched_idea or product_patch found in this compilation.", variant: "destructive" });
+      return;
+    }
 
     setApplyingPatch(true);
     try {
@@ -187,12 +193,15 @@ export default function RealityPage() {
         },
         score: typeof d.score === "number" ? Math.min(100, (d.score as number) + 15) : undefined,
         summary: patchedIdea.slice(0, 300),
+        projectId: undefined,
       }) as { id?: string };
       setPatchSaved(true);
       if (report?.id) {
+        toast({ title: "Patch applied", description: "Patched Idea report created. Navigating…" });
         navigate(`/app/reports/${report.id}`);
       }
-    } catch {
+    } catch (err) {
+      toast({ title: "Failed to apply patch", description: err instanceof Error ? err.message : "Unexpected error.", variant: "destructive" });
       setApplyingPatch(false);
     }
   }
@@ -989,7 +998,7 @@ export default function RealityPage() {
                       variant="ghost"
                       onClick={() => navigate("/app/proof")}
                     >
-                      Next: Proof Reactor <ArrowRight size={11} />
+                      Next: Proof Engine <ArrowRight size={11} />
                     </NoctraButton>
                   )}
                   <NoctraButton variant="ghost" onClick={reset}>

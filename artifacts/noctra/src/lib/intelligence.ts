@@ -45,14 +45,14 @@ export interface InsightBrief {
 const INTELLIGENCE_TOOLS = ["idea", "reality", "proof", "swarm", "mvp", "doctor", "launch"];
 
 const TOOL_LABELS: Record<string, string> = {
-  idea: "Signal Chamber",
-  reality: "Pressure Matrix",
-  proof: "Proof Reactor",
-  swarm: "Swarm Field",
-  mvp: "Blueprint Board",
-  doctor: "Diagnostic Bay",
-  launch: "Launch Control",
-  twin: "Memory Constellation",
+  idea: "Idea Checker",
+  reality: "Reality Compiler",
+  proof: "Proof Engine",
+  swarm: "Market Swarm",
+  mvp: "MVP Planner",
+  doctor: "Project Doctor",
+  launch: "Launch Room",
+  twin: "Product Twin",
 };
 
 // Recommended order for tool journey
@@ -154,18 +154,18 @@ export function detectContradictions(reports: ReportSummary[]): Contradiction[] 
       contradictions.push({
         type: "signal",
         severity: "high",
-        description: `Signal Chamber scored ${ideaScore}/100 (strong) but Pressure Matrix returned NO-GO — your strongest assumptions may be the most dangerous ones`,
+        description: `Idea Checker scored ${ideaScore}/100 (strong) but Reality Compiler returned NO-GO — your strongest assumptions may be the most dangerous ones`,
         tools: ["idea", "reality"],
-        resolution: "Re-run Pressure Matrix with explicit focus on why high-scoring ideas still fail. Address each critical risk before proceeding.",
+        resolution: "Re-run Reality Compiler with explicit focus on why high-scoring ideas still fail. Address each critical risk before proceeding.",
       });
     }
     if (ideaScore < 45 && goSignal === "GO") {
       contradictions.push({
         type: "signal",
         severity: "medium",
-        description: `Signal Chamber scored ${ideaScore}/100 (weak signal) but Pressure Matrix returned GO — you may be pressure-testing the wrong version of the idea`,
+        description: `Idea Checker scored ${ideaScore}/100 (weak signal) but Reality Compiler returned GO — you may be pressure-testing the wrong version of the idea`,
         tools: ["idea", "reality"],
-        resolution: "Sharpen the idea formulation and re-run Signal Chamber before treating the GO signal as valid.",
+        resolution: "Sharpen the idea formulation and re-run Idea Checker before treating the GO signal as valid.",
       });
     }
   }
@@ -177,9 +177,9 @@ export function detectContradictions(reports: ReportSummary[]): Contradiction[] 
       contradictions.push({
         type: "score",
         severity: "high",
-        description: `Launch Control shows ${launchScore}/100 readiness but Diagnostic Bay health is only ${doctorScore}/100 — you're planning to launch on a broken foundation`,
+        description: `Launch Room shows ${launchScore}/100 readiness but Project Doctor health is only ${doctorScore}/100 — you're planning to launch on a broken foundation`,
         tools: ["launch", "doctor"],
-        resolution: "Resolve all RED gates from Diagnostic Bay first. A ${doctorScore}/100 health score means production incidents are likely within hours of launch.",
+        resolution: "Resolve all RED gates from Project Doctor first. A ${doctorScore}/100 health score means production incidents are likely within hours of launch.",
       });
     }
   }
@@ -192,7 +192,7 @@ export function detectContradictions(reports: ReportSummary[]): Contradiction[] 
       contradictions.push({
         type: "assumption",
         severity: "medium",
-        description: `Proof Reactor scores ${proofScore}/100 but flagged ${gaps} unaddressed evidence gaps — the score may be inflated by low-quality signals`,
+        description: `Proof Engine scores ${proofScore}/100 but flagged ${gaps} unaddressed evidence gaps — the score may be inflated by low-quality signals`,
         tools: ["proof"],
         resolution: "Close at least 2 of the flagged evidence gaps before treating the proof score as launch validation.",
       });
@@ -226,9 +226,9 @@ export function detectContradictions(reports: ReportSummary[]): Contradiction[] 
       contradictions.push({
         type: "timing",
         severity: "low",
-        description: "Signal Chamber and Blueprint Board run on the same day with no Proof Reactor — you may be planning to build before validating",
+        description: "Idea Checker and MVP Planner run on the same day with no Proof Engine — you may be planning to build before validating",
         tools: ["idea", "mvp"],
-        resolution: "Run Proof Reactor before finalizing the MVP scope. Build only what validated demand requires.",
+        resolution: "Run Proof Engine before finalizing the MVP scope. Build only what validated demand requires.",
       });
     }
   }
@@ -297,7 +297,7 @@ export function generateInsightBrief(reports: ReportSummary[]): InsightBrief {
       ? `Run ${TOOL_LABELS[coverage.nextRecommended] ?? coverage.nextRecommended}`
       : worstTrend
       ? `Re-run ${worstTrend.label} and address the specific issues causing the score decline`
-      : "Run Memory Constellation for a full strategic synthesis across all reports";
+      : "Run Product Twin for a full strategic synthesis across all reports";
 
   return { headline, status, topRisk, topOpportunity, immediateAction, avgScore };
 }

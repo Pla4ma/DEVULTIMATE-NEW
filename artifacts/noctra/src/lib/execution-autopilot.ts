@@ -92,8 +92,8 @@ export function generateExecutionPackage(params: {
     );
 
     title = "Codebase Health Execution Package";
-    goal = `Fix ${failedGates.length || "critical"} Diagnostic Bay failures and bring health score above 70/100.`;
-    expectedOutcome = "Diagnostic Bay score ≥ 70, all critical gates passing, production-ready codebase.";
+    goal = `Fix ${failedGates.length || "critical"} Project Doctor failures and bring health score above 70/100.`;
+    expectedOutcome = "Project Doctor score ≥ 70, all critical gates passing, production-ready codebase.";
     riskIfIgnored = "Launching with the current health score risks immediate production incidents, security breaches, and user data loss.";
 
     if (failedGates.length > 0) {
@@ -101,18 +101,18 @@ export function generateExecutionPackage(params: {
         const gateName = String(gate.name ?? gate.gate ?? gate.check ?? "Failed gate");
         taskBatch.push({
           title: `Fix: ${gateName}`,
-          detail: String(gate.recommendation ?? gate.fix ?? gate.detail ?? `Address the ${gateName} failure identified in Diagnostic Bay`),
+          detail: String(gate.recommendation ?? gate.fix ?? gate.detail ?? `Address the ${gateName} failure identified in Project Doctor`),
           priority: "critical",
           category: "technical",
           estimatedHours: 2,
         });
-        acceptanceCriteria.push(`${gateName} gate passes with GREEN status in the next Diagnostic Bay scan`);
-        testPlan.push(`Re-run Diagnostic Bay after fixing ${gateName} — verify gate status changes to PASS`);
+        acceptanceCriteria.push(`${gateName} gate passes with GREEN status in the next Project Doctor scan`);
+        testPlan.push(`Re-run Project Doctor after fixing ${gateName} — verify gate status changes to PASS`);
       }
     } else {
       taskBatch.push({
         title: "Audit and improve codebase health",
-        detail: "Review all Diagnostic Bay findings and address the highest-severity issues first — focus on security, error handling, and deployment configuration.",
+        detail: "Review all Project Doctor findings and address the highest-severity issues first — focus on security, error handling, and deployment configuration.",
         priority: "critical",
         category: "technical",
         estimatedHours: 4,
@@ -143,7 +143,7 @@ export function generateExecutionPackage(params: {
           estimatedHours: 3,
         });
         acceptanceCriteria.push(`${code} error is resolved and no longer appears in the Reality Compiler output`);
-        testPlan.push(`Re-run Pressure Matrix and verify ${code} is no longer flagged`);
+        testPlan.push(`Re-run Reality Compiler and verify ${code} is no longer flagged`);
       }
     }
   }
@@ -152,7 +152,7 @@ export function generateExecutionPackage(params: {
   else if (proofSignals.length < 3) {
     title = "Proof Collection Execution Package";
     goal = `Collect ${3 - proofSignals.length} more strong proof signals to justify build investment.`;
-    expectedOutcome = `${3 - proofSignals.length + proofSignals.length}+ proof signals with diverse evidence types, Proof Reactor score ≥ 60.`;
+    expectedOutcome = `${3 - proofSignals.length + proofSignals.length}+ proof signals with diverse evidence types, Proof Engine score ≥ 60.`;
     riskIfIgnored = "Building without proof of demand is the #1 reason startups fail — you're betting your runway on unvalidated assumptions.";
 
     taskBatch.push(
@@ -180,15 +180,15 @@ export function generateExecutionPackage(params: {
     );
 
     acceptanceCriteria.push(
-      "3+ proof signals logged in Proof Reactor with documented sources",
+      "3+ proof signals logged in Proof Engine with documented sources",
       "At least 1 external validation (not self-reported or assumed)",
-      "Proof Reactor score improves to ≥ 55/100"
+      "Proof Engine score improves to ≥ 55/100"
     );
 
     testPlan.push(
       "Review interview recordings for consistent pain points (signal: same problem mentioned by 3+ users)",
       "Check landing page conversion rate against industry benchmark (signal: ≥ 2% conversion)",
-      "Re-run Proof Reactor with updated signals and verify score improvement"
+      "Re-run Proof Engine with updated signals and verify score improvement"
     );
   }
 
@@ -292,7 +292,7 @@ export function generateExecutionPackage(params: {
 - Scores: ${scores.join(", ") || "none yet"}
 - Open critical tasks: ${openCritical.length}
 - Proof signals: ${proofSignals.length}
-${doctorGates ? `- Failed Diagnostic Bay gates: ${doctorGates}` : ""}
+${doctorGates ? `- Failed Project Doctor gates: ${doctorGates}` : ""}
 
 ## Current Task
 **${title}**
