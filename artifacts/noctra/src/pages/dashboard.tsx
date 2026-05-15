@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
-import { Panel, Badge, EmptyState, ProgressBar } from "@/components/Primitives";
+import { Panel, Badge } from "@/components/Primitives";
 import { getDashboardData, getReports, getProofSignals, getTasks, getProjects, createTask, saveTasks } from "@/lib/repository";
 import { TOOL_BY_KEY, TOOLS } from "@/lib/noctra-tools";
+import { useProgression } from "@/lib/progression-context";
+import { MILESTONES } from "@/lib/progression";
 import { computeNextAction, computePipeline } from "@/lib/next-action";
 import { extractRisks, RISK_SEV_COLOR } from "@/lib/risk-radar";
 import { buildTimeline, formatTimeAgo, TIMELINE_TYPE_COLOR } from "@/lib/timeline";
@@ -28,7 +30,7 @@ import {
   Zap, AlertTriangle, TrendingUp, TrendingDown, Minus,
   Brain, ShieldOff, Clock,
   Target, Map, Terminal, Copy, Download, Plus,
-  XCircle, CheckCircle, Info, Stethoscope, Lightbulb, Upload,
+  XCircle, CheckCircle, Info, Stethoscope, Lightbulb, Upload, Lock,
 } from "lucide-react";
 
 type DashData = Awaited<ReturnType<typeof getDashboardData>>;
@@ -65,6 +67,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { reportCount, nextMilestone, progress } = useProgression();
 
   // Intelligence layer — computed client-side from all reports
   const [reports, setReports] = useState<ReportSummary[]>([]);
@@ -394,6 +397,20 @@ export default function DashboardPage() {
                 ))}
               </div>
             </div>
+
+            {/* Progression unlock preview */}
+            <Panel>
+              <p className="text-xs font-semibold mb-3" style={{ color: "var(--noctra-text-muted)" }}>As you complete reports, you'll unlock:</p>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {MILESTONES.map((m) => (
+                  <div key={m.key} className="rounded-lg p-3 text-center" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", opacity: 0.6 }}>
+                    <Lock size={14} className="mx-auto mb-1" style={{ color: "var(--noctra-text-muted)" }} />
+                    <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>{m.label}</p>
+                    <p className="text-[10px] mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{m.description}</p>
+                  </div>
+                ))}
+              </div>
+            </Panel>
           </div>
         ) : (
           <>
@@ -442,6 +459,38 @@ export default function DashboardPage() {
                 </p>
               </div>
             </Panel>
+
+            {/* ═══════════════════════════════════════════════
+               PROGRESSION: Next unlock
+            ═══════════════════════════════════════════════ */}
+            {nextMilestone && (
+              <div
+                className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl"
+                style={{ background: "rgba(61,216,255,0.05)", border: "1px solid rgba(61,216,255,0.15)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <Lock size={14} style={{ color: "var(--noctra-cyan)" }} />
+                  <div>
+                    <p className="text-xs font-semibold" style={{ color: "var(--noctra-cyan)" }}>Next unlock: {nextMilestone.label}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
+                      Complete {nextMilestone.requiredReports - reportCount} more {nextMilestone.requiredReports - reportCount === 1 ? "report" : "reports"} to unlock {nextMilestone.unlocks.length} new tool{nextMilestone.unlocks.length !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--noctra-surface2)" }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.round((progress.progress / progress.total) * 100)}%`,
+                        background: "var(--noctra-cyan)",
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs font-mono" style={{ color: "var(--noctra-cyan)" }}>{reportCount}/{nextMilestone.requiredReports}</span>
+                </div>
+              </div>
+            )}
 
             {/* ═══════════════════════════════════════════════
                SECTION 2: PRODUCT STATE

@@ -6,8 +6,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ProgressionProvider } from "@/lib/progression-context";
+import { CommandPalette } from "@/components/CommandPalette";
 
 import LandingPage from "@/pages/landing";
+import PricingPage from "@/pages/pricing";
 import DashboardPage from "@/pages/dashboard";
 import IdeaPage from "@/pages/idea";
 import RealityPage from "@/pages/reality";
@@ -81,13 +84,16 @@ function ScrollToTop() {
 
 function AppRoutes() {
   return (
-    <Switch>
-      <Route path="/" component={LandingPage} />
+    <>
+      <CommandPalette />
+      <Switch>
+<Route path="/" component={LandingPage} />
+      <Route path="/pricing" component={PricingPage} />
       <Route path="/app">
-        <AuthGuard>
-          <DashboardPage />
-        </AuthGuard>
-      </Route>
+          <AuthGuard>
+            <DashboardPage />
+          </AuthGuard>
+        </Route>
       <Route path="/app/idea">
         <AuthGuard><IdeaPage /></AuthGuard>
       </Route>
@@ -132,6 +138,7 @@ function AppRoutes() {
       </Route>
       <Route component={NotFound} />
     </Switch>
+    </>
   );
 }
 
@@ -139,16 +146,18 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <TitleSetter />
-            <ScrollToTop />
-            <ErrorBoundary>
-              <AppRoutes />
-            </ErrorBoundary>
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
+        <ProgressionProvider>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <TitleSetter />
+              <ScrollToTop />
+              <ErrorBoundary>
+                <AppRoutes />
+              </ErrorBoundary>
+            </WouterRouter>
+            <Toaster />
+          </TooltipProvider>
+        </ProgressionProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

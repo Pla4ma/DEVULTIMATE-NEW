@@ -2,13 +2,37 @@ import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { TOOLS, TOOL_GROUPS, GROUP_DESCRIPTION, type Tool } from "@/lib/noctra-tools";
-import { LogOut, Menu, X, ChevronRight, Zap, Command } from "lucide-react";
-import { CommandPalette } from "@/components/CommandPalette";
+import { useProgression } from "@/lib/progression-context";
+import { LogOut, Menu, X, ChevronRight, Zap, Command, Lock, Unlock } from "lucide-react";
 
 function NavItem({ tool, collapsed, onClick }: { tool: Tool; collapsed: boolean; onClick?: () => void }) {
   const [location] = useLocation();
+  const { unlockedTools, nextMilestone } = useProgression();
+  const isLocked = !unlockedTools.has(tool.key as never);
   const active = location === tool.route || (tool.route !== "/app" && location.startsWith(tool.route));
   const Icon = tool.icon;
+
+  if (isLocked) {
+    return (
+      <div
+        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group relative opacity-50`}
+        style={{ borderLeft: "2px solid transparent", cursor: "not-allowed" }}
+        title={nextMilestone ? `Complete ${nextMilestone.requiredReports} reports to unlock ${tool.diegetic}` : "Coming soon"}
+      >
+        <Lock size={16} style={{ color: "var(--noctra-text-muted)" }} />
+        {!collapsed && (
+          <>
+            <span className="text-sm font-medium truncate flex-1" style={{ color: "var(--noctra-text-muted)" }}>
+              {tool.diegetic}
+            </span>
+            <span className="text-[8px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider shrink-0" style={{ background: "rgba(122,132,153,0.1)", color: "var(--noctra-text-muted)" }}>
+              Locked
+            </span>
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <Link href={tool.route} onClick={onClick}>
@@ -41,6 +65,7 @@ function NavItem({ tool, collapsed, onClick }: { tool: Tool; collapsed: boolean;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { signOut, user } = useAuth();
+  const { reportCount, progress, nextMilestone } = useProgression();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -87,6 +112,33 @@ export function AppShell({ children }: { children: ReactNode }) {
           );
         })}
       </nav>
+
+      {/* Progression bar */}
+      {!collapsed && (
+        <div className="px-3 py-2 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>
+              Progress
+            </span>
+            <span className="text-[10px] font-mono" style={{ color: "var(--noctra-cyan)" }}>
+              {reportCount}
+            </span>
+          </div>
+          <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: "var(--noctra-surface2)" }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.round((progress.progress / progress.total) * 100)}%`,
+                background: "var(--noctra-cyan)",
+                boxShadow: "0 0 6px var(--noctra-cyan-glow)",
+              }}
+            />
+          </div>
+          <p className="text-[9px] mt-1" style={{ color: "var(--noctra-text-muted)" }}>
+            {nextMilestone ? `${reportCount}/${nextMilestone.requiredReports} reports` : "All tools unlocked"}
+          </p>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="border-t p-3 space-y-1" style={{ borderColor: "var(--noctra-border)" }}>
@@ -165,9 +217,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
-
-      {/* Global command palette */}
-      <CommandPalette />
     </div>
   );
 }

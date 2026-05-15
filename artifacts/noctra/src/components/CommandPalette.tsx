@@ -17,6 +17,7 @@ type PaletteAction = {
 
 const ACTIONS: PaletteAction[] = [
   { id: "dashboard", title: "Go to Command Center", description: "Command center — overview of all intelligence", href: "/app", icon: LayoutDashboard, group: "Navigate" },
+  { id: "pricing", title: "View Pricing", description: "Check out our pricing plans", href: "/pricing", icon: Rocket, group: "Navigate" },
   { id: "idea", title: "New Idea Check", description: "Idea Checker — validate a startup idea", href: "/app/idea", icon: Lightbulb, group: "Tools" },
   { id: "reality", title: "Run Reality Compiler", description: "Reality Compiler — stress-test assumptions", href: "/app/reality", icon: AlertTriangle, group: "Tools" },
   { id: "proof", title: "Open Proof Engine", description: "Proof Engine — validate with evidence", href: "/app/proof", icon: FlaskConical, group: "Tools" },
