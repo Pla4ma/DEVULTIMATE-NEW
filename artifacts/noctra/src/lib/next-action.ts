@@ -55,7 +55,7 @@ function hasTool(reports: ReportLike[], tool: string): boolean {
 }
 
 // ─── Global next-action engine ──────────────────────────────────────────────
-// Walk the full founder journey and return the single most valuable next step.
+// Walk the full intelligence pipeline and return the single most valuable next step.
 
 export function computeNextAction(params: {
   reports: ReportLike[];
@@ -258,7 +258,7 @@ export function computeNextAction(params: {
 }
 
 // ─── Pipeline progress ───────────────────────────────────────────────────────
-// Returns the 8-step journey with done/active/pending state per step.
+// Returns the 8-step pipeline with done/active/pending state per step.
 
 export type PipelineStep = {
   key: string;
@@ -383,7 +383,7 @@ export function getReportNextActions(
     case "launch":
       actions.push({ title: "Ask Product Twin", href: "/app/twin", tool: "twin", description: "Get AI synthesis of your full launch readiness" });
       actions.push({ title: "Generate Launch Tasks", href: "/app/tasks", tool: "tasks", description: "Turn launch plan into a sprint queue" });
-      actions.push({ title: "Update Passport", href: "/app/passport", tool: "passport", description: "Track your launch milestone in your passport" });
+      actions.push({ title: "View Project Profile", href: "/app/passport", tool: "passport", description: "Review your complete project record and milestones" });
       break;
 
     default:

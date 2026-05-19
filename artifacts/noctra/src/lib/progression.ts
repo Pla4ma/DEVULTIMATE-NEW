@@ -1,103 +1,81 @@
 import type { ToolKey } from "@/lib/noctra-tools";
 
-export type Milestone = {
+export type Capability = {
   key: string;
   label: string;
   description: string;
-  requiredReports: number;
-  unlocks: ToolKey[];
+  phase: "diagnose" | "validate" | "build" | "launch";
+  tools: ToolKey[];
 };
 
-export const MILESTONES: Milestone[] = [
+export const CAPABILITIES: Capability[] = [
   {
-    key: "first_report",
-    label: "First Analysis",
-    description: "Complete your first report",
-    requiredReports: 1,
-    unlocks: ["reality"],
+    key: "diagnose",
+    label: "Diagnose",
+    description: "Analyze your idea and codebase for launch blockers",
+    phase: "diagnose",
+    tools: ["idea", "doctor"],
   },
   {
-    key: "momentum",
-    label: "Building Momentum",
-    description: "Complete 3 reports",
-    requiredReports: 3,
-    unlocks: ["proof", "swarm"],
+    key: "validate",
+    label: "Validate",
+    description: "Test assumptions against market reality",
+    phase: "validate",
+    tools: ["reality", "proof", "swarm"],
   },
   {
-    key: "execution",
-    label: "Ready to Build",
-    description: "Complete 5 reports",
-    requiredReports: 5,
-    unlocks: ["mvp", "doctor"],
+    key: "build",
+    label: "Build",
+    description: "Plan your MVP and track product intelligence",
+    phase: "build",
+    tools: ["mvp", "twin"],
   },
   {
-    key: "advanced",
-    label: "Advanced Mode",
-    description: "Complete 8 reports",
-    requiredReports: 8,
-    unlocks: ["twin", "launch"],
-  },
-  {
-    key: "mastery",
-    label: "Mastery",
-    description: "Complete 10+ reports",
-    requiredReports: 10,
-    unlocks: ["passport"],
+    key: "launch",
+    label: "Launch",
+    description: "Prepare for shipping and manage execution",
+    phase: "launch",
+    tools: ["launch", "passport"],
   },
 ];
 
-const ALWAYS_UNLOCKED: ToolKey[] = ["dashboard", "idea", "reports", "tasks", "projects"];
-
-export function getMilestoneFor(reportCount: number): Milestone | null {
-  const applicable = MILESTONES.filter((m) => reportCount >= m.requiredReports);
-  if (applicable.length === 0) return null;
-  return applicable[applicable.length - 1];
+export function getCapabilityFor(toolKey: ToolKey): Capability | null {
+  return CAPABILITIES.find((c) => c.tools.includes(toolKey)) ?? null;
 }
 
-export function getNextMilestone(reportCount: number): Milestone | null {
-  return MILESTONES.find((m) => reportCount < m.requiredReports) ?? null;
+export function getToolsByPhase(phase: Capability["phase"]): ToolKey[] {
+  return CAPABILITIES.find((c) => c.phase === phase)?.tools ?? [];
 }
 
-export function getUnlockedTools(reportCount: number): Set<ToolKey> {
-  const unlocked = new Set<ToolKey>(ALWAYS_UNLOCKED);
-  for (const m of MILESTONES) {
-    if (reportCount >= m.requiredReports) {
-      for (const t of m.unlocks) unlocked.add(t);
-    }
-  }
-  return unlocked;
+export type CapabilityStatus = {
+  phase: Capability["phase"];
+  label: string;
+  used: number;
+  total: number;
+  percentage: number;
+};
+
+export function computeCapabilityStatus(
+  usedTools: Set<string>
+): CapabilityStatus[] {
+  return CAPABILITIES.map((c) => {
+    const used = c.tools.filter((t) => usedTools.has(t)).length;
+    const total = c.tools.length;
+    return {
+      phase: c.phase,
+      label: c.label,
+      used,
+      total,
+      percentage: total > 0 ? Math.round((used / total) * 100) : 0,
+    };
+  });
 }
 
-export function isToolUnlocked(toolKey: ToolKey, reportCount: number): boolean {
-  if (ALWAYS_UNLOCKED.includes(toolKey)) return true;
-  return MILESTONES.some((m) => m.unlocks.includes(toolKey) && reportCount >= m.requiredReports);
-}
-
-export function getUnlockRequirement(toolKey: ToolKey): { milestone: Milestone; progress: number; total: number } | null {
-  for (const m of MILESTONES) {
-    if (m.unlocks.includes(toolKey)) {
-      return { milestone: m, progress: 0, total: m.requiredReports };
-    }
-  }
-  return null;
-}
-
-export function getMilestoneProgress(reportCount: number) {
-  const next = getNextMilestone(reportCount);
-  if (!next) {
-    return { current: "mastery", progress: 1, total: 1, label: "All tools unlocked" };
-  }
-  const prevThreshold = (() => {
-    const idx = MILESTONES.indexOf(next);
-    if (idx === 0) return 0;
-    return MILESTONES[idx - 1].requiredReports;
-  })();
-  const progress = reportCount - prevThreshold;
-  const total = next.requiredReports - prevThreshold;
-  return {
-    current: next.key,
-    progress: Math.max(0, Math.min(total, progress)),
-    total,
-    label: `${reportCount} / ${next.requiredReports} reports to unlock "${next.label}"`,
-  };
+// Intelligence coverage score (0-100) based on how many tools have been used
+export function computeCoverageScore(usedTools: Set<string>): number {
+  const allToolKeys: ToolKey[] = [
+    "idea", "doctor", "reality", "proof", "swarm", "mvp", "twin", "launch",
+  ];
+  const used = allToolKeys.filter((t) => usedTools.has(t)).length;
+  return Math.round((used / allToolKeys.length) * 100);
 }

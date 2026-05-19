@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/Primitives";
-import { Zap, Check, X, ArrowRight, Users, Building2, Rocket, Star, HelpCircle } from "lucide-react";
+import { Zap, Check, X, ArrowRight, Users, Building2, Rocket, Star, HelpCircle, Sparkles } from "lucide-react";
 
 const plans = [
   {
@@ -10,18 +10,20 @@ const plans = [
     price: "Free",
     description: "For developers just getting started",
     features: [
-      "5 AI analyses per month",
+      "3 AI analyses per month",
       "Basic idea validation",
-      "Simple codebase诊断",
+      "Codebase diagnosis (limited)",
       "Email support",
     ],
     notIncluded: [
+      "Unlimited analyses",
       "Advanced market analysis",
       "Team collaboration",
       "Priority processing",
     ],
     cta: "Start Free",
     popular: false,
+    planId: "free",
   },
   {
     name: "Pro",
@@ -29,13 +31,14 @@ const plans = [
     period: "/month",
     description: "For serious builders and indie hackers",
     features: [
-      "Unlimited AI analyses",
+      "200 AI analyses per month",
       "Full intelligence suite access",
-      "Codebase ZIP upload & analysis",
+      "100 codebase scans per month",
       "Execution plan generation",
       "Priority processing",
       "Export to Markdown",
       "Email & chat support",
+      "Unlimited projects",
     ],
     notIncluded: [
       "Team collaboration",
@@ -43,6 +46,7 @@ const plans = [
     ],
     cta: "Start Pro Trial",
     popular: true,
+    planId: "pro",
   },
   {
     name: "Team",
@@ -50,12 +54,12 @@ const plans = [
     period: "/month",
     description: "For small teams building together",
     features: [
-      "Everything in Pro",
+      "1000 AI analyses per month",
+      "500 codebase scans per month",
       "Up to 5 team members",
       "Shared workspaces",
       "Team analytics dashboard",
       "Collaborative reports",
-      "Team command palette",
       "API access",
       "Priority support",
     ],
@@ -65,13 +69,15 @@ const plans = [
     ],
     cta: "Start Team Trial",
     popular: false,
+    planId: "team",
   },
   {
     name: "Enterprise",
     price: "Custom",
     description: "For organizations at scale",
     features: [
-      "Everything in Team",
+      "Unlimited AI analyses",
+      "Unlimited codebase scans",
       "Unlimited team members",
       "Custom integrations",
       "SLA guarantees",
@@ -83,13 +89,14 @@ const plans = [
     notIncluded: [],
     cta: "Contact Sales",
     popular: false,
+    planId: "enterprise",
   },
 ];
 
 const faqs = [
   {
     question: "What's included in the free tier?",
-    answer: "The free tier gives you 5 AI analyses per month with access to basic idea validation and simple codebase diagnostics. Perfect for trying out the platform.",
+    answer: "The free tier gives you 5 AI analyses and 3 codebase scans per month. Perfect for trying out the platform before committing.",
   },
   {
     question: "Can I upgrade or downgrade anytime?",
@@ -97,7 +104,7 @@ const faqs = [
   },
   {
     question: "What counts as an analysis?",
-    answer: "Each time you run an intelligence tool (Idea Checker, Project Doctor, Reality Compiler, etc.) it counts as one analysis. Pro and Team plans include unlimited analyses.",
+    answer: "Each time you run an intelligence tool (Idea Checker, Project Doctor, Reality Compiler, etc.) it counts as one analysis. Pro and Team plans include hundreds per month.",
   },
   {
     question: "Is there a trial period?",
@@ -114,10 +121,21 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
+  function handleCTA(planId: string) {
+    if (planId === "enterprise") {
+      window.location.href = "mailto:sales@noctra.app";
+      return;
+    }
+    if (planId === "free") {
+      navigate("/");
+      return;
+    }
+    navigate("/");
+  }
+
   return (
     <AppShell>
       <div className="min-h-screen" style={{ background: "var(--noctra-bg)" }}>
-        {/* Header */}
         <div className="py-16 px-6 text-center border-b" style={{ borderColor: "var(--noctra-border)", background: "var(--noctra-surface)" }}>
           <p className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--noctra-cyan)" }}>Pricing</p>
           <h1 className="text-4xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>
@@ -127,7 +145,6 @@ export default function PricingPage() {
             Choose the plan that fits your needs. All plans include core features.
           </p>
 
-          {/* Billing toggle */}
           <div className="mt-8 flex items-center justify-center gap-4">
             <span className={`text-sm ${billingCycle === "monthly" ? "font-medium" : ""}`} style={{ color: billingCycle === "monthly" ? "var(--noctra-text)" : "var(--noctra-text-muted)" }}>
               Monthly
@@ -156,7 +173,6 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Pricing Cards */}
         <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {plans.map((plan) => (
@@ -188,6 +204,7 @@ export default function PricingPage() {
                 </div>
 
                 <button
+                  onClick={() => handleCTA(plan.planId)}
                   className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 mb-6"
                   style={{
                     background: plan.popular ? "var(--noctra-cyan)" : "var(--noctra-surface2)",
@@ -217,7 +234,6 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Feature comparison */}
         <div className="py-16 px-6 border-t" style={{ borderColor: "var(--noctra-border)", background: "var(--noctra-surface)" }}>
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-center mb-10" style={{ color: "var(--noctra-text)" }}>
@@ -236,7 +252,8 @@ export default function PricingPage() {
                 </thead>
                 <tbody>
                   {[
-                    { feature: "Monthly analyses", starter: "5", pro: "Unlimited", team: "Unlimited", enterprise: "Unlimited" },
+                    { feature: "Monthly analyses", starter: "3", pro: "200", team: "1000", enterprise: "Unlimited" },
+                    { feature: "Codebase scans/mo", starter: "1", pro: "100", team: "500", enterprise: "Unlimited" },
                     { feature: "Idea validation", starter: true, pro: true, team: true, enterprise: true },
                     { feature: "Codebase diagnosis", starter: true, pro: true, team: true, enterprise: true },
                     { feature: "Execution plans", starter: false, pro: true, team: true, enterprise: true },
@@ -285,7 +302,6 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* FAQ */}
         <div className="py-16 px-6">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold text-center mb-10" style={{ color: "var(--noctra-text)" }}>
@@ -316,7 +332,6 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* CTA */}
         <div className="py-20 px-6 text-center border-t" style={{ borderColor: "var(--noctra-border)", background: "var(--noctra-surface)" }}>
           <h2 className="text-3xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>Still have questions?</h2>
           <p className="text-lg mb-8" style={{ color: "var(--noctra-text-soft)" }}>

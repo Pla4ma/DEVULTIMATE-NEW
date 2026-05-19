@@ -300,3 +300,133 @@ create policy "score_events: delete own" on score_events
 
 create index if not exists idx_score_events_user_project_created
   on score_events(user_id, project_id, created_at desc);
+
+-- ─────────────────────────────────────────────────────────────
+-- TABLE: user_plans (subscription state)
+-- ─────────────────────────────────────────────────────────────
+create table if not exists user_plans (
+  id                uuid primary key default gen_random_uuid(),
+  user_id           uuid not null references auth.users(id) on delete cascade unique,
+  plan              text not null default 'free',
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  subscription_status text not null default 'active',
+  current_period_start timestamptz,
+  current_period_end   timestamptz,
+  cancel_at_period_end boolean not null default false,
+  trial_ends_at    timestamptz,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+
+alter table user_plans enable row level security;
+
+create policy "user_plans: select own" on user_plans
+  for select using (auth.uid() = user_id);
+
+create policy "user_plans: insert own" on user_plans
+  for insert with check (auth.uid() = user_id);
+
+create policy "user_plans: update own" on user_plans
+  for update using (auth.uid() = user_id);
+
+create index if not exists idx_user_plans_user on user_plans(user_id);
+create index if not exists idx_user_plans_plan on user_plans(plan);
+create index if not exists idx_user_plans_stripe on user_plans(stripe_subscription_id);
+
+-- ─────────────────────────────────────────────────────────────
+-- TABLE: usage_logs (per-request usage tracking)
+-- ─────────────────────────────────────────────────────────────
+create table if not exists usage_logs (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references auth.users(id) on delete cascade,
+  route           text not null,
+  tool            text,
+  provider        text,
+  model           text,
+  tokens_estimated integer,
+  cost_estimated  numeric,
+  success         boolean not null default true,
+  error_message   text,
+  ip_address      text,
+  created_at      timestamptz not null default now()
+);
+
+alter table usage_logs enable row level security;
+
+create policy "usage_logs: select own" on usage_logs
+  for select using (auth.uid() = user_id);
+
+create policy "usage_logs: insert own" on usage_logs
+  for insert with check (auth.uid() = user_id);
+
+create index if not exists idx_usage_logs_user_created on usage_logs(user_id, created_at desc);
+create index if not exists idx_usage_logs_user_route_date on usage_logs(user_id, route, created_at desc);
+create index if not exists idx_usage_logs_created on usage_logs(created_at);
+
+-- ─────────────────────────────────────────────────────────────
+-- TABLE: billing_invoices (stripe invoice records)
+-- ─────────────────────────────────────────────────────────────
+create table if not exists billing_invoices (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references auth.users(id) on delete cascade,
+  stripe_invoice_id text unique,
+  amount          integer not null,
+  currency        text not null default 'usd',
+  status          text not null,
+  invoice_url     text,
+  paid_at         timestamptz,
+  period_start    timestamptz,
+  period_end      timestamptz,
+  created_at      timestamptz not null default now()
+);
+
+alter table billing_invoices enable row level security;
+
+create policy "billing_invoices: select own" on billing_invoices
+  for select using (auth.uid() = user_id);
+
+create index if not exists idx_billing_invoices_user on billing_invoices(user_id);
+
+-- ─────────────────────────────────────────────────────────────
+-- FUNCTION: automatically create user_plan on signup
+-- ─────────────────────────────────────────────────────────────
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  insert into public.profiles (id, email, display_name)
+  values (new.id, new.email, coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1)));
+
+  insert into public.user_plans (user_id, plan)
+  values (new.id, 'free')
+  on conflict (user_id) do nothing;
+
+  return new;
+end;
+$$;
+
+create or replace trigger on_auth_user_created
+  after insert on auth.users
+  for each row
+  execute function public.handle_new_user();
+
+-- ─────────────────────────────────────────────────────────────
+-- FUNCTION: daily usage summary (for quota enforcement)
+-- ─────────────────────────────────────────────────────────────
+create or replace function public.get_daily_usage(p_user_id uuid, p_date date default current_date)
+returns table (
+  route text,
+  call_count bigint
+)
+language sql
+security definer
+as $$
+  select route, count(*)::bigint as call_count
+  from usage_logs
+  where user_id = p_user_id
+    and created_at::date = p_date
+  group by route;
+$$;

@@ -1,13 +1,13 @@
 import type { ToolKey } from "./noctra-tools";
 
-export type JourneyNode = {
+export type PipelineNode = {
   key: string;
   label: string;
   tool: ToolKey;
   hint: string;
 };
 
-export const JOURNEY: JourneyNode[] = [
+export const PIPELINE: PipelineNode[] = [
   { key: "signal",    label: "Signal",    tool: "idea",     hint: "Stress-test the raw idea" },
   { key: "reality",   label: "Reality",   tool: "reality",  hint: "Compile risk and blind spots" },
   { key: "blueprint", label: "Blueprint", tool: "mvp",      hint: "Compress to a build-ready scope" },
@@ -15,7 +15,7 @@ export const JOURNEY: JourneyNode[] = [
   { key: "market",    label: "Market",    tool: "swarm",    hint: "Analyze demand signals and segments" },
   { key: "build",     label: "Build",     tool: "doctor",   hint: "Diagnose execution health" },
   { key: "launch",    label: "Launch",    tool: "launch",   hint: "Ready the launch sequence" },
-  { key: "evolve",    label: "Evolve",    tool: "passport", hint: "Lock progression and learn" },
+  { key: "profile",   label: "Profile",   tool: "passport", hint: "Review project record and milestones" },
 ];
 
 export const TOOL_EXAMPLES: Record<ToolKey, string[]> = {

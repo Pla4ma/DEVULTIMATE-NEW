@@ -55,7 +55,6 @@ const TOOL_LABELS: Record<string, string> = {
   twin: "Product Twin",
 };
 
-// Recommended order for tool journey
 const TOOL_JOURNEY_ORDER = ["idea", "reality", "swarm", "proof", "mvp", "doctor", "launch"];
 
 function extractData(report: ReportSummary): Record<string, unknown> {

@@ -1,0 +1,102 @@
+import { isDemoMode } from "@/lib/demo-mode";
+import { demoStore } from "@/lib/demo-store";
+import { requireUserId, RepositoryError, withErrorHandling, handleSupabaseError } from "./common";
+import { supabase as _supabase } from "@/integrations/supabase/client";
+
+const supabase: any = _supabase;
+
+export async function saveTasks(tasks: Array<{ title: string; detail?: string; priority?: string; projectId?: string; sourceReportId?: string; category?: string }>) {
+  if (isDemoMode()) {
+    const userId = await requireUserId();
+    return demoStore.saveTasks(userId, tasks);
+  }
+  return withErrorHandling("saveTasks", async () => {
+    const userId = await requireUserId();
+    tasks.forEach((task) => {
+      if (!task.title?.trim()) throw new RepositoryError("Task title is required", "VALIDATION_ERROR", "saveTasks");
+    });
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert(tasks.map((t) => ({
+        user_id: userId, title: t.title.trim(), detail: t.detail?.trim() ?? null,
+        priority: (t.priority as never) ?? "medium", project_id: t.projectId ?? null,
+        source_report_id: t.sourceReportId ?? null, category: t.category ?? "development", status: "todo",
+      })))
+      .select();
+    if (error) handleSupabaseError(error, "saveTasks", { tasks });
+    return data ?? [];
+  });
+}
+
+export async function createTask(task: { title: string; detail?: string; priority?: string; projectId?: string; sourceReportId?: string; category?: string }) {
+  if (isDemoMode()) {
+    const userId = await requireUserId();
+    return demoStore.createTask(userId, task);
+  }
+  return withErrorHandling("createTask", async () => {
+    const userId = await requireUserId();
+    if (!task.title?.trim()) throw new RepositoryError("Task title is required", "VALIDATION_ERROR", "createTask");
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert({ user_id: userId, title: task.title, detail: task.detail ?? null, priority: task.priority ?? "medium", project_id: task.projectId ?? null, source_report_id: task.sourceReportId ?? null, category: task.category ?? "development", status: "todo" })
+      .select().single();
+    if (error) handleSupabaseError(error, "createTask", { task });
+    return data;
+  });
+}
+
+export async function getTasks(projectId?: string) {
+  if (isDemoMode()) {
+    const userId = await requireUserId();
+    return demoStore.getTasks(userId, projectId);
+  }
+  return withErrorHandling("getTasks", async () => {
+    const userId = await requireUserId();
+    let q = supabase.from("tasks").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+    if (projectId) q = q.eq("project_id", projectId);
+    const { data, error } = await q;
+    if (error) handleSupabaseError(error, "getTasks", { projectId });
+    return data ?? [];
+  });
+}
+
+export async function updateTaskStatus(id: string, status: string) {
+  if (isDemoMode()) {
+    const userId = await requireUserId();
+    demoStore.updateTaskStatus(userId, id, status);
+    return;
+  }
+  return withErrorHandling("updateTaskStatus", async () => {
+    if (!id?.trim()) throw new RepositoryError("Task ID is required", "VALIDATION_ERROR", "updateTaskStatus");
+    const userId = await requireUserId();
+    const { error } = await supabase.from("tasks").update({ status }).eq("id", id).eq("user_id", userId);
+    if (error) handleSupabaseError(error, "updateTaskStatus", { id, status });
+  });
+}
+
+export async function updateTask(id: string, patch: Partial<{ title: string; detail: string; priority: string; status: string; project_id: string }>) {
+  if (isDemoMode()) {
+    const userId = await requireUserId();
+    demoStore.updateTask(userId, id, patch as never);
+    return;
+  }
+  return withErrorHandling("updateTask", async () => {
+    const userId = await requireUserId();
+    const { error } = await supabase.from("tasks").update(patch).eq("id", id).eq("user_id", userId);
+    if (error) handleSupabaseError(error, "updateTask", { id, patch });
+  });
+}
+
+export async function deleteTask(id: string) {
+  if (isDemoMode()) {
+    const userId = await requireUserId();
+    demoStore.deleteTask(userId, id);
+    return;
+  }
+  return withErrorHandling("deleteTask", async () => {
+    if (!id?.trim()) throw new RepositoryError("Task ID is required", "VALIDATION_ERROR", "deleteTask");
+    const userId = await requireUserId();
+    const { error } = await supabase.from("tasks").delete().eq("id", id).eq("user_id", userId);
+    if (error) handleSupabaseError(error, "deleteTask", { id });
+  });
+}

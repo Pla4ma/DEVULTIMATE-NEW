@@ -27,6 +27,7 @@ import TasksPage from "@/pages/tasks";
 import ProjectsPage from "@/pages/projects";
 import ProjectDetailPage from "@/pages/project-detail";
 import NotFound from "@/pages/not-found";
+import PrivacyPage from "@/pages/privacy";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,7 +39,7 @@ const queryClient = new QueryClient({
 });
 
 const ROUTE_TITLES: Record<string, string> = {
-  "/": "Noctra — Turn Your Idea Into an Execution Plan",
+  "/": "Noctra — Developer Intelligence OS",
   "/app": "Dashboard — Noctra",
   "/app/idea": "Idea Checker — Noctra",
   "/app/reality": "Reality Compiler — Noctra",
@@ -48,7 +49,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/app/doctor": "Project Doctor — Noctra",
   "/app/launch": "Launch Room — Noctra",
   "/app/twin": "Product Twin — Noctra",
-  "/app/passport": "Passport — Noctra",
+  "/app/passport": "Project Profile — Noctra",
   "/app/reports": "Reports — Noctra",
   "/app/tasks": "Tasks — Noctra",
   "/app/projects": "Projects — Noctra",
@@ -68,7 +69,7 @@ function TitleSetter() {
     } else if (location.startsWith("/app/projects/")) {
       document.title = "Project — Noctra";
     } else {
-      document.title = "Noctra — Turn Your Idea Into an Execution Plan";
+      document.title = "Noctra — Developer Intelligence OS";
     }
   }, [location]);
   return null;
@@ -89,6 +90,7 @@ function AppRoutes() {
       <Switch>
 <Route path="/" component={LandingPage} />
       <Route path="/pricing" component={PricingPage} />
+      <Route path="/privacy" component={PrivacyPage} />
       <Route path="/app">
           <AuthGuard>
             <DashboardPage />

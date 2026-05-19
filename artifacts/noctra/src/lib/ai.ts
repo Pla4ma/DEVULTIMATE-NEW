@@ -1,12 +1,8 @@
 import { loadCrossToolContext, buildContextBlock, type InjectedContext } from "./cross-context";
+import { authenticatedFetch } from "./api-client";
 
 export type Message = { role: "user" | "assistant" | "system"; content: string };
 
-function getApiBase(): string {
-  return "";
-}
-
-// Semantic stage labels that show real progress during analysis — not a dead spinner
 const TOOL_STAGES: Record<string, string[]> = {
   idea: [
     "Sweeping signal space…",
@@ -81,9 +77,8 @@ const TOOL_STAGES: Record<string, string[]> = {
 };
 
 export async function callAI(messages: Message[], systemPrompt?: string): Promise<string> {
-  const res = await fetch(`${getApiBase()}/api/ai/chat`, {
+  const res = await authenticatedFetch("/api/ai/chat", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messages, systemPrompt }),
   });
 
@@ -91,6 +86,12 @@ export async function callAI(messages: Message[], systemPrompt?: string): Promis
     const err = await res.json().catch(() => ({ message: "Unknown error" })) as { message?: string; error?: string };
     if (err.error === "AI_NOT_CONFIGURED") {
       throw new Error("AI is not configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.");
+    }
+    if (err.error === "UNAUTHORIZED") {
+      throw new Error("Session expired — please sign in again.");
+    }
+    if (err.error === "QUOTA_EXCEEDED") {
+      throw new Error(err.message ?? "Usage limit reached. Upgrade your plan for more capacity.");
     }
     throw new Error(err.message ?? `Request failed: ${res.status}`);
   }
@@ -104,9 +105,8 @@ export async function streamAI(
   onChunk: (chunk: string) => void,
   systemPrompt?: string
 ): Promise<string> {
-  const res = await fetch(`${getApiBase()}/api/ai/stream`, {
+  const res = await authenticatedFetch("/api/ai/stream", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messages, systemPrompt }),
   });
 
@@ -114,6 +114,12 @@ export async function streamAI(
     const err = await res.json().catch(() => ({ message: "Unknown error" })) as { message?: string; error?: string };
     if (err.error === "AI_NOT_CONFIGURED") {
       throw new Error("AI is not configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.");
+    }
+    if (err.error === "UNAUTHORIZED") {
+      throw new Error("Session expired — please sign in again.");
+    }
+    if (err.error === "QUOTA_EXCEEDED") {
+      throw new Error(err.message ?? "Usage limit reached. Upgrade your plan for more capacity.");
     }
     throw new Error(err.message ?? `Stream failed: ${res.status}`);
   }
@@ -158,9 +164,8 @@ export async function callStructuredAI(
   input: string,
   context?: Record<string, unknown>
 ): Promise<StructuredResult> {
-  const res = await fetch(`${getApiBase()}/api/ai/structured`, {
+  const res = await authenticatedFetch("/api/ai/structured", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ tool, input, context }),
   });
 
@@ -169,14 +174,18 @@ export async function callStructuredAI(
     if (err.error === "AI_NOT_CONFIGURED") {
       throw new Error("AI is not configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.");
     }
+    if (err.error === "UNAUTHORIZED") {
+      throw new Error("Session expired — please sign in again.");
+    }
+    if (err.error === "QUOTA_EXCEEDED") {
+      throw new Error(err.message ?? "Usage limit reached. Upgrade your plan for more capacity.");
+    }
     throw new Error(err.message ?? `Structured AI failed: ${res.status}`);
   }
 
   return res.json() as Promise<StructuredResult>;
 }
 
-// Calls structured AI while emitting semantic stage labels so the UI shows real progress,
-// not a dead spinner. Stages advance on a timer; analysis runs in parallel.
 export async function streamStructuredAI(
   tool: string,
   input: string,
@@ -209,8 +218,6 @@ export async function streamStructuredAI(
   }
 }
 
-// Full pipeline: load cross-tool context → inject it → stream with semantic stages.
-// Every analysis becomes smarter by knowing what came before.
 export async function callWithCrossContext(
   tool: string,
   input: string,
@@ -231,14 +238,12 @@ export async function callWithCrossContext(
   return { ...result, injectedContext };
 }
 
-// Call the insight-sweep backend to synthesize ALL reports into strategic intelligence
 export async function callInsightSweep(reportsInput: string): Promise<{
   data: Record<string, unknown> | null;
   raw: string;
 }> {
-  const res = await fetch(`${getApiBase()}/api/ai/insight-sweep`, {
+  const res = await authenticatedFetch("/api/ai/insight-sweep", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reportsInput }),
   });
 
@@ -246,6 +251,12 @@ export async function callInsightSweep(reportsInput: string): Promise<{
     const err = await res.json().catch(() => ({ message: "Failed" })) as { message?: string; error?: string };
     if (err.error === "AI_NOT_CONFIGURED") {
       throw new Error("AI is not configured. Add OPENAI_API_KEY or GROQ_API_KEY in Replit Secrets.");
+    }
+    if (err.error === "UNAUTHORIZED") {
+      throw new Error("Session expired — please sign in again.");
+    }
+    if (err.error === "QUOTA_EXCEEDED") {
+      throw new Error(err.message ?? "Usage limit reached. Upgrade your plan for more capacity.");
     }
     throw new Error(err.message ?? `Insight sweep failed: ${res.status}`);
   }

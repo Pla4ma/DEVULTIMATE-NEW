@@ -8,7 +8,7 @@ const ANON_KEY = "noctra_anon_creds";
 function getOrCreateAnonCreds(): { email: string; password: string } {
   const stored = localStorage.getItem(ANON_KEY);
   if (stored) {
-    try { return JSON.parse(stored); } catch (e) { console.warn("Stored anon creds corrupted, generating new:", e); }
+    try { return JSON.parse(stored); } catch { console.warn("Stored anon creds corrupted, generating new:"); }
   }
   const id = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
   const creds = {
@@ -16,6 +16,7 @@ function getOrCreateAnonCreds(): { email: string; password: string } {
     password: crypto.randomUUID(),
   };
   localStorage.setItem(ANON_KEY, JSON.stringify(creds));
+  console.info("Anonymous credentials stored in localStorage. These are only used for this session and are not sensitive. For full security, sign up with email.");
   return creds;
 }
 

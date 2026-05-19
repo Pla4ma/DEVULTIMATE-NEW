@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { Panel, EmptyState, Badge, NoctraButton } from "@/components/Primitives";
 import { getProjects, createProject, deleteProject, getReports, getTasks } from "@/lib/repository";
-import { FolderOpen, Loader2, Plus, Trash2, ArrowRight, FileText, CheckSquare } from "lucide-react";
+import { FolderOpen, Loader2, Plus, Trash2, ArrowRight, FileText, CheckSquare, Stethoscope } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type Project = {
@@ -30,7 +30,6 @@ export default function ProjectsPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [stageFilter, setStageFilter] = useState<string>("all");
-  // Stats per project
   const [reportCounts, setReportCounts] = useState<Record<string, number>>({});
   const [taskCounts, setTaskCounts] = useState<Record<string, number>>({});
 
@@ -39,8 +38,6 @@ export default function ProjectsPage() {
       .then(async (p) => {
         const proj = (p as Project[]) ?? [];
         setProjects(proj);
-
-        // Load stats for each project in parallel
         const statsPromises = proj.map(async (project) => {
           const [reps, tsks] = await Promise.all([
             getReports(undefined, project.id).catch(() => []),
@@ -85,7 +82,6 @@ export default function ProjectsPage() {
   return (
     <AppShell>
       <div className="p-6 max-w-4xl mx-auto space-y-5">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Projects</h1>
@@ -98,25 +94,12 @@ export default function ProjectsPage() {
           </NoctraButton>
         </div>
 
-        {/* Create form */}
         {showForm && (
           <Panel>
             <div className="space-y-3">
               <p className="text-xs font-semibold" style={{ color: "var(--noctra-text-muted)" }}>New Project</p>
-              <input
-                value={name} onChange={(e) => setName(e.target.value)}
-                placeholder="Project name"
-                className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
-                autoFocus
-              />
-              <textarea
-                value={idea} onChange={(e) => setIdea(e.target.value)}
-                placeholder="Core idea (optional)"
-                rows={2}
-                className="w-full px-3 py-2 rounded-lg text-sm resize-none outline-none"
-                style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
-              />
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Project name" className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }} autoFocus />
+              <textarea value={idea} onChange={(e) => setIdea(e.target.value)} placeholder="Core idea (optional)" rows={2} className="w-full px-3 py-2 rounded-lg text-sm resize-none outline-none" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }} />
               <div>
                 <p className="text-xs mb-2" style={{ color: "var(--noctra-text-muted)" }}>Stage</p>
                 <div className="flex gap-2 flex-wrap">
@@ -137,7 +120,6 @@ export default function ProjectsPage() {
           </Panel>
         )}
 
-        {/* Stage filter */}
         <div className="flex gap-1.5 flex-wrap">
           {["all", ...STAGES].map((s) => (
             <button key={s} onClick={() => setStageFilter(s)} className="px-3 py-1 rounded-full text-xs font-medium capitalize transition-all" style={{ background: stageFilter === s ? (s !== "all" ? `${STAGE_COLORS[s]}20` : "var(--noctra-surface2)") : "transparent", border: `1px solid ${stageFilter === s ? (s !== "all" ? STAGE_COLORS[s] : "var(--noctra-border)") : "transparent"}`, color: stageFilter === s ? (s !== "all" ? STAGE_COLORS[s] : "var(--noctra-text)") : "var(--noctra-text-muted)" }}>
@@ -146,18 +128,13 @@ export default function ProjectsPage() {
           ))}
         </div>
 
-        {/* Project list */}
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 size={22} className="animate-spin" style={{ color: "var(--noctra-cyan)" }} />
-          </div>
+          <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin" style={{ color: "var(--noctra-cyan)" }} /></div>
         ) : filtered.length === 0 ? (
           <div className="space-y-3">
-            <EmptyState icon={<FolderOpen size={24} />} title="No projects yet" body="Create your first project to start organizing your founder context, reports, and tasks." />
+            <EmptyState icon={<FolderOpen size={24} />} title="No projects yet" body="Create your first project to start organizing your reports, tasks, and scans." />
             <div className="flex justify-center">
-              <NoctraButton onClick={() => setShowForm(true)}>
-                <Plus size={13} /> Create Project
-              </NoctraButton>
+              <NoctraButton onClick={() => setShowForm(true)}><Plus size={13} /> Create Project</NoctraButton>
             </div>
           </div>
         ) : (
@@ -174,39 +151,26 @@ export default function ProjectsPage() {
                         <Badge style={{ background: `${stageColor}18`, color: stageColor, textTransform: "capitalize" }}>
                           {proj.stage ?? "idea"}
                         </Badge>
-                        {proj.status && proj.status !== "active" && (
-                          <Badge>{proj.status}</Badge>
-                        )}
+                        {proj.status && proj.status !== "active" && <Badge>{proj.status}</Badge>}
                         <span className="text-xs ml-auto" style={{ color: "var(--noctra-text-muted)" }}>
                           {new Date(proj.created_at).toLocaleDateString()}
                         </span>
                       </div>
                       <p className="text-base font-semibold mb-1" style={{ color: "var(--noctra-text)" }}>{proj.name}</p>
-                      {proj.idea && (
-                        <p className="text-xs mb-2 line-clamp-2" style={{ color: "var(--noctra-text-muted)" }}>{proj.idea}</p>
-                      )}
+                      {proj.idea && <p className="text-xs mb-2 line-clamp-2" style={{ color: "var(--noctra-text-muted)" }}>{proj.idea}</p>}
                       <div className="flex items-center gap-4 text-xs" style={{ color: "var(--noctra-text-muted)" }}>
-                        <span className="flex items-center gap-1">
-                          <FileText size={11} /> {reportCount} report{reportCount !== 1 ? "s" : ""}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <CheckSquare size={11} /> {taskCount} task{taskCount !== 1 ? "s" : ""}
-                        </span>
+                        <span className="flex items-center gap-1"><FileText size={11} /> {reportCount} report{reportCount !== 1 ? "s" : ""}</span>
+                        <span className="flex items-center gap-1"><CheckSquare size={11} /> {taskCount} task{taskCount !== 1 ? "s" : ""}</span>
                       </div>
                     </button>
-
                     <div className="flex items-center gap-2 shrink-0 mt-1">
-                      <NoctraButton variant="ghost" onClick={() => navigate(`/app/projects/${proj.id}`)}>
-                        <ArrowRight size={13} />
-                      </NoctraButton>
+                      <NoctraButton variant="ghost" onClick={() => navigate(`/app/projects/${proj.id}`)}><ArrowRight size={13} /></NoctraButton>
                       {confirmDelete === proj.id ? (
                         <div className="flex items-center gap-1">
                           <button onClick={() => handleDelete(proj.id)} disabled={deleting === proj.id} className="text-xs px-2 py-1 rounded" style={{ color: "var(--noctra-rose)" }}>
                             {deleting === proj.id ? <Loader2 size={10} className="animate-spin" /> : "Delete"}
                           </button>
-                          <button onClick={() => setConfirmDelete(null)} className="text-xs px-2 py-1 rounded" style={{ color: "var(--noctra-text-muted)" }}>
-                            Cancel
-                          </button>
+                          <button onClick={() => setConfirmDelete(null)} className="text-xs px-2 py-1 rounded" style={{ color: "var(--noctra-text-muted)" }}>Cancel</button>
                         </div>
                       ) : (
                         <button onClick={() => setConfirmDelete(proj.id)} className="p-1 rounded opacity-30 hover:opacity-100 transition-opacity">

@@ -1,18 +1,17 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { getReports } from "@/lib/repository";
 import {
-  getUnlockedTools,
-  getNextMilestone,
-  getMilestoneProgress,
-  type Milestone,
+  computeCapabilityStatus,
+  computeCoverageScore,
+  type CapabilityStatus,
 } from "@/lib/progression";
 import type { ToolKey } from "@/lib/noctra-tools";
 
 type ProgressionState = {
   reportCount: number;
-  unlockedTools: Set<ToolKey>;
-  nextMilestone: Milestone | null;
-  progress: { current: string; progress: number; total: number; label: string };
+  usedTools: Set<string>;
+  capabilityStatus: CapabilityStatus[];
+  coverageScore: number;
   loaded: boolean;
 };
 
@@ -21,9 +20,9 @@ const ProgressionContext = createContext<ProgressionState | null>(null);
 export function ProgressionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ProgressionState>({
     reportCount: 0,
-    unlockedTools: new Set<ToolKey>(),
-    nextMilestone: null,
-    progress: { current: "", progress: 0, total: 1, label: "Loading..." },
+    usedTools: new Set(),
+    capabilityStatus: [],
+    coverageScore: 0,
     loaded: false,
   });
 
@@ -31,11 +30,16 @@ export function ProgressionProvider({ children }: { children: ReactNode }) {
     getReports()
       .then((reports) => {
         const count = Array.isArray(reports) ? reports.length : 0;
+        const tools = new Set(
+          Array.isArray(reports)
+            ? reports.map((r: { tool: string }) => r.tool).filter(Boolean)
+            : []
+        );
         setState({
           reportCount: count,
-          unlockedTools: getUnlockedTools(count),
-          nextMilestone: getNextMilestone(count),
-          progress: getMilestoneProgress(count),
+          usedTools: tools,
+          capabilityStatus: computeCapabilityStatus(tools),
+          coverageScore: computeCoverageScore(tools),
           loaded: true,
         });
       })

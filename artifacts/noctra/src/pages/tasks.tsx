@@ -1,60 +1,20 @@
 import { useEffect, useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
-import { Panel, EmptyState, Badge, NoctraButton } from "@/components/Primitives";
+import { Panel, EmptyState, NoctraButton } from "@/components/Primitives";
 import { getTasks, updateTaskStatus, deleteTask, createTask, getProjects } from "@/lib/repository";
 import { tasksToGithubMarkdown } from "@/lib/export";
 import { generateSprintFromTasks } from "@/lib/sprint";
 import {
-  CheckSquare, Loader2, Trash2, Plus, CheckCircle, Circle,
-  Search, Download, Filter, Copy, Check, X, Calendar, ChevronDown
+  CheckSquare, Loader2, Plus, CheckCircle, XCircle,
+  Search, Download, Filter, Copy, Check, X, Calendar, ChevronDown, ListTodo,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-type Task = {
-  id: string; title: string; detail?: string | null;
-  priority: string; category?: string | null; status: string; created_at: string;
-  source_report_id?: string | null;
-  project_id?: string | null;
-  acceptance_criteria?: string[] | null;
-};
-
-const STATUS_MAP: Record<string, string> = {
-  open: "todo", "in-progress": "in-progress", completed: "completed",
-  todo: "todo", doing: "in-progress", done: "completed",
-};
-
-function normalizeStatus(s: string): string {
-  return STATUS_MAP[s] ?? "todo";
-}
-
-const STATUS_CYCLE: Record<string, string> = {
-  todo: "in-progress", "in-progress": "completed", completed: "todo",
-};
-const STATUS_TABS = ["all", "todo", "in-progress", "completed"] as const;
-type StatusTab = typeof STATUS_TABS[number];
-
-const PRIORITY_COLOR: Record<string, string> = {
-  critical: "var(--noctra-rose)", high: "var(--noctra-rose)", medium: "var(--noctra-amber)", low: "var(--noctra-emerald)",
-};
-const STATUS_COLOR: Record<string, string> = {
-  todo: "var(--noctra-text-muted)", "in-progress": "var(--noctra-cyan)", completed: "var(--noctra-emerald)",
-};
-
-function exportToCSV(tasks: Task[]) {
-  const headers = ["title", "priority", "status", "category", "created_at"];
-  const rows = tasks.map((t) => [
-    `"${(t.title ?? "").replace(/"/g, '""')}"`,
-    t.priority, t.status, t.category ?? "",
-    new Date(t.created_at).toLocaleDateString(),
-  ].join(","));
-  const csv = [headers.join(","), ...rows].join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "noctra-tasks.csv"; a.click();
-  URL.revokeObjectURL(url);
-}
+import { TaskItem } from "./tasks/TaskItem";
+import {
+  normalizeStatus, STATUS_CYCLE, STATUS_TABS, STATUS_COLOR, PRIORITY_COLOR, exportToCSV,
+  type Task, type StatusTab,
+} from "./tasks/tasks-types";
 
 export default function TasksPage() {
   const { toast } = useToast();
@@ -71,32 +31,26 @@ export default function TasksPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [projectMap, setProjectMap] = useState<Record<string, string>>({});
-
   const [projectFilter, setProjectFilter] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showProjectMenu, setShowProjectMenu] = useState(false);
+  const [copyDone, setCopyDone] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     Promise.all([getTasks(), getProjects().catch(() => [])])
       .then(([t, p]) => {
         if (cancelled) return;
-        setTasks(((t as Task[]) ?? []).map(task => ({
-          ...task,
-          status: normalizeStatus(task.status),
-        })));
+        setTasks(((t as Task[]) ?? []).map(task => ({ ...task, status: normalizeStatus(task.status) })));
         const map: Record<string, string> = {};
         (p as Array<{ id: string; name: string }>).forEach((proj) => { map[proj.id] = proj.name; });
         setProjectMap(map);
       })
-      .catch((err) => {
-        if (!cancelled) toast({ title: "Failed to load tasks", description: err?.message ?? "Unknown error", variant: "destructive" });
-      })
+      .catch((err) => { if (!cancelled) toast({ title: "Failed to load tasks", description: err?.message ?? "Unknown error", variant: "destructive" }); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = useMemo(() => {
     let list = tasks;
@@ -110,38 +64,20 @@ export default function TasksPage() {
   const selectedTasks = useMemo(() => filtered.filter(t => selectedIds.has(t.id)), [filtered, selectedIds]);
 
   function toggleSelect(id: string) {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
+    setSelectedIds(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   }
+  function selectAll() { setSelectedIds(new Set(filtered.map(t => t.id))); }
+  function clearSelection() { setSelectedIds(new Set()); }
 
-  function selectAll() {
-    setSelectedIds(new Set(filtered.map(t => t.id)));
-  }
-
-  function clearSelection() {
-    setSelectedIds(new Set());
-  }
-
-  async function copyVisibleMarkdown() {
-    const md = tasksToGithubMarkdown(filtered);
+  async function copyMarkdown(tasksToCopy: Task[]) {
+    const md = tasksToGithubMarkdown(tasksToCopy);
     try {
       await navigator.clipboard.writeText(md);
-      toast({ title: "Tasks copied to clipboard", description: `${filtered.length} task${filtered.length !== 1 ? "s" : ""} copied as markdown.` });
+      toast({ title: "Copied", description: `${tasksToCopy.length} task${tasksToCopy.length !== 1 ? "s" : ""} copied as markdown.` });
+      setCopyDone(true);
+      setTimeout(() => setCopyDone(false), 2000);
     } catch (e) {
-      toast({ title: "Failed to copy", description: e instanceof Error ? e.message : "Clipboard access denied.", variant: "destructive" });
-    }
-  }
-
-  async function copySelectedMarkdown() {
-    const md = tasksToGithubMarkdown(selectedTasks);
-    try {
-      await navigator.clipboard.writeText(md);
-      toast({ title: "Selected tasks copied", description: `${selectedTasks.length} task${selectedTasks.length !== 1 ? "s" : ""} copied as markdown.` });
-    } catch (e) {
-      toast({ title: "Failed to copy", description: e instanceof Error ? e.message : "Clipboard access denied.", variant: "destructive" });
+      toast({ title: "Failed to copy", description: "Clipboard access denied.", variant: "destructive" });
     }
   }
 
@@ -149,52 +85,39 @@ export default function TasksPage() {
     const md = tasksToGithubMarkdown(filtered);
     const blob = new Blob([md], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "noctra-tasks.md"; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = "noctra-tasks.md"; a.click();
     URL.revokeObjectURL(url);
-    toast({ title: "Tasks exported", description: `${filtered.length} task${filtered.length !== 1 ? "s" : ""} exported as markdown.` });
+    toast({ title: "Exported", description: `${filtered.length} task${filtered.length !== 1 ? "s" : ""} exported as markdown.` });
   }
 
   function exportGitHub() {
     const md = tasksToGithubMarkdown(filtered);
     const blob = new Blob([md], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "noctra-tasks-github.md"; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = "noctra-tasks-github.md"; a.click();
     URL.revokeObjectURL(url);
     toast({ title: "GitHub Issues exported", description: `${filtered.length} task${filtered.length !== 1 ? "s" : ""} formatted as GitHub Issues.` });
   }
 
   async function generateSprintFromSelected() {
-    if (selectedTasks.length === 0) {
-      toast({ title: "No tasks selected", description: "Select tasks to generate a sprint.", variant: "destructive" });
-      return;
-    }
+    if (selectedTasks.length === 0) { toast({ title: "No tasks selected", description: "Select tasks to generate a sprint.", variant: "destructive" }); return; }
     try {
-const sprintTasks = selectedTasks.map(t => ({
-        id: t.id,
-        title: t.title,
-        detail: t.detail ?? undefined,
+      const sprintTasks = selectedTasks.map(t => ({
+        id: t.id, title: t.title, detail: t.detail ?? undefined,
         priority: t.priority as "high" | "medium" | "low",
-        category: t.category ?? "development",
-        status: normalizeStatus(t.status),
-        created_at: t.created_at,
-        source_report_id: t.source_report_id ?? undefined,
-        project_id: t.project_id ?? null,
-        acceptance_criteria: t.acceptance_criteria ?? undefined,
+        category: t.category ?? "development", status: normalizeStatus(t.status),
+        created_at: t.created_at, source_report_id: t.source_report_id ?? undefined,
+        project_id: t.project_id ?? null, acceptance_criteria: t.acceptance_criteria ?? undefined,
       }));
       const sprint = generateSprintFromTasks(sprintTasks, { title: "Sprint Plan" });
       const md = `# ${sprint.title}\n\n## Goal\n${sprint.days.length > 0 ? sprint.days[0].goal : "Complete selected tasks"}\n\n## Days\n${sprint.days.map(d => `### ${d.day}\n**Goal:** ${d.goal}\n${d.tasks.map(t => `- ${t}`).join("\n")}\n**Acceptance:** ${d.acceptance_criteria.join("; ")}`).join("\n\n")}\n\n## Risks\n${sprint.risks.map(r => `- ${r}`).join("\n")}\n\n## Demo Checklist\n${sprint.demo_checklist.map(c => `- [ ] ${c}`).join("\n")}`;
       const blob = new Blob([md], { type: "text/markdown" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url; a.download = "noctra-sprint.md"; a.click();
+      const a = document.createElement("a"); a.href = url; a.download = "noctra-sprint.md"; a.click();
       URL.revokeObjectURL(url);
-      toast({ title: "Sprint generated and downloaded", description: `${selectedTasks.length} task${selectedTasks.length !== 1 ? "s" : ""} → sprint plan.` });
+      toast({ title: "Sprint downloaded", description: `${selectedTasks.length} task${selectedTasks.length !== 1 ? "s" : ""} → sprint plan.` });
       clearSelection();
-    } catch (err) {
-      toast({ title: "Failed to generate sprint", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
-    }
+    } catch (err) { toast({ title: "Failed to generate sprint", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" }); }
   }
 
   const counts = useMemo(() => ({
@@ -207,26 +130,16 @@ const sprintTasks = selectedTasks.map(t => ({
   async function toggleStatus(task: Task) {
     const next = STATUS_CYCLE[task.status] ?? "todo";
     setTogglingId(task.id);
-    try {
-      await updateTaskStatus(task.id, next);
-      setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, status: next } : t));
-    } catch (err) {
-      toast({ title: "Failed to update status", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
-    } finally {
-      setTogglingId(null);
-    }
+    try { await updateTaskStatus(task.id, next); setTasks((prev) => prev.map((t) => t.id === task.id ? { ...t, status: next } : t)); }
+    catch (err) { toast({ title: "Failed to update status", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" }); }
+    finally { setTogglingId(null); }
   }
 
   async function handleDelete(id: string) {
     setDeletingId(id);
-    try {
-      await deleteTask(id);
-      setTasks((prev) => prev.filter((t) => t.id !== id));
-    } catch (err) {
-      toast({ title: "Failed to delete task", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
-    } finally {
-      setDeletingId(null);
-    }
+    try { await deleteTask(id); setTasks((prev) => prev.filter((t) => t.id !== id)); }
+    catch (err) { toast({ title: "Failed to delete task", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" }); }
+    finally { setDeletingId(null); }
   }
 
   async function handleAdd() {
@@ -236,7 +149,8 @@ const sprintTasks = selectedTasks.map(t => ({
       const task = await createTask({ title: newTitle.trim(), priority: newPriority, category: newCategory });
       setTasks((prev) => [task as Task, ...prev]);
       setNewTitle(""); setShowAdd(false);
-    } catch (err) { toast({ title: "Failed to add task", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" }); } finally { setAdding(false); }
+    } catch (err) { toast({ title: "Failed to add task", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" }); }
+    finally { setAdding(false); }
   }
 
   const completedPct = tasks.length > 0 ? Math.round((counts.completed / tasks.length) * 100) : 0;
@@ -244,36 +158,32 @@ const sprintTasks = selectedTasks.map(t => ({
   return (
     <AppShell>
       <div className="p-6 max-w-4xl mx-auto space-y-5">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Tasks</h1>
+            <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Task Queue</h1>
             <p className="text-sm mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>
-              Task Queue · {tasks.length} task{tasks.length !== 1 ? "s" : ""} · {completedPct}% done
+              {tasks.length} task{tasks.length !== 1 ? "s" : ""} · {completedPct}% complete · {counts["in-progress"]} in progress
             </p>
           </div>
           <div className="flex gap-2">
             {selectedIds.size > 0 ? (
               <>
-                <NoctraButton variant="ghost" onClick={copySelectedMarkdown} disabled={selectedTasks.length === 0}>
-                  <Copy size={13} /> Copy ({selectedIds.size})
+                <NoctraButton variant="ghost" onClick={() => copyMarkdown(selectedTasks)} disabled={selectedTasks.length === 0}>
+                  {copyDone ? <Check size={13} /> : <Copy size={13} />} Copy ({selectedIds.size})
                 </NoctraButton>
                 <NoctraButton variant="ghost" onClick={generateSprintFromSelected} disabled={selectedTasks.length === 0}>
                   <Calendar size={13} /> Sprint ({selectedIds.size})
                 </NoctraButton>
-                <NoctraButton variant="ghost" onClick={clearSelection}>
-                  <X size={13} /> Clear
-                </NoctraButton>
+                <NoctraButton variant="ghost" onClick={clearSelection}><X size={13} /> Clear</NoctraButton>
               </>
             ) : (
               <>
-                <NoctraButton variant="ghost" onClick={copyVisibleMarkdown} disabled={filtered.length === 0}>
-                  <Copy size={13} /> Copy
+                <NoctraButton variant="ghost" onClick={() => copyMarkdown(filtered)} disabled={filtered.length === 0}>
+                  {copyDone ? <Check size={13} /> : <Copy size={13} />} Copy
                 </NoctraButton>
                 <div className="relative">
-                  <NoctraButton variant="ghost" onClick={() => {}} disabled={filtered.length === 0}>
-                    <Download size={13} /> Export
-                    <ChevronDown size={11} />
+                  <NoctraButton variant="ghost" disabled={filtered.length === 0}>
+                    <Download size={13} /> Export <ChevronDown size={11} />
                   </NoctraButton>
                 </div>
               </>
@@ -284,92 +194,58 @@ const sprintTasks = selectedTasks.map(t => ({
           </div>
         </div>
 
-        {/* Export dropdown */}
         {selectedIds.size === 0 && filtered.length > 0 && (
           <div className="flex gap-2 p-2 rounded-lg" style={{ background: "var(--noctra-surface)" }}>
-            <button onClick={exportMarkdown} className="text-xs px-3 py-1.5 rounded-md transition-all" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}>
-              Markdown
-            </button>
-            <button onClick={exportGitHub} className="text-xs px-3 py-1.5 rounded-md transition-all" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}>
-              GitHub Issues
-            </button>
-            <button onClick={() => exportToCSV(filtered)} className="text-xs px-3 py-1.5 rounded-md transition-all" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}>
-              CSV
-            </button>
+            <button onClick={exportMarkdown} className="text-xs px-3 py-1.5 rounded-md" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}>Markdown</button>
+            <button onClick={exportGitHub} className="text-xs px-3 py-1.5 rounded-md" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}>GitHub Issues</button>
+            <button onClick={() => exportToCSV(filtered)} className="text-xs px-3 py-1.5 rounded-md" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}>CSV</button>
             {filtered.length > 0 && (
-              <button onClick={selectAll} className="text-xs px-3 py-1.5 rounded-md transition-all ml-auto" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-muted)" }}>
-                Select all ({filtered.length})
-              </button>
+              <button onClick={selectAll} className="text-xs px-3 py-1.5 rounded-md ml-auto" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-muted)" }}>Select all ({filtered.length})</button>
             )}
           </div>
         )}
 
-        {/* Add task form */}
         {showAdd && (
           <Panel>
             <div className="space-y-3">
-              <input
-                value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                placeholder="Task title…"
-                className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
-                autoFocus
-              />
+              <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAdd()} placeholder="Task title…" autoFocus className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }} />
               <div className="flex gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
                   <span className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>Priority:</span>
                   {["high", "medium", "low"].map((p) => (
-                    <button key={p} onClick={() => setNewPriority(p)} className="px-2.5 py-0.5 rounded-full text-xs capitalize transition-all" style={{ background: newPriority === p ? `${PRIORITY_COLOR[p]}20` : "var(--noctra-surface2)", border: `1px solid ${newPriority === p ? PRIORITY_COLOR[p] : "var(--noctra-border)"}`, color: newPriority === p ? PRIORITY_COLOR[p] : "var(--noctra-text-muted)" }}>
-                      {p}
-                    </button>
+                    <button key={p} onClick={() => setNewPriority(p)} className="px-2.5 py-0.5 rounded-full text-xs capitalize" style={{ background: newPriority === p ? `${PRIORITY_COLOR[p]}20` : "var(--noctra-surface2)", border: `1px solid ${newPriority === p ? PRIORITY_COLOR[p] : "var(--noctra-border)"}`, color: newPriority === p ? PRIORITY_COLOR[p] : "var(--noctra-text-muted)" }}>{p}</button>
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>Category:</span>
                   {["development", "marketing", "research", "ops"].map((c) => (
-                    <button key={c} onClick={() => setNewCategory(c)} className="px-2.5 py-0.5 rounded-full text-xs capitalize transition-all" style={{ background: newCategory === c ? "rgba(61,216,255,0.2)" : "var(--noctra-surface2)", border: `1px solid ${newCategory === c ? "var(--noctra-cyan)" : "var(--noctra-border)"}`, color: newCategory === c ? "var(--noctra-cyan)" : "var(--noctra-text-muted)" }}>
-                      {c}
-                    </button>
+                    <button key={c} onClick={() => setNewCategory(c)} className="px-2.5 py-0.5 rounded-full text-xs capitalize" style={{ background: newCategory === c ? "rgba(61,216,255,0.2)" : "var(--noctra-surface2)", border: `1px solid ${newCategory === c ? "var(--noctra-cyan)" : "var(--noctra-border)"}`, color: newCategory === c ? "var(--noctra-cyan)" : "var(--noctra-text-muted)" }}>{c}</button>
                   ))}
                 </div>
               </div>
               <div className="flex gap-2">
-                <NoctraButton onClick={handleAdd} disabled={adding || !newTitle.trim()} className="flex-1">
-                  {adding ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Add Task
-                </NoctraButton>
+                <NoctraButton onClick={handleAdd} disabled={adding || !newTitle.trim()} className="flex-1">{adding ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Add Task</NoctraButton>
                 <NoctraButton variant="ghost" onClick={() => setShowAdd(false)}>Cancel</NoctraButton>
               </div>
             </div>
           </Panel>
         )}
 
-        {/* Search + filters */}
         <div className="flex gap-3 flex-wrap items-center">
           <div className="relative flex-1 min-w-[200px]">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--noctra-text-muted)" }} />
-            <input
-              value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tasks…"
-              className="w-full pl-8 pr-3 py-2 rounded-lg text-sm outline-none"
-              style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
-            />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tasks…" className="w-full pl-8 pr-3 py-2 rounded-lg text-sm outline-none" style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }} />
           </div>
           {Object.keys(projectMap).length > 0 && (
             <div className="relative">
-              <button
-                onClick={() => setShowProjectMenu(!showProjectMenu)}
-                className="px-3 py-2 rounded-lg text-xs flex items-center gap-2 transition-all"
-                style={{ background: projectFilter !== "all" ? "rgba(61,216,255,0.1)" : "var(--noctra-surface)", border: `1px solid ${projectFilter !== "all" ? "var(--noctra-cyan)" : "var(--noctra-border)"}`, color: projectFilter !== "all" ? "var(--noctra-cyan)" : "var(--noctra-text-muted)" }}
-              >
-                {projectFilter === "all" ? "All Projects" : (projectMap[projectFilter] || projectFilter)}
-                <ChevronDown size={11} />
+              <button onClick={() => setShowProjectMenu(!showProjectMenu)} className="px-3 py-2 rounded-lg text-xs flex items-center gap-2" style={{ background: projectFilter !== "all" ? "rgba(61,216,255,0.1)" : "var(--noctra-surface)", border: `1px solid ${projectFilter !== "all" ? "var(--noctra-cyan)" : "var(--noctra-border)"}`, color: projectFilter !== "all" ? "var(--noctra-cyan)" : "var(--noctra-text-muted)" }}>
+                {projectFilter === "all" ? "All Projects" : (projectMap[projectFilter] || projectFilter)} <ChevronDown size={11} />
               </button>
               {showProjectMenu && (
                 <div className="absolute top-full left-0 mt-1 py-1 rounded-lg shadow-lg z-10 min-w-[160px]" style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)" }}>
-                  <button onClick={() => { setProjectFilter("all"); setShowProjectMenu(false); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-noctra-surface2" style={{ color: projectFilter === "all" ? "var(--noctra-cyan)" : "var(--noctra-text)" }}>All Projects</button>
+                  <button onClick={() => { setProjectFilter("all"); setShowProjectMenu(false); }} className="w-full text-left px-3 py-1.5 text-xs" style={{ color: projectFilter === "all" ? "var(--noctra-cyan)" : "var(--noctra-text)" }}>All Projects</button>
                   {Object.entries(projectMap).map(([id, name]) => (
-                    <button key={id} onClick={() => { setProjectFilter(id); setShowProjectMenu(false); }} className="w-full text-left px-3 py-1.5 text-xs hover:bg-noctra-surface2" style={{ color: projectFilter === id ? "var(--noctra-cyan)" : "var(--noctra-text)" }}>{name}</button>
+                    <button key={id} onClick={() => { setProjectFilter(id); setShowProjectMenu(false); }} className="w-full text-left px-3 py-1.5 text-xs" style={{ color: projectFilter === id ? "var(--noctra-cyan)" : "var(--noctra-text)" }}>{name}</button>
                   ))}
                 </div>
               )}
@@ -378,135 +254,41 @@ const sprintTasks = selectedTasks.map(t => ({
           <div className="flex items-center gap-1.5">
             <Filter size={12} style={{ color: "var(--noctra-text-muted)" }} />
             {(["all", "high", "medium", "low"] as const).map((p) => (
-              <button key={p} onClick={() => setPriorityFilter(p)} className="px-2.5 py-1 rounded-full text-xs capitalize transition-all" style={{ background: priorityFilter === p ? (p !== "all" ? `${PRIORITY_COLOR[p]}20` : "var(--noctra-surface2)") : "transparent", border: `1px solid ${priorityFilter === p ? (p !== "all" ? PRIORITY_COLOR[p] : "var(--noctra-border)") : "transparent"}`, color: priorityFilter === p ? (p !== "all" ? PRIORITY_COLOR[p] : "var(--noctra-text)") : "var(--noctra-text-muted)" }}>
-                {p}
-              </button>
+              <button key={p} onClick={() => setPriorityFilter(p)} className="px-2.5 py-1 rounded-full text-xs capitalize" style={{ background: priorityFilter === p ? (p !== "all" ? `${PRIORITY_COLOR[p]}20` : "var(--noctra-surface2)") : "transparent", border: `1px solid ${priorityFilter === p ? (p !== "all" ? PRIORITY_COLOR[p] : "var(--noctra-border)") : "transparent"}`, color: priorityFilter === p ? (p !== "all" ? PRIORITY_COLOR[p] : "var(--noctra-text)") : "var(--noctra-text-muted)" }}>{p}</button>
             ))}
           </div>
         </div>
 
-        {/* Status tabs */}
         <div className="flex gap-1 p-1 rounded-xl" style={{ background: "var(--noctra-surface)" }}>
           {STATUS_TABS.map((st) => (
-            <button key={st} onClick={() => setStatusFilter(st)} className="flex-1 px-3 py-2 rounded-lg text-xs font-medium capitalize transition-all" style={{ background: statusFilter === st ? "var(--noctra-surface2)" : "transparent", color: statusFilter === st ? STATUS_COLOR[st] ?? "var(--noctra-text)" : "var(--noctra-text-muted)", border: statusFilter === st ? "1px solid var(--noctra-border)" : "1px solid transparent" }}>
+              <button key={st} onClick={() => setStatusFilter(st)} className="flex-1 px-3 py-2 rounded-lg text-xs font-medium capitalize" style={{ background: statusFilter === st ? "var(--noctra-surface2)" : "transparent", color: statusFilter === st ? STATUS_COLOR[st] ?? "var(--noctra-text)" : "var(--noctra-text-muted)", border: statusFilter === st ? "1px solid var(--noctra-border)" : "1px solid transparent" }}>
               {st === "all" ? "All" : st} ({counts[st]})
             </button>
           ))}
         </div>
 
-        {/* Task list */}
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 size={22} className="animate-spin" style={{ color: "var(--noctra-cyan)" }} />
-          </div>
+          <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin" style={{ color: "var(--noctra-cyan)" }} /></div>
         ) : filtered.length === 0 ? (
-          <EmptyState icon={<CheckSquare size={24} />} title={search ? "No tasks match your search" : `No ${statusFilter === "all" ? "" : statusFilter} tasks`} body={tasks.length === 0 ? "Tasks are auto-generated when you save AI reports. You can also add them manually." : "Try a different filter or search term."} />
+          <EmptyState icon={<ListTodo size={24} />} title={search ? "No tasks match your search" : `No ${statusFilter === "all" ? "" : statusFilter} tasks`} body={tasks.length === 0 ? "Tasks are auto-generated when you save AI reports. You can also add them manually." : "Try a different filter or search term."} />
         ) : (
           <div className="space-y-2">
             {filtered.map((task) => (
-              <Panel key={task.id} style={{ padding: "0" }}>
-                <div className="px-4 py-3">
-                  <div className="flex items-start gap-3">
-                    <button
-                      onClick={() => toggleStatus(task)}
-                      disabled={togglingId === task.id}
-                      className="mt-0.5 shrink-0 transition-opacity hover:opacity-70"
-                    >
-                      {togglingId === task.id ? (
-                        <Loader2 size={16} className="animate-spin" style={{ color: STATUS_COLOR[task.status] }} />
-                      ) : task.status === "completed" ? (
-                        <CheckCircle size={16} style={{ color: "var(--noctra-emerald)" }} />
-                      ) : task.status === "in-progress" ? (
-                        <div className="w-4 h-4 rounded-full border-2" style={{ borderColor: "var(--noctra-cyan)", background: "rgba(61,216,255,0.1)" }} />
-                      ) : (
-                        <Circle size={16} style={{ color: "var(--noctra-border)" }} />
-                      )}
-                    </button>
-
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(task.id)}
-                      onChange={() => toggleSelect(task.id)}
-                      className="mt-1 shrink-0 accent-cyan-400"
-                    />
-
-                    <div className="flex-1 min-w-0">
-                      <button onClick={() => setExpandedId(expandedId === task.id ? null : task.id)} className="w-full text-left">
-                        <p className="text-sm" style={{ color: task.status === "completed" ? "var(--noctra-text-muted)" : "var(--noctra-text)", textDecoration: task.status === "completed" ? "line-through" : "none" }}>
-                          {task.title}
-                        </p>
-                      </button>
-                      {expandedId === task.id && (task.detail || task.acceptance_criteria) && (
-                        <div className="mt-2 space-y-2">
-                          {task.detail && (
-                            <p className="text-xs leading-relaxed" style={{ color: "var(--noctra-text-muted)" }}>{task.detail}</p>
-                          )}
-                          {task.acceptance_criteria && task.acceptance_criteria.length > 0 && (
-                            <div>
-                              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-cyan)" }}>Acceptance Criteria</p>
-                              <ul className="space-y-1">
-                                {task.acceptance_criteria.map((c, i) => (
-                                  <li key={i} className="text-[11px] flex items-start gap-1.5" style={{ color: "var(--noctra-text-muted)" }}>
-                                    <CheckCircle size={10} className="mt-0.5 shrink-0" style={{ color: "var(--noctra-emerald)" }} />
-                                    {c}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {expandedId === task.id && (task.source_report_id || task.project_id) && (
-                        <div className="flex flex-wrap items-center gap-2 mt-2">
-                          {task.source_report_id && (
-                            <button
-                              onClick={() => navigate(`/app/reports/${task.source_report_id}`)}
-                              className="text-[11px] px-2 py-1 rounded-full"
-                              style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-cyan)" }}
-                            >
-                              View source report
-                            </button>
-                          )}
-                          {task.project_id && (
-                            <button
-                              onClick={() => navigate(`/app/projects/${task.project_id}`)}
-                              className="text-[11px] px-2 py-1 rounded-full"
-                              style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-muted)" }}
-                            >
-                              {projectMap[task.project_id] ? `Project: ${projectMap[task.project_id]}` : "View project"}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      {task.priority && (
-                        <div className="w-2 h-2 rounded-full" style={{ background: PRIORITY_COLOR[task.priority] ?? "var(--noctra-text-muted)" }} title={task.priority} />
-                      )}
-                      {task.category && (
-                        <Badge style={{ fontSize: "10px", opacity: 0.7 }}>{task.category}</Badge>
-                      )}
-                      <button
-                        onClick={() => handleDelete(task.id)}
-                        disabled={deletingId === task.id}
-                        className="p-1 rounded opacity-30 hover:opacity-100 transition-opacity"
-                      >
-                        {deletingId === task.id ? (
-                          <Loader2 size={12} className="animate-spin" style={{ color: "var(--noctra-rose)" }} />
-                        ) : (
-                          <Trash2 size={12} style={{ color: "var(--noctra-rose)" }} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </Panel>
+              <TaskItem
+                key={task.id}
+                task={task}
+                togglingId={togglingId}
+                deletingId={deletingId}
+                selectedIds={selectedIds}
+                projectMap={projectMap}
+                onToggleStatus={toggleStatus}
+                onDelete={handleDelete}
+                onToggleSelect={toggleSelect}
+              />
             ))}
           </div>
         )}
 
-        {/* Footer stats */}
         {tasks.length > 0 && (
           <div className="flex items-center justify-between text-xs pt-2" style={{ color: "var(--noctra-text-muted)" }}>
             <span>Showing {filtered.length} of {tasks.length} tasks</span>

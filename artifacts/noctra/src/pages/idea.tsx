@@ -260,7 +260,7 @@ export default function IdeaPage() {
     <AppShell>
       <ToolScene
         icon={ScanSearch}
-        label={TOOL.diegetic}
+        label={TOOL.label}
         accent={TOOL.accent}
         phase={phase}
         inputPanel={InputPanel}

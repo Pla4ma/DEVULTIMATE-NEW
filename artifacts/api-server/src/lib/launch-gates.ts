@@ -28,6 +28,9 @@ export interface StaticSignals {
   hasPaymentFiles: boolean;
   hasAiFiles: boolean;
   hasStorageFiles: boolean;
+  hasPrivacyPolicy: boolean;
+  hasUploadLimits: boolean;
+  hasPaymentVerification: boolean;
   sourceFileCount: number;
   testFileCount: number;
   componentCount: number;
@@ -181,7 +184,113 @@ export function evaluateLaunchGates(signals: StaticSignals): LaunchGate[] {
     });
   }
 
-  // 6. Performance Gate
+  // 6. Infrastructure Gate (deterministic: build + start scripts + deployment config + CI)
+  {
+    const evidence: string[] = [];
+    if (!signals.hasBuildScript) evidence.push("No build script in package.json — app cannot be built for production");
+    if (!signals.hasStartScript) evidence.push("No start script in package.json — app cannot be started in production");
+    if (signals.hasBuildScript) evidence.push("✓ Build script exists");
+    if (signals.hasStartScript) evidence.push("✓ Start script exists");
+    if (signals.hasDeploymentConfig) evidence.push("✓ Deployment config found");
+    if (!signals.hasDeploymentConfig) evidence.push("No deployment config (Dockerfile, vercel.json, fly.toml, etc.)");
+    if (signals.hasDockerfile) evidence.push("✓ Dockerfile found");
+    if (signals.hasCiWorkflow) evidence.push("✓ CI workflow found");
+    if (!signals.hasCiWorkflow) evidence.push("No CI workflow configured");
+
+    const blocking = !signals.hasBuildScript || !signals.hasStartScript;
+    const warning = !signals.hasDeploymentConfig || !signals.hasCiWorkflow;
+    gates.push({
+      name: "Infrastructure Gate",
+      status: blocking ? "RED" : warning ? "YELLOW" : "GREEN",
+      evidence,
+      how_to_fix: blocking
+        ? "Add build and start scripts to package.json — these are required for production deployment"
+        : warning
+        ? "Add deployment config and CI workflow for reliable releases"
+        : "Infrastructure signals look solid",
+      why: "Without build/start scripts, deployment config, and CI, production releases require manual intervention and are prone to errors.",
+    });
+  }
+
+  // 7. API Security Gate (deterministic: API routes require auth signals)
+  if (signals.hasApiRoutes) {
+    const evidence: string[] = [];
+    if (!signals.hasAuthFiles) evidence.push("API routes detected but no auth files found — endpoints may be unprotected");
+    if (signals.hasAuthFiles) evidence.push("✓ Auth files detected");
+    evidence.push(`${signals.apiRouteCount} API route(s) found`);
+    if (signals.consoleLogCount > 5) evidence.push(`${signals.consoleLogCount} console.log statements in source — may leak sensitive data via API responses`);
+
+    gates.push({
+      name: "API Security Gate",
+      status: !signals.hasAuthFiles ? "RED" : "GREEN",
+      evidence,
+      how_to_fix: !signals.hasAuthFiles
+        ? "Add authentication middleware to all API routes before exposing to users"
+        : "API routes have auth signals present",
+      why: "Exposed API routes without authentication are the most common source of data breaches in production.",
+    });
+  }
+
+  // 8. Payment Security Gate (deterministic: payment files must verify webhooks)
+  if (signals.hasPaymentFiles) {
+    const evidence: string[] = [];
+    if (signals.hasPaymentVerification) evidence.push("✓ Payment webhook signature verification detected");
+    if (!signals.hasPaymentVerification) evidence.push("Payment files found but no webhook signature verification detected");
+    gates.push({
+      name: "Payment Security Gate",
+      status: signals.hasPaymentVerification ? "GREEN" : "RED",
+      evidence,
+      how_to_fix: signals.hasPaymentVerification
+        ? "Payment verification looks properly configured"
+        : "Add Stripe webhook signature verification using constructEvent() before processing any payment events",
+      why: "Without webhook signature verification, attackers can forge payment events and trigger refunds or unauthorized access.",
+    });
+  }
+
+  // 9. Data Gate (deterministic: database without migrations)
+  if (signals.hasDatabaseMigrations) {
+    gates.push({
+      name: "Data Gate",
+      status: "GREEN",
+      evidence: ["✓ Database migrations found"],
+      how_to_fix: "Data layer looks properly managed",
+      why: "Database migrations ensure schema changes are tracked, reviewable, and reversible.",
+    });
+  }
+
+  // 10. Upload Gate (deterministic: upload feature without limits)
+  if (signals.hasStorageFiles) {
+    const evidence: string[] = [];
+    if (!signals.hasUploadLimits) evidence.push("Upload/storage files found but no file size or rate limits detected");
+    if (signals.hasUploadLimits) evidence.push("✓ File size or upload limits detected");
+    gates.push({
+      name: "Upload Security Gate",
+      status: signals.hasUploadLimits ? "GREEN" : "YELLOW",
+      evidence,
+      how_to_fix: signals.hasUploadLimits
+        ? "Upload limits detected"
+        : "Add file size limits, type validation, and rate limiting to upload endpoints",
+      why: "Unrestricted uploads enable denial-of-service attacks, storage exhaustion, and malware distribution.",
+    });
+  }
+
+  // 11. AI Privacy Gate (deterministic: AI apps should have privacy policy)
+  if (signals.hasAiFiles) {
+    const evidence: string[] = [];
+    if (!signals.hasPrivacyPolicy) evidence.push("AI-related files detected but no privacy policy found");
+    if (signals.hasPrivacyPolicy) evidence.push("✓ Privacy policy found");
+    gates.push({
+      name: "AI Privacy Gate",
+      status: signals.hasPrivacyPolicy ? "GREEN" : "YELLOW",
+      evidence,
+      how_to_fix: signals.hasPrivacyPolicy
+        ? "Privacy policy detected"
+        : "Add a privacy policy disclosing what data is sent to AI providers and how it's handled",
+      why: "AI features that send user data to third-party providers require clear privacy disclosure to comply with regulations and build user trust.",
+    });
+  }
+
+  // 12. Performance Gate
   {
     const evidence: string[] = [];
     if (signals.consoleLogCount > 20) evidence.push(`${signals.consoleLogCount} console.log statements (should be removed for production)`);

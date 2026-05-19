@@ -3,6 +3,9 @@ export interface QualityResult {
   repaired: boolean;
   missingFields: string[];
   warnings: string[];
+  contentWarnings: string[];
+  qualityConfidence: "high" | "medium" | "low";
+  parseStatus: "clean" | "repaired" | "fallback";
 }
 
 type ToolSchema = {
@@ -10,9 +13,6 @@ type ToolSchema = {
   optional?: string[];
 };
 
-// These schemas are kept in sync with the AI system prompts in routes/ai.ts.
-// Each required field MUST be returned by the corresponding prompt.
-// If you change a prompt's output schema, update this file too.
 const TOOL_SCHEMAS: Record<string, ToolSchema> = {
   idea: {
     required: ["verdict", "summary", "signal_score", "next_actions"],
@@ -48,8 +48,53 @@ const TOOL_SCHEMAS: Record<string, ToolSchema> = {
   },
 };
 
+const GENERIC_PHRASES = [
+  "consider",
+  "interesting",
+  "promising",
+  "it is worth noting",
+  "you may want to",
+  "could be beneficial",
+  "might be a good idea",
+  "it seems",
+  "it appears",
+  "it looks like",
+  "perhaps",
+  "possibly",
+  "in order to",
+  "a lot of",
+];
+
+const EXPECTED_SIGNAL_TERMS = [
+  "build script", "start script", "env example", ".env.example", ".env",
+  "gitignore", "readme", "dockerfile", "docker-compose",
+  "deployment config", "ci workflow", "ci/cd",
+  "auth file", "authentication", "authorization",
+  "migration", "database migration",
+  "console.log", "debugger", "todo", "fixme",
+  "hardcoded secret", "secret", "api key",
+  "test file", "test script", "unit test",
+  "stripe", "payment", "webhook",
+  "privacy policy", "upload limit",
+  "dangerouslySetInnerHTML", "eval",
+  "score", "health", "health_score",
+  "component", "api route", "route",
+  "package.json", "package manager",
+  "typescript", "any type",
+  "performance", "security",
+];
+
 export function getRequiredFields(tool: string): string[] {
   return TOOL_SCHEMAS[tool]?.required ?? [];
+}
+
+function extractStrings(value: unknown): string[] {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(v => extractStrings(v));
+  if (value && typeof value === "object") {
+    return Object.values(value).flatMap(v => extractStrings(v));
+  }
+  return [];
 }
 
 export function validateReportQuality(
@@ -59,9 +104,18 @@ export function validateReportQuality(
 ): QualityResult {
   const schema = TOOL_SCHEMAS[tool];
   const warnings: string[] = [];
+  const contentWarnings: string[] = [];
 
   if (!schema) {
-    return { valid: true, repaired, missingFields: [], warnings: [`No schema defined for tool: ${tool} — skipping validation`] };
+    return {
+      valid: true,
+      repaired,
+      missingFields: [],
+      warnings: [`No schema defined for tool: ${tool} — skipping validation`],
+      contentWarnings: [],
+      qualityConfidence: "medium",
+      parseStatus: repaired ? "repaired" : "clean",
+    };
   }
 
   const missingFields: string[] = [];
@@ -75,7 +129,6 @@ export function validateReportQuality(
     warnings.push("JSON was repaired from malformed AI response — review output for truncation");
   }
 
-  // Warn on empty arrays for fields that should have content
   for (const field of schema.required) {
     const val = data[field];
     if (Array.isArray(val) && val.length === 0) {
@@ -83,62 +136,158 @@ export function validateReportQuality(
     }
   }
 
+  // Content quality checks for doctor/launch tools
+  if (tool === "doctor" || tool === "launch") {
+    // Check that gates have evidence
+    const gates = data.gates as unknown[] | undefined;
+    if (Array.isArray(gates)) {
+      for (const gate of gates) {
+        const g = gate as Record<string, unknown>;
+        const evidence = g.evidence;
+        if (Array.isArray(evidence) && evidence.length === 0) {
+          contentWarnings.push(`Gate "${g.name}" has no evidence — AI may be guessing`);
+        }
+        if (Array.isArray(evidence)) {
+          const hasSignalRef = evidence.some((e: string) =>
+            EXPECTED_SIGNAL_TERMS.some(term => e.toLowerCase().includes(term))
+          );
+          if (evidence.length > 0 && !hasSignalRef) {
+            contentWarnings.push(`Gate "${g.name}" evidence does not reference any scanner signal — may be generic`);
+          }
+        }
+      }
+    }
+
+    // Check that issues have substance
+    const issues = data.issues as unknown[] | undefined;
+    if (Array.isArray(issues)) {
+      for (const issue of issues) {
+        const iss = issue as Record<string, unknown>;
+        const issueText = String(iss.issue ?? "");
+        if (!EXPECTED_SIGNAL_TERMS.some(term => issueText.toLowerCase().includes(term))) {
+          contentWarnings.push(`Issue "${issueText.slice(0, 50)}..." may not reference scanner evidence`);
+        }
+      }
+    }
+
+    // Check for generic phrases in verdict and summary
+    const verdict = String(data.verdict ?? "");
+    const summary = String(data.summary ?? "");
+    for (const phrase of GENERIC_PHRASES) {
+      if (verdict.toLowerCase().includes(phrase)) {
+        contentWarnings.push(`Verdict contains vague phrase: "${phrase}"`);
+      }
+      if (summary.toLowerCase().includes(phrase)) {
+        contentWarnings.push(`Summary contains vague phrase: "${phrase}"`);
+      }
+    }
+
+    // Score justification: high score but many issues = suspicious
+    const healthScore = data.health_score ?? data.launch_score;
+    if (typeof healthScore === "number" && Array.isArray(issues)) {
+      const criticalCount = issues.filter(i => (i as Record<string, unknown>).severity === "CRITICAL").length;
+      if (healthScore >= 70 && criticalCount > 0) {
+        contentWarnings.push(`High score (${healthScore}) with ${criticalCount} critical issue(s) — score may be inflated`);
+      }
+      if (healthScore >= 85 && issues.length > 5) {
+        contentWarnings.push(`High score (${healthScore}) with ${issues.length} total issues — score may be inconsistent`);
+      }
+      if (healthScore <= 35 && issues.length === 0) {
+        contentWarnings.push(`Low score (${healthScore}) with zero issues — score may be unjustified`);
+      }
+    }
+  }
+
+  // Generic phrase check for all tools
+  for (const field of ["verdict", "summary"] as const) {
+    const val = data[field];
+    if (typeof val === "string") {
+      for (const phrase of GENERIC_PHRASES) {
+        if (val.toLowerCase().includes(phrase)) {
+          contentWarnings.push(`${field} contains vague phrase: "${phrase}"`);
+        }
+      }
+    }
+  }
+
+  const missingFieldSeverity = missingFields.length;
+  const contentWarningSeverity = contentWarnings.length;
+  const hasEmptyArrays = warnings.some(w => w.includes("empty array"));
+
+  let qualityConfidence: "high" | "medium" | "low";
+  if (missingFieldSeverity > 0 || contentWarningSeverity > 3) {
+    qualityConfidence = "low";
+  } else if (contentWarningSeverity > 0 || hasEmptyArrays || repaired) {
+    qualityConfidence = "medium";
+  } else {
+    qualityConfidence = "high";
+  }
+
   const valid = missingFields.length === 0;
-  return { valid, repaired, missingFields, warnings };
+
+  return {
+    valid,
+    repaired,
+    missingFields,
+    warnings: [...warnings, ...contentWarnings],
+    contentWarnings,
+    qualityConfidence,
+    parseStatus: repaired ? "repaired" : valid ? "clean" : "fallback",
+  };
 }
 
 export function buildFallbackResult(tool: string): Record<string, unknown> {
   const fallbacks: Record<string, Record<string, unknown>> = {
     idea: {
-      verdict: "Analysis could not be completed — please try again",
-      summary: "The AI did not return a complete analysis. Check your API key and try with more specific input.",
+      verdict: "AI analysis unavailable — static scan completed but expert diagnostic failed",
+      summary: "The AI diagnostic system did not return a complete analysis. Below are the raw static signals available for manual review. Retry with more specific input or check API key configuration.",
       signal_score: 0,
-      who_hurts_most: "Unknown",
-      why_it_matters: "Unknown",
-      sharpest_experiment: "Retry with more context about the problem and target user",
+      who_hurts_most: "Unknown — AI unavailable",
+      why_it_matters: "Run analysis again when AI provider is responsive",
+      sharpest_experiment: "Retry when AI system is available",
       strengths: [],
-      red_flags: ["Analysis incomplete"],
+      red_flags: ["AI diagnostic unavailable — static signals only"],
       assumptions: [],
       better_versions: [],
-      next_actions: ["Retry with a more detailed description of the problem and target user"],
+      next_actions: ["Retry with a more detailed description of the problem and target user", "Check API key configuration"],
     },
     reality: {
-      verdict: "Reality check could not be completed",
-      summary: "The AI did not return a complete analysis. Check your API key and try again.",
+      verdict: "AI analysis unavailable — static scan completed but expert diagnostic failed",
+      summary: "The AI diagnostic system did not return a complete analysis. The static scan results are available for manual review. Retry when the AI provider is responsive.",
       reality_score: 0,
       go_signal: "CAUTION",
-      blind_spots: ["Analysis incomplete — retry for accurate assessment"],
+      blind_spots: ["AI unavailable — cannot assess blind spots"],
       red_flags: [],
       risk_items: [],
       market_risks: [],
       technical_risks: [],
       patch_plan: [],
-      next_actions: ["Retry with more context about your current situation"],
+      next_actions: ["Retry with more context", "Review static scan results manually"],
     },
     proof: {
-      verdict: "Proof analysis could not be completed",
+      verdict: "AI analysis unavailable — static scan completed but expert diagnostic failed",
       proof_score: 0,
       signal_density: 0,
       experiments: [],
       objections: [],
-      evidence_gaps: ["No evidence gathered yet — start with 5 customer conversations"],
+      evidence_gaps: ["AI unavailable — start with 5 customer conversations"],
       next_experiments: ["Talk to 5 potential customers this week and document their exact words"],
-      next_actions: ["Start collecting proof signals"],
+      next_actions: ["Start collecting proof signals manually"],
     },
     swarm: {
-      verdict: "Market simulation could not be completed",
+      verdict: "AI analysis unavailable — static scan completed but expert diagnostic failed",
       swarm_score: 0,
-      consensus: "Analysis failed",
+      consensus: "AI unavailable",
       pricing_signal: "Unknown",
       segment_breakdown: { enthusiasts: 0, skeptics: 0, neutrals: 100 },
       personas: [],
       top_objections: [],
       recommendations: [],
       next_experiments: [],
-      next_actions: ["Retry with more context about your target market"],
+      next_actions: ["Retry when AI provider is responsive"],
     },
     mvp: {
-      verdict: "MVP plan could not be generated",
+      verdict: "AI analysis unavailable — static scan completed but expert diagnostic failed",
       mvp_score: 0,
       north_star_metric: "To be defined",
       ruthless_scope: { build_now: [], build_next: [], cut: [] },
@@ -146,21 +295,22 @@ export function buildFallbackResult(tool: string): Record<string, unknown> {
       weeks: [],
       milestones: [],
       feature_roi: [],
-      next_actions: ["Retry with a clearer description of the core user action you want to enable"],
+      next_actions: ["Retry when AI provider is responsive"],
     },
     doctor: {
-      verdict: "Diagnostic could not be completed",
+      verdict: "AI diagnostic unavailable — static scan completed",
+      summary: "The AI diagnostic system failed to generate a report. Your static scan results are preserved below. These include file counts, framework detection, security signals, and launch gate evaluations. For a full AI-powered diagnostic, retry when the system is available.",
       health_score: 0,
       framework: "Unknown",
       gates: [],
       issues: [],
-      repair_queue: ["Retry scan with a valid ZIP file"],
+      repair_queue: ["AI diagnostic unavailable — review static scan results for manual analysis", "Retry scan with a valid ZIP file when AI is available"],
       fix_plan: [],
-      critical_issues: [],
-      next_actions: ["Retry with a valid project ZIP file"],
+      critical_issues: ["AI diagnostic unavailable — see static scan signals for manual review"],
+      next_actions: ["Review static scan results manually", "Retry when AI provider is responsive"],
     },
     launch: {
-      verdict: "Launch assessment could not be completed",
+      verdict: "AI analysis unavailable — static scan completed but expert diagnostic failed",
       launch_score: 0,
       go_no_go: "HOLD",
       gates: [],
@@ -181,9 +331,9 @@ export function buildFallbackResult(tool: string): Record<string, unknown> {
   };
 
   return fallbacks[tool] ?? {
-    verdict: "Analysis could not be completed",
-    summary: "An error occurred during analysis. Please try again.",
+    verdict: "AI analysis unavailable — static scan completed",
+    summary: "An error occurred during analysis. Static scan results are available for manual review.",
     score: 0,
-    next_actions: ["Retry with more context"],
+    next_actions: ["Retry when AI provider is responsive"],
   };
 }

@@ -1,6 +1,3 @@
-// daily-briefing.ts — Deterministic founder daily briefing
-// Pure utility: no React, no side effects.
-
 import { computeToolCoverage, detectContradictions, type ReportSummary } from "./intelligence";
 
 export interface DailyBriefing {
@@ -33,18 +30,18 @@ function getHourOfDay(): number {
 
 function getGreeting(): string {
   const h = getHourOfDay();
-  if (h < 12) return "Good morning, Founder.";
-  if (h < 17) return "Good afternoon, Founder.";
-  return "Good evening, Founder.";
+  if (h < 12) return "Morning briefing.";
+  if (h < 17) return "Afternoon briefing.";
+  return "Evening briefing.";
 }
 
 function getWorkBlock(): string {
   const h = getHourOfDay();
-  if (h < 9) return "You're early — use this quiet window for deep analysis before standups.";
-  if (h < 12) return "Prime focus window. Tackle the hardest validation task first.";
-  if (h < 14) return "Post-lunch window — good for reviewing reports and running quick tools.";
-  if (h < 17) return "Afternoon block — ideal for building, scanning, or running the Swarm.";
-  if (h < 20) return "Evening session — review today's output, set tomorrow's priorities.";
+  if (h < 9) return "Early window — use this quiet time for deep analysis before standups.";
+  if (h < 12) return "Prime focus window. Tackle the hardest diagnosis task first.";
+  if (h < 14) return "Post-lunch window — good for reviewing reports and running scans.";
+  if (h < 17) return "Afternoon block — ideal for running validations and planning.";
+  if (h < 20) return "Evening session — review today's output, queue tomorrow's priorities.";
   return "Late session — wrap up documentation and queue tomorrow's tasks.";
 }
 
@@ -67,7 +64,6 @@ export function generateDailyBriefing(params: {
   const coverage = computeToolCoverage(reports);
   const contradictions = detectContradictions(reports);
 
-  // Sort reports newest-first for each tool
   const byTool = new Map<string, ReportSummary>();
   for (const r of [...reports].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -80,32 +76,27 @@ export function generateDailyBriefing(params: {
     scores[tool] = typeof report.score === "number" ? report.score : 0;
   }
 
-  // Open critical/high tasks
   const openCritical = tasks.filter((t) => t.status !== "completed" && t.priority === "critical");
   const openHigh = tasks.filter((t) => t.status !== "completed" && t.priority === "high");
   const completedToday = tasks.filter((t) => t.status === "completed").length;
   const openTotal = tasks.filter((t) => t.status !== "completed").length;
 
-  // Determine current focus
-  let currentFocus = "No active focus — start by running your first intelligence tool.";
+  let currentFocus = "No active focus — start by running your first analysis.";
   const nextTool = NEXT_TOOL_SEQUENCE.find((t) => !coverage.covered.includes(t));
   if (openCritical.length > 0) {
-    currentFocus = `${openCritical.length} critical task${openCritical.length > 1 ? "s" : ""} need your attention now — these are blocking progress.`;
+    currentFocus = `${openCritical.length} critical task${openCritical.length > 1 ? "s" : ""} need attention — these are blocking progress.`;
   } else if (contradictions.filter((c) => c.severity === "high").length > 0) {
     currentFocus = "High-severity intelligence contradictions detected — your reports are telling conflicting stories.";
   } else if (nextTool) {
     currentFocus = `Next intelligence gap: run ${TOOL_LABELS[nextTool] ?? nextTool} to eliminate a key unknown.`;
-  } else if (scores.launch && scores.launch < 60) {
-    currentFocus = `Launch readiness is at ${scores.launch}/100 — resolve blockers before pushing to production.`;
   } else if (scores.doctor && scores.doctor < 60) {
     currentFocus = `Project Doctor flagged ${scores.doctor}/100 — code health needs attention before shipping.`;
   } else if (proofSignals.length < 3) {
-    currentFocus = "Proof signals are thin — get more validation evidence before committing to a build.";
+    currentFocus = "Proof signals are thin — gather more validation evidence before committing to a build.";
   } else {
-    currentFocus = "All systems look stable — focus on execution and shipping.";
+    currentFocus = "All systems nominal — focus on execution and shipping.";
   }
 
-  // Top 3 priorities (deterministic, ordered by urgency)
   const priorities: string[] = [];
 
   if (openCritical.length > 0) {
@@ -130,11 +121,7 @@ export function generateDailyBriefing(params: {
   if (priorities.length < 3) {
     priorities.push("Review your latest reports — look for score declines or new contradictions");
   }
-  if (priorities.length < 3) {
-    priorities.push("Ask Product Twin for a strategic synthesis across all your reports");
-  }
 
-  // Biggest risk
   let biggestRisk = "No critical risks detected — keep shipping.";
   const highContradiction = contradictions.find((c) => c.severity === "high");
   if (highContradiction) {
@@ -145,12 +132,9 @@ export function generateDailyBriefing(params: {
     biggestRisk = `Reality Compiler score is ${scores.reality}/100 — core idea assumptions have not been validated.`;
   } else if (proofSignals.length === 0) {
     biggestRisk = "Zero proof signals — you have no external validation that anyone wants this product.";
-  } else {
-    biggestRisk = contradictions[0]?.description ?? "Monitor score trends — a declining tool score signals emerging risk.";
   }
 
-  // Easiest win
-  let easiestWin = "Run a quick tool to expand your intelligence coverage.";
+  let easiestWin = "Run a quick analysis to expand your intelligence coverage.";
   if (nextTool === "idea") {
     easiestWin = "Run Idea Checker — takes 2 minutes and unlocks the full intelligence pipeline.";
   } else if (nextTool === "reality") {
@@ -166,7 +150,6 @@ export function generateDailyBriefing(params: {
     easiestWin = `Run ${TOOL_LABELS[nextTool] ?? nextTool} — next step in your intelligence journey.`;
   }
 
-  // One thing to avoid
   let oneThingToAvoid = "Don't build features you haven't validated with real users.";
   if (contradictions.filter((c) => c.severity === "high").length > 0) {
     oneThingToAvoid = "Don't proceed to build until you've resolved the high-severity intelligence contradictions.";
@@ -178,13 +161,8 @@ export function generateDailyBriefing(params: {
     oneThingToAvoid = "Don't skip validation tools — building without intelligence coverage leads to expensive pivots.";
   }
 
-  // Quick stats
   const quickStats = [
-    {
-      label: "Reports",
-      value: reports.length,
-      color: "var(--noctra-violet)",
-    },
+    { label: "Reports", value: reports.length, color: "var(--noctra-violet)" },
     {
       label: "Coverage",
       value: `${coverage.percentage}%`,
@@ -196,7 +174,7 @@ export function generateDailyBriefing(params: {
       color: openCritical.length > 0 ? "var(--noctra-rose)" : "var(--noctra-cyan)",
     },
     {
-      label: "Proof Signals",
+      label: "Signals",
       value: proofSignals.length,
       color: proofSignals.length >= 5 ? "var(--noctra-emerald)" : proofSignals.length >= 2 ? "var(--noctra-amber)" : "var(--noctra-rose)",
     },
@@ -210,7 +188,6 @@ export function generateDailyBriefing(params: {
     });
   }
 
-  // Suggested prompt for Replit / Cursor
   const toolsRun = coverage.covered.join(", ") || "none yet";
   const avgScore =
     Object.values(scores).filter((s) => s > 0).length > 0

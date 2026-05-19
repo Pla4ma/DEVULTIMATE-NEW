@@ -29,7 +29,7 @@ const ACTIONS: PaletteAction[] = [
   { id: "tasks", title: "Open Tasks", description: "View and manage your action queue", href: "/app/tasks", icon: CheckSquare, group: "Workspace" },
   { id: "projects", title: "Open Projects", description: "Browse and manage project workspaces", href: "/app/projects", icon: FolderOpen, group: "Workspace" },
   { id: "reports", title: "Open Reports", description: "History of all intelligence analyses", href: "/app/reports", icon: FileText, group: "Workspace" },
-  { id: "passport", title: "Passport", description: "Intelligence summary and milestones", href: "/app/passport", icon: BookOpen, group: "Workspace" },
+  { id: "passport", title: "Project Profile", description: "Complete project record and milestones", href: "/app/passport", icon: BookOpen, group: "Workspace" },
 ];
 
 export function CommandPalette() {
