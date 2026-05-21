@@ -1,4 +1,4 @@
-# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# See https://docs.github.com/en/getting-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
 # compiled output
 dist
@@ -10,6 +10,11 @@ out-tsc
 
 # dependencies
 node_modules
+
+# environment files
+.env
+.env.local
+.env.*.local
 
 # IDEs and editors
 /.idea
@@ -35,15 +40,22 @@ node_modules
 npm-debug.log
 yarn-error.log
 testem.log
+*.log
 /typings
 
 # System Files
 .DS_Store
 Thumbs.db
 
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
-
 # Replit
 .cache/
 .local/
+.replit-artifact/
+
+# Source map files
+*.mjs.map
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+attached_assets/

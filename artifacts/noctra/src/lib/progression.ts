@@ -12,9 +12,9 @@ export const CAPABILITIES: Capability[] = [
   {
     key: "diagnose",
     label: "Diagnose",
-    description: "Analyze your idea and codebase for launch blockers",
+    description: "Scan your codebase and check your idea",
     phase: "diagnose",
-    tools: ["idea", "doctor"],
+    tools: ["doctor", "idea"],
   },
   {
     key: "validate",
@@ -71,7 +71,6 @@ export function computeCapabilityStatus(
   });
 }
 
-// Intelligence coverage score (0-100) based on how many tools have been used
 export function computeCoverageScore(usedTools: Set<string>): number {
   const allToolKeys: ToolKey[] = [
     "idea", "doctor", "reality", "proof", "swarm", "mvp", "twin", "launch",

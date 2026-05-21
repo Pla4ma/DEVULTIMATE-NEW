@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { Terminal } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { ToolScene } from "@/components/ToolScene";
 import { callWithCrossContext } from "@/lib/ai";
 import type { StructuredResult } from "@/lib/ai";
 import type { InjectedContext } from "@/lib/cross-context";
 import { saveReport, getReports } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
+import { useProgression } from "@/lib/progression-context";
 import { useToast } from "@/hooks/use-toast";
 import { RealityInputPanel } from "./reality/RealityInputPanel";
 import { RealityOutputPanel } from "./reality/RealityOutputPanel";
@@ -18,6 +20,7 @@ const TOOL = TOOL_BY_KEY["reality"]!;
 export default function RealityPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { refreshProgression } = useProgression();
   const [input, setInput] = useState("");
   const [compileMode, setCompileMode] = useState<CompileMode>("full");
   const [phase, setPhase] = useState<Phase>("idle");
@@ -40,7 +43,7 @@ export default function RealityPage() {
         const desc = latest.summary ?? ((latest.payload as Record<string, unknown>)?.markdown as string) ?? "";
         setLatestIdea(desc ? `Based on my latest idea analysis:\n\n${desc.slice(0, 1000)}` : null);
       }
-    }).catch(() => {});
+    }).catch(() => { toast({ title: "Failed to load idea context", variant: "destructive" }); });
   }, []);
 
   const handleKeyDown = useCallback(
@@ -104,6 +107,7 @@ export default function RealityPage() {
       const saved = report as { id?: string };
       setSavedReportId(saved?.id ?? null);
       setAutoSaved(true);
+      refreshProgression();
       if (saved?.id) {
         await generateTasksFromReport({
           id: saved.id,
@@ -201,59 +205,37 @@ export default function RealityPage() {
 
   return (
     <AppShell>
-      <div className="p-6 max-w-5xl mx-auto space-y-5">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: `${TOOL.accent}15`, border: `1px solid ${TOOL.accent}30` }}
-          >
-            <Terminal size={16} style={{ color: TOOL.accent }} />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold" style={{ color: "var(--noctra-text)" }}>
-              Reality Compiler
-            </h1>
-            <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>
-              Catch assumption errors before they become expensive mistakes
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <ToolScene
+        icon={Terminal}
+        label="Reality Compiler"
+        accent={TOOL.accent}
+        phase={phase}
+        description="Catch assumption errors before they become expensive mistakes"
+        inputPanel={
           <RealityInputPanel
-            input={input}
-            setInput={setInput}
-            compileMode={compileMode}
-            setCompileMode={setCompileMode}
-            phase={phase}
-            currentStage={currentStage}
+            input={input} setInput={setInput}
+            compileMode={compileMode} setCompileMode={setCompileMode}
+            phase={phase} currentStage={currentStage}
             injectedContext={injectedContext}
-            autoSaved={autoSaved}
-            autoSaveError={autoSaveError}
-            savedReportId={savedReportId}
-            latestIdea={latestIdea}
-            canApplyPatch={canApplyPatch}
-            patchedIdea={patchedIdea}
-            generatingTasks={generatingTasks}
-            applyingPatch={applyingPatch}
-            onRun={run}
-            onReset={reset}
-            onApplyPatch={handleApplyPatch}
-            onGenerateTasks={handleGenerateTasks}
+            autoSaved={autoSaved} autoSaveError={autoSaveError}
+            savedReportId={savedReportId} latestIdea={latestIdea}
+            canApplyPatch={canApplyPatch} patchedIdea={patchedIdea}
+            generatingTasks={generatingTasks} applyingPatch={applyingPatch}
+            onRun={run} onReset={reset}
+            onApplyPatch={handleApplyPatch} onGenerateTasks={handleGenerateTasks}
             onNavigate={navigate}
           />
+        }
+        outputPanel={
           <RealityOutputPanel
-            phase={phase}
-            error={error}
-            result={result}
-            compileMode={compileMode}
-            currentStage={currentStage}
+            phase={phase} error={error} result={result}
+            compileMode={compileMode} currentStage={currentStage}
             savedReportId={savedReportId}
-            onReset={reset}
-            onNavigate={navigate}
+            onReset={reset} onNavigate={navigate}
           />
-        </div>
-      </div>
+        }
+        errorMessage={phase === "error" ? error : undefined}
+      />
     </AppShell>
   );
 }

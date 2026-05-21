@@ -45,7 +45,7 @@ describe('noctra-tools', () => {
 
     it('should return correct tool for known keys', () => {
       expect(TOOL_BY_KEY['idea']?.label).toBe('Idea Checker');
-      expect(TOOL_BY_KEY['doctor']?.label).toBe('Project Doctor');
+      expect(TOOL_BY_KEY['doctor']?.label).toBe('Product Doctor');
       expect(TOOL_BY_KEY['mvp']?.label).toBe('MVP Planner');
     });
 
@@ -55,8 +55,8 @@ describe('noctra-tools', () => {
   });
 
   describe('TOOL_GROUPS', () => {
-    it('should include Core group', () => {
-      expect(TOOL_GROUPS).toContain('Core');
+    it('should include Launch Cockpit group', () => {
+      expect(TOOL_GROUPS).toContain('Launch Cockpit');
     });
 
     it('should be an array of strings', () => {

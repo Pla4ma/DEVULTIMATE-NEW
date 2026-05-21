@@ -24,6 +24,7 @@ export function TaskItem({
 }: TaskItemProps) {
   const [, navigate] = useLocation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const isExpanded = expandedId === task.id;
 
   return (
@@ -110,17 +111,32 @@ export function TaskItem({
             {task.category && (
               <Badge style={{ fontSize: "10px", opacity: 0.7 }}>{task.category}</Badge>
             )}
-            <button
-              onClick={() => onDelete(task.id)}
-              disabled={deletingId === task.id}
-              className="p-1 rounded opacity-30 hover:opacity-100 transition-opacity"
-            >
-              {deletingId === task.id ? (
-                <Loader2 size={12} className="animate-spin" style={{ color: "var(--noctra-rose)" }} />
-              ) : (
+            {confirmDeleteId === task.id ? (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => { onDelete(task.id); setConfirmDeleteId(null); }}
+                  disabled={deletingId === task.id}
+                  className="text-[10px] px-1.5 py-0.5 rounded"
+                  style={{ background: "rgba(244,63,94,0.15)", color: "var(--noctra-rose)" }}
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => setConfirmDeleteId(null)}
+                  className="text-[10px] px-1.5 py-0.5 rounded"
+                  style={{ background: "var(--noctra-surface2)", color: "var(--noctra-text-muted)" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmDeleteId(task.id)}
+                className="p-1 rounded opacity-30 hover:opacity-100 transition-opacity"
+              >
                 <Trash2 size={12} style={{ color: "var(--noctra-rose)" }} />
-              )}
-            </button>
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { Panel, EmptyState, Badge, NoctraButton } from "@/components/Primitives"
 import { getReports, deleteReport } from "@/lib/repository";
 import { downloadMarkdown, reportToMarkdown } from "@/lib/export";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
+import { BreadcrumbBar } from "@/components/Breadcrumb";
 import { FileText, Loader2, Trash2, Download, ArrowRight, Search, Grid3X3, List, Stethoscope } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -67,6 +68,7 @@ export default function ReportsPage() {
   return (
     <AppShell>
       <div className="p-6 max-w-4xl mx-auto space-y-5">
+        <BreadcrumbBar />
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -116,9 +118,9 @@ export default function ReportsPage() {
           <div className="flex items-center justify-center py-16"><Loader2 size={22} className="animate-spin" style={{ color: "var(--noctra-cyan)" }} /></div>
         ) : filtered.length === 0 ? (reports.length === 0 ? (
           <div className="space-y-4">
-            <EmptyState icon={<Stethoscope size={24} />} title="No reports yet" body="Run Project Doctor or an intelligence tool to generate your first analysis report." />
+            <EmptyState icon={<Stethoscope size={24} />} title="No reports yet" body="Run Product Doctor or an intelligence tool to generate your first analysis report." />
             <div className="flex justify-center gap-3">
-              <NoctraButton onClick={() => navigate("/app/doctor")}>Run Project Doctor</NoctraButton>
+              <NoctraButton onClick={() => navigate("/app/doctor")}>Run Product Doctor</NoctraButton>
               <NoctraButton variant="ghost" onClick={() => navigate("/app/idea")}>Run Idea Checker</NoctraButton>
             </div>
           </div>

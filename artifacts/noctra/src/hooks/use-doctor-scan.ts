@@ -1,8 +1,9 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useProgression } from "@/lib/progression-context";
 import { callStructuredAI } from "@/lib/ai";
-import { saveReport, saveScan } from "@/lib/repository";
+import { saveReport, saveScan, createScanSnapshot, createBlocker } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { authenticatedFetch } from "@/lib/api-client";
 
@@ -25,13 +26,25 @@ export type ScanResult = {
     evidenceIndex?: Array<{ filePath: string; lineNumber?: number; snippet?: string; severity: string; explanation: string; signal: string }>;
     repoMap?: Record<string, string[]>;
   };
+  projectId?: string;
 };
 
 export type AIResult = Awaited<ReturnType<typeof callStructuredAI>>;
 
-export function useDoctorScan() {
+export type BlockerInput = {
+  title: string;
+  severity: "P0" | "P1" | "P2";
+  category: "security" | "performance" | "testing" | "deployment" | "docs" | "code" | "privacy" | "billing";
+  evidence: string;
+  why_it_matters: string;
+  recommended_fix: string;
+  acceptance_criteria: string;
+};
+
+export function useDoctorScan(projectId?: string) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { refreshProgression } = useProgression();
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState("");
   const [zipFile, setZipFile] = useState<File | null>(null);
@@ -65,7 +78,11 @@ export function useDoctorScan() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await authenticatedFetch("/api/projects/scan-upload", {
+      const scanUrl = projectId
+        ? `/api/projects/${projectId}/scan-upload`
+        : "/api/projects/scan";
+
+      const res = await authenticatedFetch(scanUrl, {
         method: "POST",
         body: formData,
       });
@@ -82,12 +99,11 @@ export function useDoctorScan() {
         fileName: file.name,
         summary: scan.summaryMarkdown ?? "",
         payload: scan as unknown as Record<string, unknown>,
-      }).catch(() => {
-        toast({ title: "Scan save failed", description: "Scan results are visible but not stored.", variant: "destructive" });
-      });
+        projectId,
+      }).catch(() => {});
     } catch (scanErr) {
       setScanFallbackMode("ai-only");
-      const fallbackSummary = `Repository file: ${file.name} (${(file.size / 1024).toFixed(0)} KB). Full static scan unavailable — running AI-only diagnostics based on file metadata.`;
+      const fallbackSummary = `Repository file: ${file.name} (${(file.size / 1024).toFixed(0)} KB). Full static scan unavailable.`;
       scan = { summaryMarkdown: fallbackSummary };
       setScanResult(scan);
     }
@@ -105,15 +121,42 @@ export function useDoctorScan() {
         payload: { data: result.data, markdown: result.markdown, scan },
         score: result.score ?? undefined,
         summary: result.summary,
+        projectId,
       });
       const r = report as { id?: string } | null;
-      setSavedReportId(r?.id ?? null);
-      if (r?.id) {
+      const reportId = r?.id ?? null;
+      setSavedReportId(reportId);
+
+      // Extract blockers from AI result and save them (Task 2/3)
+      const aiData = result.data as Record<string, unknown> | null;
+      const blockersFromAI = (aiData?.blockers as BlockerInput[]) ?? [];
+      if (blockersFromAI.length > 0 && reportId) {
+        for (const blocker of blockersFromAI) {
+          try {
+            await createBlocker({
+              projectId: projectId ?? "",
+              title: blocker.title,
+              severity: blocker.severity,
+              category: blocker.category,
+              evidence: blocker.evidence,
+              whyItMatters: blocker.why_it_matters,
+              recommendedFix: blocker.recommended_fix,
+              acceptanceCriteria: blocker.acceptance_criteria,
+              status: "open",
+            });
+          } catch (e) {
+            console.warn("Failed to save blocker:", e);
+          }
+        }
+      }
+
+      // Generate tasks from report
+      if (reportId) {
         const taskCount = await generateTasksFromReport({
-          id: r.id,
+          id: reportId,
           tool: "doctor",
           payload: { data: result.data },
-          project_id: null,
+          project_id: projectId ?? null,
         }).catch((taskErr) => {
           toast({ title: "Task generation failed", description: taskErr instanceof Error ? taskErr.message : "Could not generate fix tasks.", variant: "destructive" });
           return 0;
@@ -123,7 +166,32 @@ export function useDoctorScan() {
         }
       }
 
+      // Create scan snapshot (Task 4)
+      if (projectId && reportId) {
+        try {
+          await createScanSnapshot({
+            projectId,
+            reportId,
+            score: result.score ?? undefined,
+            blockers: blockersFromAI.map((b: BlockerInput, i: number) => ({
+              id: `blocker-${i}`,
+              title: b.title,
+              severity: b.severity,
+              category: b.category,
+              status: "open",
+            })),
+            staticSignals: ((scan?.scan ?? {}) as Record<string, unknown>),
+            generatedTasks: [],
+            evidenceIndex: (scan?.evidenceIndex ?? []) as unknown[],
+            summary: result.summary,
+          });
+        } catch (e) {
+          console.warn("Failed to create scan snapshot:", e);
+        }
+      }
+
       setPhase("done");
+      setTimeout(() => { try { refreshProgression(); } catch {} }, 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Diagnosis failed");
       setPhase("error");
@@ -141,7 +209,8 @@ export function useDoctorScan() {
   }
 
   return {
-    phase, error, zipFile, scanResult, aiResult, savedReportId, dragOver, scanFallbackMode, fileRef,
+    phase, error, zipFile, scanResult, aiResult, savedReportId,
+    dragOver, scanFallbackMode, fileRef,
     handleFileSelect, reset, navigate,
     setDragOver,
   };

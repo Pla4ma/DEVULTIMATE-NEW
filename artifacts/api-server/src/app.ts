@@ -1,10 +1,26 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "RATE_LIMITED", message: "Too many requests, please try again later" },
+});
+app.use("/api", limiter);
 
 app.use(
   pinoHttp({
@@ -30,11 +46,11 @@ const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173,http:
 
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+    if (!origin) {
       callback(null, true);
       return;
     }
-    if (process.env.NODE_ENV === "development") {
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
       callback(null, true);
       return;
     }
@@ -53,7 +69,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   const status = err.message?.includes("Not allowed by CORS") ? 403 : 500;
   res.status(status).json({
     error: "SERVER_ERROR",
-    message: process.env.NODE_ENV === "development" ? err.message : "Internal server error",
+    message: "Internal server error",
   });
 });
 

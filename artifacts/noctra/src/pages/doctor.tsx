@@ -21,7 +21,9 @@ export default function DoctorPage() {
         icon={Stethoscope}
         label={TOOL.label}
         accent={TOOL.accent}
-        phase={phase === "done" ? "done" : phase === "error" ? "error" : phase === "idle" ? "idle" : "running"}
+        phase={phase === "done" ? "done" : phase === "error" ? "error" : "running"}
+        description="Upload your repo ZIP. Get launch readiness, blockers, fix queue, and build prompt."
+        stage={phase === "scanning" ? "Deep scanning codebase…" : phase === "diagnosing" ? "AI diagnosing launch blockers…" : phase === "generating" ? "Generating fix tasks and build prompt…" : undefined}
         inputPanel={
           <DoctorInputPanel
             phase={phase} scanResult={scanResult} zipFile={zipFile} error={error}

@@ -1,9 +1,6 @@
 import { isDemoMode } from "@/lib/demo-mode";
 import { demoStore } from "@/lib/demo-store";
-import { requireUserId, RepositoryError, withErrorHandling, handleSupabaseError } from "./common";
-import { supabase as _supabase } from "@/integrations/supabase/client";
-
-const supabase: any = _supabase;
+import { requireUserId, RepositoryError, withErrorHandling, handleSupabaseError, getSupabaseClient } from "./common";
 
 export async function saveReport(params: {
   tool: string;
@@ -22,6 +19,8 @@ export async function saveReport(params: {
     if (!params.tool?.trim()) throw new RepositoryError("Tool is required", "VALIDATION_ERROR", "saveReport");
     if (!params.title?.trim()) throw new RepositoryError("Title is required", "VALIDATION_ERROR", "saveReport");
     if (!params.payload) throw new RepositoryError("Payload is required", "VALIDATION_ERROR", "saveReport");
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new RepositoryError("Supabase not configured", "SUPABASE_NOT_CONFIGURED", "saveReport");
 
     const { data, error } = await supabase
       .from("reports")
@@ -29,14 +28,14 @@ export async function saveReport(params: {
         user_id: userId,
         tool: params.tool.trim(),
         title: params.title.trim(),
-        payload: params.payload as never,
+        payload: params.payload,
         score: params.score ?? null,
         summary: params.summary?.trim() ?? null,
         project_id: params.projectId ?? null,
       })
       .select()
       .single();
-    if (error) handleSupabaseError(error, "saveReport", { params });
+    if (error) handleSupabaseError(error, "saveReport", { params } as Record<string, unknown>);
     return data;
   });
 }
@@ -48,11 +47,13 @@ export async function getReports(tool?: string, projectId?: string) {
   }
   return withErrorHandling("getReports", async () => {
     const userId = await requireUserId();
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new RepositoryError("Supabase not configured", "SUPABASE_NOT_CONFIGURED", "getReports");
     let q = supabase.from("reports").select("*").eq("user_id", userId).order("created_at", { ascending: false });
     if (tool) q = q.eq("tool", tool);
     if (projectId) q = q.eq("project_id", projectId);
     const { data, error } = await q;
-    if (error) handleSupabaseError(error, "getReports", { tool, projectId });
+    if (error) handleSupabaseError(error, "getReports", { tool, projectId } as Record<string, unknown>);
     return data ?? [];
   });
 }
@@ -65,8 +66,10 @@ export async function getReport(id: string) {
   return withErrorHandling("getReport", async () => {
     if (!id?.trim()) throw new RepositoryError("Report ID is required", "VALIDATION_ERROR", "getReport");
     const userId = await requireUserId();
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new RepositoryError("Supabase not configured", "SUPABASE_NOT_CONFIGURED", "getReport");
     const { data, error } = await supabase.from("reports").select("*").eq("id", id).eq("user_id", userId).single();
-    if (error) handleSupabaseError(error, "getReport", { id });
+    if (error) handleSupabaseError(error, "getReport", { id } as Record<string, unknown>);
     return data;
   });
 }
@@ -80,8 +83,10 @@ export async function deleteReport(id: string) {
   return withErrorHandling("deleteReport", async () => {
     if (!id?.trim()) throw new RepositoryError("Report ID is required", "VALIDATION_ERROR", "deleteReport");
     const userId = await requireUserId();
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new RepositoryError("Supabase not configured", "SUPABASE_NOT_CONFIGURED", "deleteReport");
     const { error } = await supabase.from("reports").delete().eq("id", id).eq("user_id", userId);
-    if (error) handleSupabaseError(error, "deleteReport", { id });
+    if (error) handleSupabaseError(error, "deleteReport", { id } as Record<string, unknown>);
   });
 }
 
@@ -94,8 +99,10 @@ export async function linkReportToProject(reportId: string, projectId: string | 
   return withErrorHandling("linkReportToProject", async () => {
     if (!reportId?.trim()) throw new RepositoryError("Report ID is required", "VALIDATION_ERROR", "linkReportToProject");
     const userId = await requireUserId();
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new RepositoryError("Supabase not configured", "SUPABASE_NOT_CONFIGURED", "linkReportToProject");
     const { error } = await supabase.from("reports").update({ project_id: projectId }).eq("id", reportId).eq("user_id", userId);
-    if (error) handleSupabaseError(error, "linkReportToProject", { reportId, projectId });
+    if (error) handleSupabaseError(error, "linkReportToProject", { reportId, projectId } as Record<string, unknown>);
   });
 }
 
@@ -107,14 +114,16 @@ export async function updateReport(id: string, updates: { title?: string; payloa
   return withErrorHandling("updateReport", async () => {
     if (!id?.trim()) throw new RepositoryError("Report ID is required", "VALIDATION_ERROR", "updateReport");
     const userId = await requireUserId();
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new RepositoryError("Supabase not configured", "SUPABASE_NOT_CONFIGURED", "updateReport");
     const { data, error } = await supabase
       .from("reports")
-      .update({ ...updates, payload: updates.payload as never, updated_at: new Date().toISOString() })
+      .update({ ...updates, payload: updates.payload, updated_at: new Date().toISOString() })
       .eq("id", id)
       .eq("user_id", userId)
       .select()
       .single();
-    if (error) handleSupabaseError(error, "updateReport", { id, updates });
+    if (error) handleSupabaseError(error, "updateReport", { id, updates } as Record<string, unknown>);
     return data;
   });
 }

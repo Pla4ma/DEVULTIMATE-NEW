@@ -1,9 +1,7 @@
-import { supabase as _supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { isDemoMode, getDemoUser, DEMO_USER_FALLBACK_ID } from "@/lib/demo-mode";
 import { demoStore } from "@/lib/demo-store";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const supabase: any = _supabase;
 
 export interface MemoryContext {
   selectedProject: Record<string, unknown> | null;
@@ -35,21 +33,21 @@ const EMPTY: MemoryContext = {
 
 async function getCurrentUserId(): Promise<string | null> {
   if (!isSupabaseConfigured()) return null;
+  const supabaseClient = supabase as SupabaseClient | null;
+  if (!supabaseClient) return null;
   try {
-    const { data } = await (supabase.auth.getUser() as Promise<{ data: { user: { id: string } | null } }>);
+    const { data } = await supabaseClient.auth.getUser();
     return data?.user?.id ?? null;
-  } catch (e) {
-    console.warn("getCurrentUserId failed:", e);
+  } catch {
     return null;
   }
 }
 
-async function safeQuery<T>(p: Promise<{ data: T | null }>): Promise<T | null> {
+async function safeQuery<T>(supabaseClient: SupabaseClient, query: Promise<{ data: T | null }>): Promise<T | null> {
   try {
-    const { data } = await p;
+    const { data } = await query;
     return data;
-  } catch (e) {
-    console.warn("safeQuery failed:", e);
+  } catch {
     return null;
   }
 }
@@ -58,7 +56,7 @@ function extractPayload(report: Record<string, unknown>): Record<string, unknown
   const raw = (report.payload ?? report.data) as unknown;
   if (raw && typeof raw === "object") return raw as Record<string, unknown>;
   if (typeof raw === "string") {
-    try { return JSON.parse(raw) as Record<string, unknown>; } catch (e) { console.warn("extractPayload JSON parse failed:", e); return {}; }
+    try { return JSON.parse(raw) as Record<string, unknown>; } catch { return {}; }
   }
   return {};
 }
@@ -144,27 +142,31 @@ async function loadDemoMemoryContext(projectId?: string): Promise<MemoryContext>
 export class TwinMemory {
   static async loadMemoryContext(projectId?: string): Promise<MemoryContext> {
     if (isDemoMode()) return loadDemoMemoryContext(projectId);
+
+    const supabaseClient = supabase as SupabaseClient | null;
+    if (!supabaseClient) return EMPTY;
+
     try {
       const userId = await getCurrentUserId();
       if (!userId) return EMPTY;
 
       const [selectedProject, reports, tasks, proofSignals, scans] = await Promise.all([
         projectId
-          ? safeQuery<Record<string, unknown>>(
-              supabase.from("projects").select("*").eq("id", projectId).eq("user_id", userId).single()
+          ? safeQuery(supabaseClient,
+              supabaseClient.from("projects").select("*").eq("id", projectId).eq("user_id", userId).single()
             )
           : Promise.resolve(null),
-        safeQuery<Array<Record<string, unknown>>>(
-          supabase.from("reports").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(15)
+        safeQuery(supabaseClient,
+          supabaseClient.from("reports").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(15)
         ),
-        safeQuery<Array<Record<string, unknown>>>(
-          supabase.from("tasks").select("*").eq("user_id", userId).eq("status", "todo").order("created_at", { ascending: false }).limit(25)
+        safeQuery(supabaseClient,
+          supabaseClient.from("tasks").select("*").eq("user_id", userId).eq("status", "todo").order("created_at", { ascending: false }).limit(25)
         ),
-        safeQuery<Array<Record<string, unknown>>>(
-          supabase.from("proof_signals").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(50)
+        safeQuery(supabaseClient,
+          supabaseClient.from("proof_signals").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(50)
         ),
-        safeQuery<Array<Record<string, unknown>>>(
-          supabase.from("scans").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(5)
+        safeQuery(supabaseClient,
+          supabaseClient.from("scans").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(5)
         ),
       ]);
 
@@ -194,8 +196,7 @@ export class TwinMemory {
         latestScores,
         passport,
       };
-    } catch (e) {
-      console.warn("TwinMemory.loadMemoryContext failed:", e);
+    } catch {
       return EMPTY;
     }
   }

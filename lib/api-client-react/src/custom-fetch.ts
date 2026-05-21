@@ -92,8 +92,7 @@ function mergeHeaders(...sources: Array<HeadersInit | undefined>): Headers {
 }
 
 function getMediaType(headers: Headers): string | null {
-  const value = headers.get("content-type");
-  return value ? value.split(";", 1)[0].trim().toLowerCase() : null;
+  return headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase() ?? null;
 }
 
 function isJsonMediaType(mediaType: string | null): boolean {
@@ -172,7 +171,7 @@ function buildErrorMessage(response: Response, data: unknown): string {
 }
 
 export class ApiError<T = unknown> extends Error {
-  readonly name = "ApiError";
+  override readonly name = "ApiError";
   readonly status: number;
   readonly statusText: string;
   readonly data: T | null;
@@ -200,7 +199,7 @@ export class ApiError<T = unknown> extends Error {
 }
 
 export class ResponseParseError extends Error {
-  readonly name = "ResponseParseError";
+  override readonly name = "ResponseParseError";
   readonly status: number;
   readonly statusText: string;
   readonly headers: Headers;
@@ -208,7 +207,7 @@ export class ResponseParseError extends Error {
   readonly method: string;
   readonly url: string;
   readonly rawBody: string;
-  readonly cause: unknown;
+  override readonly cause: unknown;
 
   constructor(
     response: Response,

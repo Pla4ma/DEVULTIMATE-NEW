@@ -42,7 +42,7 @@ export interface InsightBrief {
   avgScore: number;
 }
 
-const INTELLIGENCE_TOOLS = ["idea", "reality", "proof", "swarm", "mvp", "doctor", "launch"];
+const INTELLIGENCE_TOOLS = ["doctor", "idea", "reality", "proof", "swarm", "mvp", "launch"];
 
 const TOOL_LABELS: Record<string, string> = {
   idea: "Idea Checker",
@@ -50,12 +50,12 @@ const TOOL_LABELS: Record<string, string> = {
   proof: "Proof Engine",
   swarm: "Market Swarm",
   mvp: "MVP Planner",
-  doctor: "Project Doctor",
+  doctor: "Product Doctor",
   launch: "Launch Room",
   twin: "Product Twin",
 };
 
-const TOOL_JOURNEY_ORDER = ["idea", "reality", "swarm", "proof", "mvp", "doctor", "launch"];
+const TOOL_JOURNEY_ORDER = ["doctor", "idea", "reality", "swarm", "proof", "mvp", "launch"];
 
 function extractData(report: ReportSummary): Record<string, unknown> {
   const p = report.payload as Record<string, unknown> | null;

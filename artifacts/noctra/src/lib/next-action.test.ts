@@ -3,30 +3,17 @@ import { computeNextAction, computePipeline } from './next-action';
 
 describe('next-action', () => {
   describe('computeNextAction', () => {
-    it('should return "Run Idea Checker" for empty state', () => {
+    it('should return "Run Product Doctor" for empty state', () => {
       const result = computeNextAction({
         reports: [],
         tasks: [],
         projects: [],
         proofSignals: [],
       });
-      expect(result.title).toContain('Idea Checker');
+      expect(result.title).toContain('Product Doctor');
     });
 
-    it('should prioritize high priority tasks', () => {
-      const result = computeNextAction({
-        reports: [],
-        tasks: [
-          { id: '1', status: 'todo', priority: 'high', title: 'High priority' },
-          { id: '2', status: 'todo', priority: 'low', title: 'Low priority' },
-        ],
-        projects: [],
-        proofSignals: [],
-      });
-      expect(result.title).toContain('High priority');
-    });
-
-    it('should recommend Doctor when code exists but not run', () => {
+    it('should recommend Doctor when no scan has been run', () => {
       const result = computeNextAction({
         reports: [{ id: '1', tool: 'idea', score: 70, created_at: '2024-01-01' }],
         tasks: [],
@@ -36,44 +23,49 @@ describe('next-action', () => {
       expect(result.href).toBe('/app/doctor');
     });
 
-    it('should recommend MVP after idea is validated', () => {
+    it('should recommend Doctor scan when idea exists but no doctor', () => {
       const result = computeNextAction({
         reports: [
           { id: '1', tool: 'idea', score: 80, created_at: '2024-01-01' },
           { id: '2', tool: 'reality', score: 70, created_at: '2024-01-02' },
+          { id: '3', tool: 'swarm', score: 60, created_at: '2024-01-03' },
+          { id: '4', tool: 'mvp', score: 75, created_at: '2024-01-04' },
         ],
         tasks: [],
         projects: [],
         proofSignals: [],
       });
-      expect(result.href).toBe('/app/mvp');
+      expect(result.href).toBe('/app/doctor');
     });
 
-    it('should recommend Launch after MVP', () => {
+    it('should recommend fixes when doctor score is low', () => {
+      const result = computeNextAction({
+        reports: [
+          { id: '1', tool: 'doctor', score: 35, created_at: '2024-01-01', payload: { data: { gates: [{ name: 'Security', status: 'RED' }], red_gates: ['Security'] } } },
+        ],
+        tasks: [],
+        projects: [],
+        proofSignals: [],
+      });
+      expect(result.title).toContain('Blocker');
+      expect(result.href).toBe('/app/doctor');
+    });
+
+    it('should recommend Launch when all pre-launch steps are done and doctor score is good', () => {
       const result = computeNextAction({
         reports: [
           { id: '1', tool: 'idea', score: 80, created_at: '2024-01-01' },
-          { id: '2', tool: 'mvp', score: 70, created_at: '2024-01-02' },
+          { id: '2', tool: 'reality', score: 70, created_at: '2024-01-02' },
+          { id: '3', tool: 'proof', score: 75, created_at: '2024-01-03' },
+          { id: '4', tool: 'swarm', score: 65, created_at: '2024-01-04' },
+          { id: '5', tool: 'mvp', score: 75, created_at: '2024-01-05' },
+          { id: '6', tool: 'doctor', score: 80, created_at: '2024-01-06' },
         ],
         tasks: [],
         projects: [],
-        proofSignals: [],
+        proofSignals: [{ id: '1' }, { id: '2' }, { id: '3' }],
       });
       expect(result.href).toBe('/app/launch');
-    });
-
-    it('should handle proof signals', () => {
-      const result = computeNextAction({
-        reports: [],
-        tasks: [],
-        projects: [],
-        proofSignals: [
-          { id: '1', kind: 'validation' },
-          { id: '2', kind: 'validation' },
-          { id: '3', kind: 'validation' },
-        ],
-      });
-      expect(result.href).toBe('/app/proof');
     });
   });
 
@@ -90,8 +82,8 @@ describe('next-action', () => {
     it('should mark completed steps as done', () => {
       const result = computePipeline({
         reports: [
-          { id: '1', tool: 'idea', score: 80, created_at: '2024-01-01' },
-          { id: '2', tool: 'mvp', score: 70, created_at: '2024-01-02' },
+          { id: '1', tool: 'doctor', score: 80, created_at: '2024-01-01' },
+          { id: '2', tool: 'idea', score: 70, created_at: '2024-01-02' },
         ],
         tasks: [],
         proofSignals: [],
@@ -103,7 +95,7 @@ describe('next-action', () => {
     it('should mark current step as active', () => {
       const result = computePipeline({
         reports: [
-          { id: '1', tool: 'idea', score: 80, created_at: '2024-01-01' },
+          { id: '1', tool: 'doctor', score: 80, created_at: '2024-01-01' },
         ],
         tasks: [],
         proofSignals: [],

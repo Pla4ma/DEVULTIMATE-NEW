@@ -130,12 +130,14 @@ export function Spinner({ size = 20 }: { size?: number }) {
 
 // ─── EmptyState ───────────────────────────────────────────────────────────
 
-export function EmptyState({ icon, title, body }: { icon?: ReactNode; title: string; body?: string }) {
+export function EmptyState({ icon, title, body, action, children }: { icon?: ReactNode; title: string; body?: string; action?: ReactNode; children?: ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-3 py-16 text-center">
       {icon && <div style={{ color: "var(--noctra-text-muted)" }}>{icon}</div>}
       <p className="text-sm font-medium" style={{ color: "var(--noctra-text-soft)" }}>{title}</p>
       {body && <p className="text-xs max-w-xs" style={{ color: "var(--noctra-text-muted)" }}>{body}</p>}
+      {action && <div>{action}</div>}
+      {children}
     </div>
   );
 }

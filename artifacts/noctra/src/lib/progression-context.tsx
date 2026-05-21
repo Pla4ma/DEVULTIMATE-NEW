@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { getReports } from "@/lib/repository";
 import {
   computeCapabilityStatus,
@@ -15,7 +15,35 @@ type ProgressionState = {
   loaded: boolean;
 };
 
-const ProgressionContext = createContext<ProgressionState | null>(null);
+type ProgressionCtx = ProgressionState & {
+  refreshProgression: () => Promise<void>;
+};
+
+const ProgressionContext = createContext<ProgressionCtx | null>(null);
+
+async function loadProgression(): Promise<ProgressionState> {
+  try {
+    const reports = await getReports();
+    const reportArr = (Array.isArray(reports) ? reports : []) as { tool: string }[];
+    const count = reportArr.length;
+    const tools = new Set(Array.from(reportArr.map((r) => r.tool).filter(Boolean)));
+    return {
+      reportCount: count,
+      usedTools: tools,
+      capabilityStatus: computeCapabilityStatus(tools),
+      coverageScore: computeCoverageScore(tools),
+      loaded: true,
+    };
+  } catch {
+    return {
+      reportCount: 0,
+      usedTools: new Set(),
+      capabilityStatus: [],
+      coverageScore: 0,
+      loaded: true,
+    };
+  }
+}
 
 export function ProgressionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ProgressionState>({
@@ -27,35 +55,22 @@ export function ProgressionProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    getReports()
-      .then((reports) => {
-        const count = Array.isArray(reports) ? reports.length : 0;
-        const tools = new Set(
-          Array.isArray(reports)
-            ? reports.map((r: { tool: string }) => r.tool).filter(Boolean)
-            : []
-        );
-        setState({
-          reportCount: count,
-          usedTools: tools,
-          capabilityStatus: computeCapabilityStatus(tools),
-          coverageScore: computeCoverageScore(tools),
-          loaded: true,
-        });
-      })
-      .catch(() => {
-        setState((prev) => ({ ...prev, loaded: true }));
-      });
+    loadProgression().then(setState);
+  }, []);
+
+  const refreshProgression = useCallback(async () => {
+    const newState = await loadProgression();
+    setState(newState);
   }, []);
 
   return (
-    <ProgressionContext.Provider value={state}>
+    <ProgressionContext.Provider value={{ ...state, refreshProgression }}>
       {children}
     </ProgressionContext.Provider>
   );
 }
 
-export function useProgression(): ProgressionState {
+export function useProgression(): ProgressionState & { refreshProgression: () => Promise<void> } {
   const ctx = useContext(ProgressionContext);
   if (!ctx) throw new Error("useProgression must be used within ProgressionProvider");
   return ctx;

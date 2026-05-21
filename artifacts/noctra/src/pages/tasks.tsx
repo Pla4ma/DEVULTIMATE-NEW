@@ -9,6 +9,7 @@ import {
   CheckSquare, Loader2, Plus, CheckCircle, XCircle,
   Search, Download, Filter, Copy, Check, X, Calendar, ChevronDown, ListTodo,
 } from "lucide-react";
+import { BreadcrumbBar } from "@/components/Breadcrumb";
 import { useToast } from "@/hooks/use-toast";
 import { TaskItem } from "./tasks/TaskItem";
 import {
@@ -158,6 +159,7 @@ export default function TasksPage() {
   return (
     <AppShell>
       <div className="p-6 max-w-4xl mx-auto space-y-5">
+        <BreadcrumbBar />
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>Task Queue</h1>

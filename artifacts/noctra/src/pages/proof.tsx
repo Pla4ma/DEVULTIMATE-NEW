@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
+import { useProgression } from "@/lib/progression-context";
+import { BreadcrumbBar } from "@/components/Breadcrumb";
 import { FlaskConical } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { callStructuredAI } from "@/lib/ai";
@@ -17,6 +19,7 @@ const TOOL = TOOL_BY_KEY["proof"]!;
 export default function ProofPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const { refreshProgression } = useProgression();
   const [tab, setTab] = useState<Tab>("analysis");
   const [input, setInput] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
@@ -40,6 +43,18 @@ export default function ProofPage() {
       .catch((e) => { console.warn("Failed to load proof signals:", e); setSignals([]); })
       .finally(() => setSignalsLoading(false));
   }, []);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (phase === "idle" && input.trim()) run();
+    }
+  }, [phase, input]);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   async function run() {
     if (!input.trim()) return;
@@ -71,6 +86,7 @@ export default function ProofPage() {
       setSavedReportId(r?.id ?? null);
       if (r?.id) await generateTasksFromReport({ id: r.id, tool: "proof", payload: { data: res.data }, project_id: null });
       setSaved(true);
+      refreshProgression();
     } catch (err) {
       toast({ title: "Save failed", description: err instanceof Error ? err.message : "Could not auto-save report.", variant: "destructive" });
     }
@@ -109,6 +125,7 @@ export default function ProofPage() {
   return (
     <AppShell>
       <div className="p-6 max-w-5xl mx-auto space-y-5">
+        <BreadcrumbBar />
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${TOOL.accent}18`, border: `1px solid ${TOOL.accent}30` }}>
             <FlaskConical size={18} style={{ color: TOOL.accent }} />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BreadcrumbBar } from "@/components/Breadcrumb";
 import { Brain, RotateCcw, FolderOpen, AlertTriangle, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Panel, NoctraButton, Badge } from "@/components/Primitives";
@@ -11,6 +12,7 @@ import type { ReportSummary } from "@/lib/intelligence";
 import { TwinChatPanel } from "./twin/TwinChatPanel";
 import { TwinDataPanel } from "./twin/TwinDataPanel";
 import type { Msg, Project } from "./twin/twin-types";
+import { useToast } from "@/hooks/use-toast";
 
 const TOOL = TOOL_BY_KEY["twin"]!;
 
@@ -31,11 +33,13 @@ export default function TwinPage() {
   const [contradictions, setContradictions] = useState<Contradiction[]>([]);
   const [toolsCovered, setToolsCovered] = useState<string[]>([]);
 
+  const { toast } = useToast();
+
   useEffect(() => {
     let cancelled = false;
     getProjects()
       .then((p) => { if (!cancelled) setProjects((p as Project[]) ?? []); })
-      .catch(() => { if (!cancelled) setProjects([]); });
+      .catch(() => { if (!cancelled) { setProjects([]); toast({ title: "Failed to load projects", variant: "destructive" }); } });
 
     TwinMemory.loadMemoryContext().then((ctx) => {
       if (cancelled) return;
@@ -47,7 +51,7 @@ export default function TwinPage() {
       const coveredTools = new Set(ctx.latestReports.map((r) => String(r.tool ?? "")));
       const missingReports: string[] = [];
       if (!coveredTools.has("idea")) missingReports.push("Idea Checker");
-      if (!coveredTools.has("doctor")) missingReports.push("Project Doctor");
+      if (!coveredTools.has("doctor")) missingReports.push("Product Doctor");
       if (!coveredTools.has("mvp")) missingReports.push("MVP Planner");
       if (!coveredTools.has("swarm")) missingReports.push("Market Swarm");
       if (!coveredTools.has("reality")) missingReports.push("Reality Compiler");
@@ -58,7 +62,7 @@ export default function TwinPage() {
         if (avgScore > 0) parts.push(`Average score: **${avgScore.toFixed(0)}/100**.`);
         if (tasksCount > 0) parts.push(`${tasksCount} task${tasksCount !== 1 ? "s" : ""} in queue.`);
       } else {
-        parts.push("**No reports yet.** Run Idea Checker or Project Doctor to start building context.");
+        parts.push("**No reports yet.** Run Idea Checker or Product Doctor to start building context.");
       }
       if (missingReports.length > 0) {
         parts.push(`\nMissing context: ${missingReports.join(", ")}. Run these tools for deeper analysis.`);
@@ -69,9 +73,10 @@ export default function TwinPage() {
       setMessages([{ role: "assistant", content: parts.join(" ") }]);
     }).catch(() => {
       if (!cancelled) {
+        toast({ title: "Could not load project context", description: "Running with limited data.", variant: "destructive" });
         setMessages([{
           role: "assistant",
-          content: "**No project data found.** Run Project Doctor or Idea Checker to start building context. I can answer general product questions in the meantime.",
+          content: "**No project data found.** Run Product Doctor or Idea Checker to start building context. I can answer general product questions in the meantime.",
         }]);
       }
     });
@@ -97,7 +102,7 @@ export default function TwinPage() {
         }
       })
       .catch(() => {
-        if (!cancelled) { setAllReports([]); setRecentReports([]); setContradictions([]); }
+        if (!cancelled) { setAllReports([]); setRecentReports([]); setContradictions([]); toast({ title: "Failed to load reports", variant: "destructive" }); }
       });
     return () => { cancelled = true; };
   }, [selectedProjectId]);
@@ -157,6 +162,7 @@ export default function TwinPage() {
   return (
     <AppShell>
       <div className="p-6 max-w-6xl mx-auto space-y-5">
+        <BreadcrumbBar />
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${TOOL.accent}18`, border: `1px solid ${TOOL.accent}30` }}>
             <Brain size={18} style={{ color: TOOL.accent }} />

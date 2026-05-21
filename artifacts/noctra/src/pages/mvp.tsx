@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { ToolScene } from "@/components/ToolScene";
@@ -9,6 +9,7 @@ import { saveReport, saveTasks, getReports } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
+import { useProgression } from "@/lib/progression-context";
 import { ListChecks, Wand2, Loader2, RotateCcw, CheckCircle, Download, FileDown, ExternalLink, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { reportToMarkdown, downloadMarkdown } from "@/lib/export";
@@ -23,6 +24,7 @@ const FOCUS_OPTIONS = ["Web app", "Mobile app", "API / Service", "Chrome extensi
 export default function MvpPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const { refreshProgression } = useProgression();
   const [input, setInput] = useState("");
   const [timeline, setTimeline] = useState("4 weeks");
   const [stack, setStack] = useState("");
@@ -44,8 +46,20 @@ export default function MvpPage() {
       const reality = (realities as Array<{ summary?: string | null }>)?.[0];
       if (idea) setIdeaContext(idea.summary ?? null);
       if (reality) setRealityContext(reality.summary ?? null);
-    }).catch(() => {});
+    }).catch(() => { toast({ title: "Failed to load context", description: "Running without prior reports.", variant: "destructive" }); });
   }, []);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (phase === "idle" && input.trim()) run();
+    }
+  }, [phase, input]);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   async function run() {
     if (!input.trim()) return;
@@ -79,6 +93,7 @@ export default function MvpPage() {
       setSavedReportId(r?.id ?? null);
       if (r?.id) await generateTasksFromReport({ id: r.id, tool: "mvp", payload: { data: res.data }, project_id: null });
       setSaved(true);
+      refreshProgression();
     } catch (e) {
       toast({ title: "Auto-save failed", description: e instanceof Error ? e.message : "Report results visible but not stored.", variant: "destructive" });
     }
@@ -139,10 +154,15 @@ export default function MvpPage() {
         <textarea
           value={input} onChange={(e) => setInput(e.target.value)}
           placeholder={TOOL_EXAMPLES.mvp?.[0] ?? "e.g. An async video review tool for design teams. Replaces Loom + comment threads with a single structured feedback loop."}
-          rows={6} disabled={phase === "running"}
+          rows={6} disabled={phase === "running"} maxLength={4000}
           className="w-full px-3 py-2.5 rounded-lg text-sm resize-none outline-none"
           style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
         />
+        {input.length > 0 && (
+          <div className="flex justify-end mt-1">
+            <span className="text-[10px]" style={{ color: input.length > 3500 ? "var(--noctra-amber)" : "var(--noctra-text-muted)" }}>{input.length}/4000</span>
+          </div>
+        )}
       </div>
 
       {/* Timeline */}
@@ -198,6 +218,7 @@ export default function MvpPage() {
           {phase === "running" ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
           {phase === "running" ? "Planning…" : "Plan MVP"}
         </NoctraButton>
+        {phase === "idle" && <span className="flex items-center text-xs px-2" style={{ color: "var(--noctra-text-muted)" }}>⌘↵</span>}
         {phase === "done" && <NoctraButton variant="ghost" onClick={reset}><RotateCcw size={13} /></NoctraButton>}
       </div>
 
@@ -277,6 +298,7 @@ export default function MvpPage() {
         label={TOOL.label}
         accent={TOOL.accent}
         phase={phase}
+        description="Lock scope, define metrics, and generate a week-by-week build plan"
         inputPanel={InputPanel}
         outputPanel={OutputPanel}
         errorMessage={phase === "error" ? error : undefined}

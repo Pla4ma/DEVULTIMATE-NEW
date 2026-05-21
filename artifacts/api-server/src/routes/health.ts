@@ -1,13 +1,12 @@
 import { Router, type IRouter } from "express";
-import { getConfiguredProviders, isAiConfigured, getProviderStatus } from "../lib/ai-client";
+import { getConfiguredProviders, isAiConfigured } from "../lib/ai-client";
 import { optionalAuth } from "../lib/auth-middleware";
 
 const router: IRouter = Router();
 
-router.get("/healthz", optionalAuth, (_req, res) => {
+router.get("/healthz", optionalAuth, (req, res) => {
   const configured = getConfiguredProviders();
   const primary = configured[0] ?? null;
-  const reqUser = (_req as any).user;
 
   res.json({
     ok: true,
@@ -16,9 +15,8 @@ router.get("/healthz", optionalAuth, (_req, res) => {
     configuredProviders: configured,
     primaryProvider: primary,
     fallbackAvailable: configured.length > 1,
-    providerDetails: getProviderStatus(),
-    authenticated: !!reqUser,
-    userPlan: reqUser?.plan ?? null,
+    authenticated: !!req.user,
+    userPlan: req.user?.plan ?? null,
     timestamp: new Date().toISOString(),
   });
 });

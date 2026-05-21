@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { ToolScene } from "@/components/ToolScene";
@@ -9,6 +9,7 @@ import { saveReport } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
+import { useProgression } from "@/lib/progression-context";
 import { Users, Wand2, Loader2, RotateCcw, CheckCircle, ExternalLink, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,6 +29,7 @@ const PRICE_RANGES = [
 export default function SwarmPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { refreshProgression } = useProgression();
   const [input, setInput] = useState("");
   const [customPersonas, setCustomPersonas] = useState("");
   const [personaCount, setPersonaCount] = useState<typeof PERSONA_COUNTS[number]>(25);
@@ -38,6 +40,18 @@ export default function SwarmPage() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [savedReportId, setSavedReportId] = useState<string | null>(null);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (phase === "idle" && input.trim()) run();
+    }
+  }, [phase, input]);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   async function run() {
     if (!input.trim()) return;
@@ -80,6 +94,7 @@ export default function SwarmPage() {
       setSavedReportId(r?.id ?? null);
       if (r?.id) await generateTasksFromReport({ id: r.id, tool: "swarm", payload: { data: res.data }, project_id: null });
       setSaved(true);
+      refreshProgression();
     } catch (err) {
       toast({ title: "Save failed", description: err instanceof Error ? err.message : "Could not auto-save report.", variant: "destructive" });
     }
@@ -97,10 +112,15 @@ export default function SwarmPage() {
         <textarea
           value={input} onChange={(e) => setInput(e.target.value)}
           placeholder={TOOL_EXAMPLES.swarm?.[0] ?? "Describe your offer, pitch, or product…"}
-          rows={5} disabled={phase === "running"}
+          rows={5} disabled={phase === "running"} maxLength={4000}
           className="w-full px-3 py-2.5 rounded-lg text-sm resize-none outline-none"
           style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
         />
+        {input.length > 0 && (
+          <div className="flex justify-end mt-1">
+            <span className="text-[10px]" style={{ color: input.length > 3500 ? "var(--noctra-amber)" : "var(--noctra-text-muted)" }}>{input.length}/4000</span>
+          </div>
+        )}
       </div>
 
       {/* Persona count selector */}
@@ -193,6 +213,7 @@ export default function SwarmPage() {
           {phase === "running" ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
           {phase === "running" ? `Analyzing ${personaCount} market signals…` : `Run ${personaCount}-Persona Market Swarm`}
         </NoctraButton>
+        {phase === "idle" && <span className="flex items-center text-xs px-2" style={{ color: "var(--noctra-text-muted)" }}>⌘↵</span>}
         {phase === "done" && <NoctraButton variant="ghost" onClick={reset}><RotateCcw size={13} /></NoctraButton>}
       </div>
     </div>
@@ -245,6 +266,7 @@ export default function SwarmPage() {
         label={TOOL.label}
         accent={TOOL.accent}
         phase={phase}
+        description="Simulate market demand, test pricing, and identify market segments"
         inputPanel={InputPanel}
         outputPanel={OutputPanel}
         errorMessage={phase === "error" ? error : undefined}

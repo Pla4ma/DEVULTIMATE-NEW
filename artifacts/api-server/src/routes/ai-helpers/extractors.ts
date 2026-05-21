@@ -27,7 +27,7 @@ export function extractTitle(data: Record<string, unknown> | null, tool: string,
     launch: "Launch Control", twin: "Memory Constellation",
   };
   const label = toolLabels[tool] ?? tool;
-  const inputSnippet = input.split("\n")[0].slice(0, 60);
+  const inputSnippet = input.split("\n")[0]!.slice(0, 60);
   return `${label} — ${inputSnippet}${input.length > 60 ? "…" : ""}`;
 }
 

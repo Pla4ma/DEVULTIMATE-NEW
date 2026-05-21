@@ -12,6 +12,7 @@ import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import { TOOL_EXAMPLES } from "@/lib/noctra-journey";
 import { useToast } from "@/hooks/use-toast";
+import { useProgression } from "@/lib/progression-context";
 import { ScanSearch, Wand2, Loader2, RotateCcw, CheckCircle, Zap, ExternalLink, ArrowRight, AlertTriangle, CheckSquare, Rocket } from "lucide-react";
 
 const TOOL = TOOL_BY_KEY["idea"]!;
@@ -20,6 +21,7 @@ type Phase = "idle" | "running" | "done" | "error";
 export default function IdeaPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { refreshProgression } = useProgression();
   const [input, setInput] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [currentStage, setCurrentStage] = useState("");
@@ -95,6 +97,7 @@ export default function IdeaPage() {
       }
       setSaved(true);
       setAutoSaved(true);
+      refreshProgression();
     } catch (e) {
       toast({ title: "Auto-save failed", description: e instanceof Error ? e.message : "Report results visible but not stored.", variant: "destructive" });
     }
@@ -134,7 +137,13 @@ export default function IdeaPage() {
             border: "1px solid var(--noctra-border)",
             color: "var(--noctra-text)",
           }}
+          maxLength={4000}
         />
+        {input.length > 0 && (
+          <div className="flex justify-end mt-1">
+            <span className="text-[10px]" style={{ color: input.length > 3500 ? "var(--noctra-amber)" : "var(--noctra-text-muted)" }}>{input.length}/4000</span>
+          </div>
+        )}
       </div>
 
       {/* Context injection indicator */}
@@ -263,6 +272,7 @@ export default function IdeaPage() {
         label={TOOL.label}
         accent={TOOL.accent}
         phase={phase}
+        description="Score your idea for signal strength, red flags, and ICP fit"
         inputPanel={InputPanel}
         outputPanel={OutputPanel}
         errorMessage={error}

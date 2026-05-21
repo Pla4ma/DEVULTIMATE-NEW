@@ -297,7 +297,7 @@ export default function ProjectDetailPage() {
     { key: "reports", label: "Reports", count: reports.length },
     { key: "execution", label: "Execution", count: tasks.filter((t) => t.status !== "completed").length },
     { key: "proof", label: "Proof", count: proofSignals.length },
-    { key: "doctor", label: "Project Doctor", count: doctorReports.length },
+    { key: "doctor", label: "Product Doctor", count: doctorReports.length },
     { key: "twin", label: "Product Twin" },
     { key: "launch", label: "Launch", count: launchReports.length },
     { key: "history", label: "History", count: timeline.length },

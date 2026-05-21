@@ -44,10 +44,15 @@ export function ProofAnalysisPanel({
             <textarea
               value={input} onChange={(e) => setInput(e.target.value)}
               placeholder={TOOL_EXAMPLES.proof?.[0] ?? "e.g. We're validating that indie hackers will pay for automated SEO analysis. We've run 8 interviews and have 3 LOIs."}
-              rows={7} disabled={phase === "running"}
+              rows={7} disabled={phase === "running"} maxLength={4000}
               className="w-full px-3 py-2.5 rounded-lg text-sm resize-none outline-none"
               style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
             />
+            {input.length > 0 && (
+              <div className="flex justify-end mt-1">
+                <span className="text-[10px]" style={{ color: input.length > 3500 ? "var(--noctra-amber)" : "var(--noctra-text-muted)" }}>{input.length}/4000</span>
+              </div>
+            )}
           </div>
           {signals.length > 0 && (
             <div className="px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(61,216,255,0.06)", border: "1px solid rgba(61,216,255,0.15)", color: "var(--noctra-cyan)" }}>
@@ -65,6 +70,7 @@ export function ProofAnalysisPanel({
               {phase === "running" ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
               {phase === "running" ? "Analyzing…" : "Analyze Proof"}
             </NoctraButton>
+            {phase === "idle" && <span className="flex items-center text-xs px-2" style={{ color: "var(--noctra-text-muted)" }}>⌘↵</span>}
             {phase === "done" && <NoctraButton variant="ghost" onClick={onReset}><RotateCcw size={13} /></NoctraButton>}
           </div>
         </div>

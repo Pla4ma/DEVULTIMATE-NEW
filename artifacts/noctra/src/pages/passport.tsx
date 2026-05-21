@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { Panel, ScoreRing, Badge, EmptyState } from "@/components/Primitives";
 import { getPassport, getReports, getTasks, getProofSignals } from "@/lib/repository";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
+import { BreadcrumbBar } from "@/components/Breadcrumb";
 import { BarChart3, Loader2, CheckCircle, Circle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,8 +45,8 @@ function computeMilestones(data: ProfileData): MilestoneItem[] {
 
   return [
     { id: "first_analysis", label: "First Analysis", description: "Run your first intelligence tool", achieved: reports.length >= 1 },
-    { id: "codebase_scanned", label: "Codebase Scanned", description: "Scan a repo with Project Doctor", achieved: doctorCount >= 1 },
-    { id: "gates_cleared", label: "Gates Cleared", description: "All launch gates passed in Project Doctor", achieved: gatesAllGreen },
+    { id: "codebase_scanned", label: "Codebase Scanned", description: "Scan a repo with Product Doctor", achieved: doctorCount >= 1 },
+    { id: "gates_cleared", label: "Gates Cleared", description: "All launch gates passed in Product Doctor", achieved: gatesAllGreen },
     { id: "idea_validated", label: "Idea Validated", description: "Run 3 Idea Checker analyses", achieved: ideaCount >= 3, progress: ideaCount, total: 3 },
     { id: "market_tested", label: "Market Tested", description: "Run 3 Market Swarm simulations", achieved: swarmCount >= 3, progress: swarmCount, total: 3 },
     { id: "evidence_collected", label: "Evidence Collected", description: "Add 5 proof signals", achieved: signals.length >= 5, progress: signals.length, total: 5 },
@@ -109,6 +110,7 @@ export default function PassportPage() {
   return (
     <AppShell>
       <div className="p-6 max-w-5xl mx-auto space-y-6">
+        <BreadcrumbBar />
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(234,179,8,0.15)", border: "1px solid rgba(234,179,8,0.3)" }}>
             <BarChart3 size={18} style={{ color: "var(--noctra-gold)" }} />

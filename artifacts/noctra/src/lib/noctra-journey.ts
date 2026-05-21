@@ -8,14 +8,16 @@ export type PipelineNode = {
 };
 
 export const PIPELINE: PipelineNode[] = [
-  { key: "signal",    label: "Signal",    tool: "idea",     hint: "Stress-test the raw idea" },
-  { key: "reality",   label: "Reality",   tool: "reality",  hint: "Compile risk and blind spots" },
-  { key: "blueprint", label: "Blueprint", tool: "mvp",      hint: "Compress to a build-ready scope" },
-  { key: "proof",     label: "Proof",     tool: "proof",    hint: "Quantify validation evidence" },
-  { key: "market",    label: "Market",    tool: "swarm",    hint: "Analyze demand signals and segments" },
-  { key: "build",     label: "Build",     tool: "doctor",   hint: "Diagnose execution health" },
-  { key: "launch",    label: "Launch",    tool: "launch",   hint: "Ready the launch sequence" },
-  { key: "profile",   label: "Profile",   tool: "passport", hint: "Review project record and milestones" },
+  { key: "idea",      label: "Idea",    tool: "idea",     hint: "Validate the raw idea" },
+  { key: "reality",   label: "Reality", tool: "reality",  hint: "Compile risk and blind spots" },
+  { key: "blueprint", label: "MVP",     tool: "mvp",      hint: "Compress to build-ready scope" },
+  { key: "proof",     label: "Proof",   tool: "proof",    hint: "Quantify validation evidence" },
+  { key: "market",    label: "Market",  tool: "swarm",    hint: "Analyze demand signals" },
+  { key: "scan",      label: "Scan",    tool: "doctor",   hint: "Diagnose execution health and blockers" },
+  { key: "fix",       label: "Fix",     tool: "tasks",    hint: "Execute fix tasks from scan" },
+  { key: "rescan",    label: "Rescan",  tool: "doctor",   hint: "Re-scan to verify fixes improved score" },
+  { key: "launch",    label: "Launch",  tool: "launch",   hint: "Ready the launch sequence" },
+  { key: "profile",   label: "Profile", tool: "passport", hint: "Review project record and milestones" },
 ];
 
 export const TOOL_EXAMPLES: Record<ToolKey, string[]> = {
@@ -59,17 +61,18 @@ export const TOOL_EXAMPLES: Record<ToolKey, string[]> = {
 };
 
 export const NEXT_BEST_MOVES: { tool: ToolKey; title: string; reason: string; confidence: number }[] = [
-  { tool: "idea",    title: "Run Idea Checker on your sharpest idea",      reason: "Fastest path to a measurable validation step.", confidence: 86 },
-  { tool: "reality", title: "Run Reality Compiler on your top assumption", reason: "Surface blind spots before you build.",     confidence: 78 },
-  { tool: "proof",   title: "Run Proof Engine to assess validation depth", reason: "Your validation depth is below launch threshold.", confidence: 72 },
+  { tool: "doctor",  title: "Run Product Doctor on your codebase",           reason: "Fastest path to launch readiness.", confidence: 92 },
+  { tool: "idea",    title: "Run Idea Checker on your sharpest idea",        reason: "Validate before you build.",        confidence: 86 },
+  { tool: "mvp",     title: "Generate MVP Planner",                         reason: "Turn validation into a build plan.", confidence: 78 },
+  { tool: "reality", title: "Run Reality Compiler on your top assumption",   reason: "Surface blind spots before you build.",     confidence: 74 },
 ];
 
 export const COMPANION_LINES = {
-  hero: "Run Idea Checker to surface strengths, fragilities, and the next validation step.",
-  dashboard: "Review your execution plan. Gaps in proof or Doctor may block launch.",
-  loadingShort: "Processing. You'll see results in a moment.",
+  hero: "Launch readiness starts here. Scan your codebase, fix blockers, rescan to verify improvement.",
+  dashboard: "Your launch cockpit: score, blockers, and the next fix to push you forward.",
+  loadingShort: "Processing. Results in a moment.",
   briefingReady: "Briefing compiled. Review the intelligence panel.",
-  warning: "Critical findings detected. Address before moving to build phase.",
-  success: "Report saved. Next action available below.",
+  warning: "Critical findings detected. Address before moving forward.",
+  success: "Report saved. Fix tasks generated. Rescan to verify improvement.",
   launching: "Launch readiness under assessment. Results will show here.",
 };

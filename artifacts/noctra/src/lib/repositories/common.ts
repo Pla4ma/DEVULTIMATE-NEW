@@ -1,25 +1,46 @@
 import { supabase as _supabase, isSupabaseConfigured, supabaseConfigError } from "@/integrations/supabase/client";
 import { isDemoMode, getDemoUser, DEMO_USER_FALLBACK_ID } from "@/lib/demo-mode";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-const supabase: any = _supabase;
+const supabase: SupabaseClient | null = isSupabaseConfigured() ? _supabase as unknown as SupabaseClient : null;
 
 export class RepositoryError extends Error {
   constructor(
     message: string,
     public code?: string,
     public operation?: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'RepositoryError';
   }
 }
 
+type UserResponse = {
+  data: { user: { id: string } | null } | null;
+  error: { message: string; code?: string } | null;
+};
+
+type QueryResponse<T> = {
+  data: T[] | null;
+  error: { message: string; code?: string } | null;
+};
+
+type SingleResponse<T> = {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+};
+
+type MutationResponse<T> = {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+};
+
 export async function requireUserId(): Promise<string> {
   if (isDemoMode()) {
     return getDemoUser()?.id ?? DEMO_USER_FALLBACK_ID;
   }
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !supabase) {
     throw new RepositoryError(
       supabaseConfigError ?? "Supabase is not configured.",
       "SUPABASE_NOT_CONFIGURED",
@@ -27,11 +48,11 @@ export async function requireUserId(): Promise<string> {
     );
   }
   try {
-    const { data, error } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser() as unknown as UserResponse;
     if (error) {
       throw new RepositoryError("Authentication failed", "AUTH_ERROR", "getUser", { originalError: error });
     }
-    if (!data.user) {
+    if (!data?.user) {
       throw new RepositoryError("You must be signed in", "NOT_AUTHENTICATED", "getUser");
     }
     return data.user.id;
@@ -41,7 +62,7 @@ export async function requireUserId(): Promise<string> {
   }
 }
 
-export function handleSupabaseError(error: any, operation: string, context?: any): never {
+export function handleSupabaseError(error: { message?: string; code?: string } | null, operation: string, context?: Record<string, unknown>): never {
   switch (error?.code) {
     case 'PGRST116':
       throw new RepositoryError("Resource not found", "NOT_FOUND", operation, { ...context, originalError: error });
@@ -57,12 +78,16 @@ export function handleSupabaseError(error: any, operation: string, context?: any
 export async function withErrorHandling<T>(
   operation: string,
   fn: () => Promise<T>,
-  context?: any
+  context?: Record<string, unknown>
 ): Promise<T> {
   try {
     return await fn();
   } catch (error) {
     if (error instanceof RepositoryError) throw error;
-    handleSupabaseError(error, operation, context);
+    handleSupabaseError(error as { message?: string; code?: string } | null, operation, context);
   }
+}
+
+export function getSupabaseClient(): SupabaseClient | null {
+  return supabase;
 }

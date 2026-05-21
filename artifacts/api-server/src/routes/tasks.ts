@@ -18,6 +18,11 @@ router.post("/generate", async (req, res) => {
       return;
     }
 
+    if (typeof reportId !== "string" || typeof tool !== "string") {
+      res.status(400).json({ error: "BAD_REQUEST", message: "reportId and tool must be strings" });
+      return;
+    }
+
     logger.info({ reportId, tool, projectId }, "Generating tasks from report");
 
     const tasks = generateTasksFromPayload({ id: reportId, tool, payload, project_id: projectId });

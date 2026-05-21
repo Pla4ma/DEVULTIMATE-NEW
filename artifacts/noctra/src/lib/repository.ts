@@ -15,3 +15,11 @@ export {
 export { saveScan, getScans } from "./repositories/scans";
 export { getPassport, upsertPassport } from "./repositories/passport";
 export { getDashboardData } from "./repositories/dashboard";
+export {
+  getBlockers, createBlocker, updateBlocker, deleteBlocker,
+} from "./repositories/blockers";
+export type { Blocker } from "./repositories/blockers";
+export {
+  getScanSnapshots, getLatestScanSnapshot, getScanDelta, createScanSnapshot,
+} from "./repositories/scan-snapshots";
+export type { ScanSnapshot, ScanDelta } from "./repositories/scan-snapshots";

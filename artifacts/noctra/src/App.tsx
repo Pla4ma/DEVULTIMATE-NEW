@@ -39,37 +39,36 @@ const queryClient = new QueryClient({
 });
 
 const ROUTE_TITLES: Record<string, string> = {
-  "/": "Noctra — Developer Intelligence OS",
-  "/app": "Dashboard — Noctra",
-  "/app/idea": "Idea Checker — Noctra",
-  "/app/reality": "Reality Compiler — Noctra",
-  "/app/proof": "Proof Engine — Noctra",
-  "/app/swarm": "Market Swarm — Noctra",
-  "/app/mvp": "MVP Planner — Noctra",
-  "/app/doctor": "Project Doctor — Noctra",
-  "/app/launch": "Launch Room — Noctra",
-  "/app/twin": "Product Twin — Noctra",
-  "/app/passport": "Project Profile — Noctra",
-  "/app/reports": "Reports — Noctra",
-  "/app/tasks": "Tasks — Noctra",
-  "/app/projects": "Projects — Noctra",
+  "/": "DEVULTIMATE — AI Launch Readiness Platform",
+  "/app": "Launch Cockpit — DEVULTIMATE",
+  "/app/idea": "Idea Checker — DEVULTIMATE",
+  "/app/reality": "Reality Compiler — DEVULTIMATE",
+  "/app/proof": "Proof Engine — DEVULTIMATE",
+  "/app/swarm": "Market Swarm — DEVULTIMATE",
+  "/app/mvp": "MVP Planner — DEVULTIMATE",
+  "/app/doctor": "Product Doctor — DEVULTIMATE",
+  "/app/launch": "Launch Room — DEVULTIMATE",
+  "/app/twin": "Product Twin — DEVULTIMATE",
+  "/app/passport": "Project Profile — DEVULTIMATE",
+  "/app/reports": "Reports — DEVULTIMATE",
+  "/app/tasks": "Fix Tasks — DEVULTIMATE",
+  "/app/projects": "Projects — DEVULTIMATE",
 };
 
 function TitleSetter() {
   const [location] = useLocation();
   useEffect(() => {
-    // Match exact route first, then check prefixes for detail pages
     const exact = ROUTE_TITLES[location];
     if (exact) {
       document.title = exact;
       return;
     }
     if (location.startsWith("/app/reports/")) {
-      document.title = "Report — Noctra";
+      document.title = "Report — DEVULTIMATE";
     } else if (location.startsWith("/app/projects/")) {
-      document.title = "Project — Noctra";
+      document.title = "Project — DEVULTIMATE";
     } else {
-      document.title = "Noctra — Developer Intelligence OS";
+      document.title = "DEVULTIMATE — AI Launch Readiness Platform";
     }
   }, [location]);
   return null;
@@ -87,6 +86,7 @@ function AppRoutes() {
   return (
     <>
       <CommandPalette />
+      <OnboardingWizard />
       <Switch>
 <Route path="/" component={LandingPage} />
       <Route path="/pricing" component={PricingPage} />

@@ -72,7 +72,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
               <span className="text-xs font-mono" style={{ color: projectState.readiness >= 70 ? "var(--noctra-emerald)" : projectState.readiness >= 40 ? "var(--noctra-amber)" : "var(--noctra-rose)" }}>{projectState.readiness}%</span>
             </div>
             <ProgressBar value={projectState.readiness} color={projectState.readiness >= 70 ? "var(--noctra-emerald)" : projectState.readiness >= 40 ? "var(--noctra-amber)" : "var(--noctra-rose)"} />
-            <p className="text-xs mt-1.5 capitalize" style={{ color: "var(--noctra-text-muted)" }}>Phase: {projectState.phase.replace("-", " ")}</p>
+            <p className="text-xs mt-1.5 capitalize" style={{ color: "var(--noctra-text-muted)" }}>Phase: {projectState.stage.replace("_", " ")}</p>
           </Panel>
           {tasks.length > 0 ? (
             <Panel>
@@ -130,7 +130,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
             ))}
           </div>
           <button onClick={() => navigate("/app/doctor")} className="flex items-center gap-1.5 mt-3 text-xs" style={{ color: "var(--noctra-rose)" }}>
-            <RefreshCw size={11} /> Re-scan with Project Doctor
+            <RefreshCw size={11} /> Re-scan with Product Doctor
           </button>
         </Panel>
       ) : null}
@@ -186,7 +186,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
             { label: "Reality Compiler", href: "/app/reality", color: "var(--noctra-amber)" },
             { label: "Proof Engine", href: "/app/proof", color: "var(--noctra-emerald)" },
             { label: "MVP Planner", href: "/app/mvp", color: "var(--noctra-cyan)" },
-            { label: "Project Doctor", href: "/app/doctor", color: "var(--noctra-rose)" },
+            { label: "Product Doctor", href: "/app/doctor", color: "var(--noctra-rose)" },
             { label: "Launch Room", href: "/app/launch", color: "var(--noctra-amber)" },
           ].map(({ label, href, color }) => (
             <button key={href} onClick={() => navigate(href)} className="px-3 py-2 rounded-lg text-xs font-medium text-left hover:opacity-80" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color }}>{label}</button>

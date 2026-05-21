@@ -119,6 +119,7 @@ export function RealityInputPanel({
           }
           rows={9}
           disabled={phase === "running"}
+          maxLength={4000}
           className="w-full px-3 py-2.5 rounded-lg text-sm resize-none outline-none font-mono"
           style={{
             background: "var(--noctra-surface2)",
@@ -126,6 +127,11 @@ export function RealityInputPanel({
             color: "var(--noctra-text)",
           }}
         />
+        {input.length > 0 && (
+          <div className="flex justify-end mt-1">
+            <span className="text-[10px]" style={{ color: input.length > 3500 ? "var(--noctra-amber)" : "var(--noctra-text-muted)" }}>{input.length}/4000</span>
+          </div>
+        )}
 
         {injectedContext?.hasContext && injectedContext.reports.length > 0 && (
           <div

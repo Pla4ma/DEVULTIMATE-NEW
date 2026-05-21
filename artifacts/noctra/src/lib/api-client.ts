@@ -1,25 +1,12 @@
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
-import { isDemoMode, getDemoUser } from "@/lib/demo-mode";
+import { isDemoMode } from "@/lib/demo-mode";
 
 let cachedToken: string | null = null;
 let tokenExpiry = 0;
 
 export async function getAuthToken(): Promise<string | null> {
   if (isDemoMode()) {
-    const demoUser = getDemoUser();
-    if (!demoUser) return null;
-    const demoPayload = {
-      sub: demoUser.id,
-      email: demoUser.email,
-      aud: "authenticated",
-      role: "authenticated",
-      app_metadata: { provider: "demo", plan: "demo" },
-      is_demo: true,
-      exp: Math.floor(Date.now() / 1000) + 86400,
-    };
-    const encoded = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" })) + "." +
-      btoa(JSON.stringify(demoPayload)) + ".demo-sig";
-    return encoded;
+    return null;
   }
 
   if (!isSupabaseConfigured()) return null;
@@ -29,7 +16,9 @@ export async function getAuthToken(): Promise<string | null> {
   }
 
   try {
-    const { data } = await supabase!.auth.getSession();
+    const supabaseClient = supabase;
+    if (!supabaseClient) return null;
+    const { data } = await supabaseClient.auth.getSession();
     const token = data.session?.access_token ?? null;
     if (token) {
       cachedToken = token;

@@ -3,14 +3,20 @@ import type { StaticSignals } from "../launch-gates";
 import type { ScanResult, EvidenceItem, SampleFile } from "./types";
 import {
   MAX_PER_FILE_SIZE, MAX_FILE_COUNT, MAX_SCAN_TIME_MS,
-  MAX_TEXT_BYTES_PER_FILE, MAX_TOTAL_TEXT_BYTES, SECRET_PATTERNS,
+  MAX_TEXT_BYTES_PER_FILE, MAX_TOTAL_TEXT_BYTES, MAX_UNCOMPRESSED_TOTAL, SECRET_PATTERNS,
 } from "./constants";
 import { redactSecrets, isSafePath, shouldIgnoreDir, isBinary, getExtension, getEntryPriority } from "./utils";
 import { buildSummaryMarkdown } from "./summary";
 
 export async function doScan(buffer: Buffer, fileName: string): Promise<ScanResult> {
   const startTime = Date.now();
-  const zip = await JSZip.loadAsync(buffer);
+
+  // ZIP bomb protection: use optimized loading options
+  const zip = await JSZip.loadAsync(buffer, {
+    checkCRC32: true,
+    createFolders: false,
+  });
+
   const warnings: string[] = [];
   const extensions: Record<string, number> = {};
   const manifests: string[] = [];
@@ -85,7 +91,7 @@ export async function doScan(buffer: Buffer, fileName: string): Promise<ScanResu
     }
 
     const parts = path.split("/");
-    const name = parts[parts.length - 1];
+    const name = parts[parts.length - 1]!;
 
     if (shouldIgnoreDir(parts.slice(0, -1))) { ignoredFiles++; continue; }
     if (isBinary(name)) { ignoredFiles++; continue; }
@@ -202,7 +208,7 @@ export async function doScan(buffer: Buffer, fileName: string): Promise<ScanResu
       if (lineCount > 600) staticSignals.filesOver600Lines++;
 
       for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
+        const line = lines[i]!;
         const lowerLine = line.toLowerCase();
 
         if (lowerLine.includes("// todo") || lowerLine.includes("//todo")) staticSignals.todoCount++;

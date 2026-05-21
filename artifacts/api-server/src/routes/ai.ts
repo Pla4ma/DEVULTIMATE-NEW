@@ -4,12 +4,16 @@ import { safeParseAiJson, buildRepairPrompt } from "../lib/ai-json";
 import { buildFallbackResult, getRequiredFields, validateReportQuality } from "../lib/report-quality";
 import { requireQuota, requirePlan } from "../lib/usage-quota";
 import { INSIGHT_SWEEP_PROMPT } from "../prompts";
-import { getOpenAIStreamConfig, getGroq, streamViaOpenAI, streamViaGroq } from "./ai-helpers/stream";
+import { getOpenAIStreamConfig, streamViaOpenAI, streamViaGroq } from "./ai-helpers/stream";
 import { buildDoctorUserContent } from "./ai-helpers/doctor-prompt";
 import { buildSystemPrompt } from "./ai-helpers/prompt-registry";
 import { extractScore, extractTitle, extractSummary } from "./ai-helpers/extractors";
 
 const router = Router();
+
+const MAX_MESSAGES = 100;
+const MAX_MESSAGE_LENGTH = 100000;
+const MAX_INPUT_LENGTH = 50000;
 
 function aiNotConfiguredResponse(res: import("express").Response): void {
   res.status(503).json({
@@ -35,9 +39,22 @@ router.post("/chat", requireQuota("ai-chat", "aiCallsPerDay"), async (req, res) 
     systemPrompt?: string;
   };
 
+  if (!Array.isArray(messages)) {
+    res.status(400).json({ error: "VALIDATION_ERROR", message: "messages must be an array" });
+    return;
+  }
+
+  if (messages.length > MAX_MESSAGES) {
+    res.status(400).json({ error: "VALIDATION_ERROR", message: `Too many messages (max ${MAX_MESSAGES})` });
+    return;
+  }
+
   const validMessages = messages.filter(
     (m) => m.role === "user" || m.role === "assistant" || m.role === "system"
-  ) as Array<{ role: "system" | "user" | "assistant"; content: string }>;
+  ).map((m) => ({
+    role: m.role as "system" | "user" | "assistant",
+    content: m.content.slice(0, MAX_MESSAGE_LENGTH),
+  }));
 
   try {
     const result = await callAIWithFallback({
@@ -57,10 +74,23 @@ router.post("/stream", requireQuota("ai-stream", "aiCallsPerDay"), requirePlan([
     systemPrompt?: string;
   };
 
+  if (!Array.isArray(messages)) {
+    res.status(400).json({ error: "VALIDATION_ERROR", message: "messages must be an array" });
+    return;
+  }
+
+  if (messages.length > MAX_MESSAGES) {
+    res.status(400).json({ error: "VALIDATION_ERROR", message: `Too many messages (max ${MAX_MESSAGES})` });
+    return;
+  }
+
   const fullMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
-  if (systemPrompt) fullMessages.push({ role: "system", content: systemPrompt });
+  if (systemPrompt) fullMessages.push({ role: "system", content: systemPrompt.slice(0, MAX_MESSAGE_LENGTH) });
   fullMessages.push(
-    ...messages.filter((m) => m.role === "user" || m.role === "assistant" || m.role === "system") as typeof fullMessages
+    ...messages.filter((m) => m.role === "user" || m.role === "assistant" || m.role === "system").map((m) => ({
+      role: m.role as "system" | "user" | "assistant",
+      content: m.content.slice(0, MAX_MESSAGE_LENGTH),
+    }))
   );
 
   res.setHeader("Content-Type", "text/event-stream");
@@ -96,6 +126,11 @@ router.post("/structured", requireQuota("ai-structured", "structuredReportsPerDa
 
   if (!tool?.trim() || !input?.trim()) {
     res.status(400).json({ error: "VALIDATION_ERROR", message: "tool and input are required" });
+    return;
+  }
+
+  if (input.length > MAX_INPUT_LENGTH) {
+    res.status(400).json({ error: "VALIDATION_ERROR", message: `Input too long (max ${MAX_INPUT_LENGTH} characters)` });
     return;
   }
 
@@ -193,6 +228,11 @@ router.post("/insight-sweep", requireQuota("ai-insight-sweep", "structuredReport
   const { reportsInput } = req.body as { reportsInput: string };
   if (!reportsInput?.trim()) {
     res.status(400).json({ error: "VALIDATION_ERROR", message: "reportsInput is required" });
+    return;
+  }
+
+  if (reportsInput.length > MAX_INPUT_LENGTH) {
+    res.status(400).json({ error: "VALIDATION_ERROR", message: `Input too long (max ${MAX_INPUT_LENGTH} characters)` });
     return;
   }
 

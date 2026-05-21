@@ -40,7 +40,7 @@ export function isBinary(filename: string): boolean {
 
 export function getEntryPriority(filePath: string): number {
   const parts = filePath.split("/");
-  const name = parts[parts.length - 1];
+  const name = parts[parts.length - 1]!;
   const lower = filePath.toLowerCase();
   const lowerName = name.toLowerCase();
   if (lowerName === "package.json") return 1;

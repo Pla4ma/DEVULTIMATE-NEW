@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { supabaseConfigError } from "@/integrations/supabase/client";
-import { Zap, ArrowRight, Play, Sparkles, Star, Stethoscope, CheckCircle, Code, Terminal } from "lucide-react";
+import { Zap, ArrowRight, Play, Sparkles, Star, Stethoscope, CheckCircle, Code, Terminal, RotateCcw, Target, Rocket } from "lucide-react";
 import { AnimatedWorkflow } from "./landing/AnimatedWorkflow";
 import { LandingAuthSection } from "./landing/LandingAuthSection";
 import { stats, integrations, testimonials, features, howItWorks } from "./landing/landing-data";
@@ -23,6 +23,7 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
+  const [showAuth, setShowAuth] = useState(false);
   const supabaseReady = !supabaseConfigError;
 
   useEffect(() => {
@@ -35,10 +36,10 @@ export default function LandingPage() {
     if (!supabaseReady) { setError(supabaseConfigError ?? "Supabase is not configured."); return; }
     setLoading(true);
     try {
-      if (tab === "login") { await signIn(email, password); navigate("/app"); }
+      if (tab === "login") { await signIn(email.trim(), password); navigate("/app"); }
       else {
-        const { needsEmailConfirmation } = await signUp(email, password);
-        if (needsEmailConfirmation) setMsg("Check your email to confirm your account.");
+        const { needsEmailConfirmation } = await signUp(email.trim(), password);
+        if (needsEmailConfirmation) { setMsg("Check your email to confirm your account."); }
         else navigate("/app");
       }
     } catch (err) { setError(err instanceof Error ? err.message : "Something went wrong"); }
@@ -60,7 +61,18 @@ export default function LandingPage() {
     finally { setLoading(false); }
   }
 
-  const scrollToAuth = () => document.getElementById("auth")?.scrollIntoView({ behavior: "smooth" });
+  function openAuth(t: "login" | "signup") {
+    setTab(t);
+    setShowAuth(true);
+    setError("");
+    setMsg("");
+  }
+
+  function closeAuth() {
+    setShowAuth(false);
+    setError("");
+    setMsg("");
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--noctra-bg)" }}>
@@ -70,7 +82,7 @@ export default function LandingPage() {
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--noctra-cyan)", boxShadow: "0 0 20px rgba(61,216,255,0.3)" }}>
               <Zap size={18} className="text-black" />
             </div>
-            <span className="font-bold text-lg tracking-wide" style={{ color: "var(--noctra-text)" }}>NOCTRA</span>
+            <span className="font-bold text-lg tracking-wide" style={{ color: "var(--noctra-text)" }}>DEVULTIMATE</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm hover:opacity-80" style={{ color: "var(--noctra-text-soft)" }}>Features</a>
@@ -79,8 +91,8 @@ export default function LandingPage() {
             <button onClick={() => navigate("/pricing")} className="text-sm hover:opacity-80" style={{ color: "var(--noctra-text-soft)" }}>Pricing</button>
           </nav>
           <div className="flex items-center gap-3">
-            <button onClick={() => { setTab("login"); scrollToAuth(); }} className="text-sm px-4 py-2 rounded-lg hover:opacity-80" style={{ color: "var(--noctra-text-soft)" }}>Sign in</button>
-            <button onClick={() => { setTab("signup"); scrollToAuth(); }} className="text-sm px-4 py-2 rounded-lg font-medium hover:opacity-90" style={{ background: "var(--noctra-cyan)", color: "#000" }}>Get Started</button>
+            <button onClick={() => openAuth("login")} className="text-sm px-4 py-2 rounded-lg hover:opacity-80" style={{ color: "var(--noctra-text-soft)" }}>Sign in</button>
+            <button onClick={() => openAuth("signup")} className="text-sm px-4 py-2 rounded-lg font-medium hover:opacity-90" style={{ background: "var(--noctra-cyan)", color: "#000" }}>Get Started</button>
           </div>
         </div>
       </header>
@@ -94,18 +106,18 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 relative">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs mb-6" style={{ background: "rgba(61,216,255,0.08)", border: "1px solid rgba(61,216,255,0.2)", color: "var(--noctra-cyan)" }}>
-              <Stethoscope size={12} />
-              <span>Developer Intelligence OS</span>
+              <Rocket size={12} />
+              <span>AI Launch Readiness Platform</span>
             </div>
             <h1 className="text-5xl lg:text-7xl font-bold leading-tight mb-6" style={{ color: "var(--noctra-text)" }}>
-              Diagnose, validate, and ship<br />
-              <span style={{ background: "linear-gradient(135deg, var(--noctra-cyan), var(--noctra-violet))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>with complete confidence.</span>
+              Scan. Fix. Rescan. Ship.<br />
+              <span style={{ background: "linear-gradient(135deg, var(--noctra-cyan), var(--noctra-violet))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>with evidence-backed confidence.</span>
             </h1>
             <p className="text-xl max-w-2xl mx-auto mb-8 leading-relaxed" style={{ color: "var(--noctra-text-soft)" }}>
-              Upload your codebase. Noctra scans for launch blockers, validates assumptions, and generates a prioritized execution plan — so you ship the right thing, the right way.
+              Upload your codebase. Get a launch readiness score with evidence-backed blockers. Fix the issues, rescan to verify improvement, and ship when all gates are green. From idea to launch — one scan at a time.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button onClick={() => { setTab("signup"); scrollToAuth(); }} className="px-8 py-4 rounded-xl text-base font-semibold flex items-center gap-2 transition-all hover:scale-105" style={{ background: "var(--noctra-cyan)", color: "#000", boxShadow: "0 0 30px rgba(61,216,255,0.3)" }}>
+              <button onClick={() => openAuth("signup")} className="px-8 py-4 rounded-xl text-base font-semibold flex items-center gap-2 transition-all hover:scale-105" style={{ background: "var(--noctra-cyan)", color: "#000", boxShadow: "0 0 30px rgba(61,216,255,0.3)" }}>
                 <Play size={16} /> Start Free Analysis
               </button>
               <button onClick={handleDemo} className="px-8 py-4 rounded-xl text-base font-medium flex items-center gap-2 transition-all hover:bg-white/5" style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}>
@@ -133,10 +145,10 @@ export default function LandingPage() {
       <section className="py-24 px-6 border-t" style={{ borderColor: "var(--noctra-border)" }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--noctra-rose)" }}>Project Doctor</p>
-            <h2 className="text-4xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>Your codebase has launch blockers.<br />Noctra finds them in seconds.</h2>
+            <p className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--noctra-rose)" }}>Evidence-Backed Blockers</p>
+            <h2 className="text-4xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>Your codebase has launch blockers.<br />We find them with file-level evidence.</h2>
             <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--noctra-text-soft)" }}>
-              Upload a ZIP of your repository. Noctra performs static analysis across your entire codebase, then generates a structured diagnostic report with prioritized fixes.
+              Upload a ZIP of your repository. We perform static analysis across your entire codebase, generate a structured diagnostic report with prioritized fixes, and create a fix task queue. Fix, rescan, and watch your score improve.
             </p>
           </div>
           <div className="grid md:grid-cols-4 gap-4">
@@ -156,7 +168,7 @@ export default function LandingPage() {
           <div className="mt-8 rounded-xl border p-5" style={{ background: "var(--noctra-surface)", borderColor: "var(--noctra-border)", borderStyle: "dashed" }}>
             <div className="flex items-center gap-3 text-sm mb-3" style={{ color: "var(--noctra-text-soft)" }}>
               <Terminal size={14} />
-              <span className="font-mono text-xs" style={{ color: "var(--noctra-cyan)" }}>Your scan output</span>
+              <span className="font-mono text-xs" style={{ color: "var(--noctra-cyan)" }}>Your scan output — every finding has file-level evidence</span>
             </div>
             <div className="space-y-2">
               {[
@@ -184,9 +196,9 @@ export default function LandingPage() {
       <section id="features" className="py-24 px-6 border-t" style={{ borderColor: "var(--noctra-border)", background: "var(--noctra-surface)" }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <p className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--noctra-cyan)" }}>Intelligence Suite</p>
-            <h2 className="text-4xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>Everything you need to ship confidently</h2>
-            <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--noctra-text-soft)" }}>From codebase diagnosis to launch readiness — a complete toolkit for developers who build products.</p>
+            <p className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--noctra-cyan)" }}>The Launch Readiness Loop</p>
+            <h2 className="text-4xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>Everything you need to ship with confidence</h2>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--noctra-text-soft)" }}>Scan your codebase for blockers, fix with prioritized tasks, rescan to verify improvement — all the way from idea to launch.</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             {features.map(({ icon: Icon, label, desc, color }) => (
@@ -206,7 +218,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--noctra-violet)" }}>The Workflow</p>
-            <h2 className="text-4xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>From idea to launch in 4 steps</h2>
+            <h2 className="text-4xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>From scan to launch in 4 steps</h2>
           </div>
           <div className="grid md:grid-cols-4 gap-6">
             {howItWorks.map(({ step, title, desc }, i) => (
@@ -237,10 +249,10 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="flex items-center justify-center gap-6 text-xs" style={{ color: "var(--noctra-text-muted)" }}>
-            {["Idea Checker", "Project Doctor", "MVP Planner", "Launch Room"].map((tool) => (
-              <div key={tool} className="flex items-center gap-1.5">
+            {["Scan", "Fix", "Rescan", "Launch"].map((step) => (
+              <div key={step} className="flex items-center gap-1.5">
                 <CheckCircle size={10} style={{ color: "var(--noctra-emerald)" }} />
-                {tool}
+                {step}
               </div>
             ))}
           </div>
@@ -251,7 +263,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--noctra-emerald)" }}>Testimonials</p>
-            <h2 className="text-4xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>Loved by developers</h2>
+            <h2 className="text-4xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>Built for developers who ship</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {testimonials.map(({ quote, author, role }, i) => (
@@ -274,21 +286,30 @@ export default function LandingPage() {
       <section className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--noctra-cyan)] opacity-5 to-[var(--noctra-violet)] opacity-5" />
         <div className="max-w-4xl mx-auto text-center relative">
-          <h2 className="text-4xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>Ready to ship with confidence?</h2>
-          <p className="text-lg mb-8" style={{ color: "var(--noctra-text-soft)" }}>Join thousands of developers who catch launch blockers before they ship.</p>
-          <button onClick={() => { setTab("signup"); scrollToAuth(); }} className="px-8 py-4 rounded-xl text-base font-semibold transition-all hover:scale-105" style={{ background: "var(--noctra-cyan)", color: "#000", boxShadow: "0 0 30px rgba(61,216,255,0.3)" }}>
+          <h2 className="text-4xl font-bold mb-4" style={{ color: "var(--noctra-text)" }}>Ready to know your launch readiness score?</h2>
+          <p className="text-lg mb-8" style={{ color: "var(--noctra-text-soft)" }}>Join thousands of developers who catch launch blockers with evidence-backed scans and fix them with the rescan loop.</p>
+          <button onClick={() => openAuth("signup")} className="px-8 py-4 rounded-xl text-base font-semibold transition-all hover:scale-105" style={{ background: "var(--noctra-cyan)", color: "#000", boxShadow: "0 0 30px rgba(61,216,255,0.3)" }}>
             Start Free — No Credit Card
           </button>
         </div>
       </section>
 
-      <LandingAuthSection
-        tab={tab} setTab={setTab} email={email} setEmail={setEmail}
-        password={password} setPassword={setPassword}
-        loading={loading} error={error} msg={msg}
-        supabaseConfigError={supabaseConfigError} supabaseReady={supabaseReady}
-        onSubmit={handleSubmit} onAnon={handleAnon} onDemo={handleDemo}
-      />
+      {/* Auth Modal */}
+      {showAuth && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeAuth} />
+          <div className="relative w-full max-w-md rounded-2xl border p-8" style={{ background: "var(--noctra-surface)", borderColor: "var(--noctra-border)", boxShadow: "0 0 60px rgba(0,0,0,0.5)" }}>
+            <button onClick={closeAuth} className="absolute top-4 right-4 text-sm" style={{ color: "var(--noctra-text-muted)" }}>✕</button>
+            <LandingAuthSection
+              tab={tab} setTab={setTab} email={email} setEmail={setEmail}
+              password={password} setPassword={setPassword}
+              loading={loading} error={error} msg={msg}
+              supabaseConfigError={supabaseConfigError} supabaseReady={supabaseReady}
+              onSubmit={handleSubmit} onAnon={handleAnon} onDemo={handleDemo}
+            />
+          </div>
+        </div>
+      )}
 
       <footer className="border-t px-6 py-8" style={{ borderColor: "var(--noctra-border)", background: "var(--noctra-surface)" }}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -296,14 +317,14 @@ export default function LandingPage() {
             <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: "var(--noctra-cyan)" }}>
               <Zap size={12} className="text-black" />
             </div>
-            <span className="font-bold" style={{ color: "var(--noctra-text)" }}>NOCTRA</span>
+            <span className="font-bold" style={{ color: "var(--noctra-text)" }}>DEVULTIMATE</span>
           </div>
           <div className="flex items-center gap-4">
             <a href="/privacy" className="text-xs hover:opacity-80" style={{ color: "var(--noctra-text-muted)" }}>Repo Privacy</a>
             <span className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>·</span>
             <a href="/pricing" className="text-xs hover:opacity-80" style={{ color: "var(--noctra-text-muted)" }}>Pricing</a>
           </div>
-          <p className="text-sm" style={{ color: "var(--noctra-text-muted)" }}>© 2026 Noctra. Built for developers who ship.</p>
+          <p className="text-sm" style={{ color: "var(--noctra-text-muted)" }}>© 2026 DEVULTIMATE. Scan. Fix. Rescan. Ship.</p>
         </div>
       </footer>
     </div>

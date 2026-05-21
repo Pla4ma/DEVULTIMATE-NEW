@@ -5,6 +5,15 @@ import { updateUserPlan } from "../lib/supabase-admin";
 
 const router: IRouter = Router();
 
+const ALLOWED_EVENT_TYPES = new Set([
+  "checkout.session.completed",
+  "customer.subscription.created",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+  "invoice.paid",
+  "invoice.payment_failed",
+]);
+
 function verifyStripeSignature(payload: string, sig: string, secret: string): boolean {
   const parts = sig.split(",").reduce<Record<string, string>>((acc, p) => {
     const [k, v] = p.split("=");
@@ -70,15 +79,17 @@ router.post("/stripe/webhook", async (req, res) => {
   }
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  const rawBody = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
 
-  if (webhookSecret && !verifyStripeSignature(rawBody, sig, webhookSecret)) {
-    res.status(401).json({ error: "Invalid signature" });
+  if (!webhookSecret) {
+    logger.error("STRIPE_WEBHOOK_SECRET not configured — rejecting all webhooks");
+    res.status(500).json({ error: "SERVER_ERROR", message: "Webhook secret not configured" });
     return;
   }
 
-  if (!webhookSecret) {
-    logger.warn("STRIPE_WEBHOOK_SECRET not configured — accepting webhook without signature verification");
+  const rawBody = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+  if (!verifyStripeSignature(rawBody, sig, webhookSecret)) {
+    res.status(401).json({ error: "Invalid signature" });
+    return;
   }
 
   try {
@@ -89,6 +100,12 @@ router.post("/stripe/webhook", async (req, res) => {
 
     const eventType = event?.type ?? "unknown";
     logger.info({ eventType }, "Processing Stripe webhook");
+
+    if (!ALLOWED_EVENT_TYPES.has(eventType)) {
+      logger.debug({ eventType }, "Unhandled Stripe event");
+      res.json({ received: true });
+      return;
+    }
 
     switch (eventType) {
       case "checkout.session.completed": {
@@ -102,8 +119,6 @@ router.post("/stripe/webhook", async (req, res) => {
       }
       case "customer.subscription.created":
       case "customer.subscription.updated":
-        await syncPlanFromStripe(eventType, event?.data?.object ?? {});
-        break;
       case "customer.subscription.deleted":
         await syncPlanFromStripe(eventType, event?.data?.object ?? {});
         break;
@@ -117,8 +132,6 @@ router.post("/stripe/webhook", async (req, res) => {
         logger.warn({ invoiceId: failedInvoice?.id, attempt: failedInvoice?.attempt_count }, "Invoice payment failed");
         break;
       }
-      default:
-        logger.debug({ eventType }, "Unhandled Stripe event");
     }
 
     res.json({ received: true });

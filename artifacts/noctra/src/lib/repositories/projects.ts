@@ -1,9 +1,6 @@
 import { isDemoMode } from "@/lib/demo-mode";
 import { demoStore } from "@/lib/demo-store";
-import { requireUserId, RepositoryError, withErrorHandling, handleSupabaseError } from "./common";
-import { supabase as _supabase } from "@/integrations/supabase/client";
-
-const supabase: any = _supabase;
+import { requireUserId, RepositoryError, withErrorHandling, handleSupabaseError, getSupabaseClient } from "./common";
 
 export async function createProject(params: { name: string; idea?: string; stage?: string; status?: string; meta?: Record<string, unknown> }) {
   if (isDemoMode()) {
@@ -13,11 +10,13 @@ export async function createProject(params: { name: string; idea?: string; stage
   return withErrorHandling("createProject", async () => {
     const userId = await requireUserId();
     if (!params.name?.trim()) throw new RepositoryError("Project name is required", "VALIDATION_ERROR", "createProject");
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new RepositoryError("Supabase not configured", "SUPABASE_NOT_CONFIGURED", "createProject");
     const { data, error } = await supabase
       .from("projects")
-      .insert({ user_id: userId, name: params.name.trim(), idea: params.idea?.trim() ?? null, stage: params.stage ?? "idea", status: params.status ?? "active", meta: (params.meta ?? {}) as never })
+      .insert({ user_id: userId, name: params.name.trim(), idea: params.idea?.trim() ?? null, stage: params.stage ?? "idea", status: params.status ?? "active", meta: params.meta ?? {} })
       .select().single();
-    if (error) handleSupabaseError(error, "createProject", { params });
+    if (error) handleSupabaseError(error, "createProject", { params } as Record<string, unknown>);
     return data;
   });
 }
@@ -29,6 +28,8 @@ export async function getProjects() {
   }
   return withErrorHandling("getProjects", async () => {
     const userId = await requireUserId();
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new RepositoryError("Supabase not configured", "SUPABASE_NOT_CONFIGURED", "getProjects");
     const { data, error } = await supabase.from("projects").select("*").eq("user_id", userId).order("created_at", { ascending: false });
     if (error) handleSupabaseError(error, "getProjects");
     return data ?? [];
@@ -43,21 +44,25 @@ export async function getProject(id: string) {
   return withErrorHandling("getProject", async () => {
     if (!id?.trim()) throw new RepositoryError("Project ID is required", "VALIDATION_ERROR", "getProject");
     const userId = await requireUserId();
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new RepositoryError("Supabase not configured", "SUPABASE_NOT_CONFIGURED", "getProject");
     const { data, error } = await supabase.from("projects").select("*").eq("id", id).eq("user_id", userId).single();
-    if (error) handleSupabaseError(error, "getProject", { id });
+    if (error) handleSupabaseError(error, "getProject", { id } as Record<string, unknown>);
     return data;
   });
 }
 
-export async function updateProject(id: string, patch: Partial<{ name: string; idea: string; stage: string; status: string; meta: Record<string, unknown> }>) {
+export async function updateProject(id: string, patch: Record<string, unknown>) {
   if (isDemoMode()) {
     const userId = await requireUserId();
     return demoStore.updateProject(userId, id, patch as never);
   }
   return withErrorHandling("updateProject", async () => {
     const userId = await requireUserId();
-    const { data, error } = await supabase.from("projects").update(patch as never).eq("id", id).eq("user_id", userId).select().single();
-    if (error) handleSupabaseError(error, "updateProject", { id, patch });
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new RepositoryError("Supabase not configured", "SUPABASE_NOT_CONFIGURED", "updateProject");
+    const { data, error } = await supabase.from("projects").update(patch).eq("id", id).eq("user_id", userId).select().single();
+    if (error) handleSupabaseError(error, "updateProject", { id, patch } as Record<string, unknown>);
     return data;
   });
 }
@@ -71,7 +76,9 @@ export async function deleteProject(id: string) {
   return withErrorHandling("deleteProject", async () => {
     if (!id?.trim()) throw new RepositoryError("Project ID is required", "VALIDATION_ERROR", "deleteProject");
     const userId = await requireUserId();
+    const supabase = getSupabaseClient();
+    if (!supabase) throw new RepositoryError("Supabase not configured", "SUPABASE_NOT_CONFIGURED", "deleteProject");
     const { error } = await supabase.from("projects").delete().eq("id", id).eq("user_id", userId);
-    if (error) handleSupabaseError(error, "deleteProject", { id });
+    if (error) handleSupabaseError(error, "deleteProject", { id } as Record<string, unknown>);
   });
 }

@@ -386,6 +386,15 @@ alter table billing_invoices enable row level security;
 create policy "billing_invoices: select own" on billing_invoices
   for select using (auth.uid() = user_id);
 
+create policy "billing_invoices: insert own" on billing_invoices
+  for insert with check (auth.uid() = user_id);
+
+create policy "billing_invoices: update own" on billing_invoices
+  for update using (auth.uid() = user_id);
+
+create policy "billing_invoices: delete own" on billing_invoices
+  for delete using (auth.uid() = user_id);
+
 create index if not exists idx_billing_invoices_user on billing_invoices(user_id);
 
 -- ─────────────────────────────────────────────────────────────
@@ -422,7 +431,7 @@ returns table (
   call_count bigint
 )
 language sql
-security definer
+security definer set search_path = ''
 as $$
   select route, count(*)::bigint as call_count
   from usage_logs

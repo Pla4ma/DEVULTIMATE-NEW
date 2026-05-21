@@ -22,9 +22,9 @@ export function DoctorTab({ doctorReports, latestDoctorReport, openScanGates, ta
     <div className="space-y-3">
       {doctorReports.length === 0 ? (
         <>
-          <EmptyState icon={<FileText size={22} />} title="No diagnosis yet" body="Upload your project ZIP to Project Doctor to diagnose your codebase for launch blockers, code quality issues, and security gaps." />
+          <EmptyState icon={<FileText size={22} />} title="No diagnosis yet" body="Upload your project ZIP to Product Doctor to diagnose your codebase for launch blockers, code quality issues, and security gaps." />
           <div className="flex justify-center">
-            <NoctraButton onClick={() => navigate("/app/doctor")}><FileText size={13} /> Scan with Project Doctor</NoctraButton>
+            <NoctraButton onClick={() => navigate("/app/doctor")}><FileText size={13} /> Scan with Product Doctor</NoctraButton>
           </div>
         </>
       ) : (
@@ -146,7 +146,7 @@ export function DoctorTab({ doctorReports, latestDoctorReport, openScanGates, ta
           ) : null}
 
           <div className="flex gap-2 flex-wrap">
-            <NoctraButton variant="ghost" onClick={() => navigate("/app/doctor")}><RefreshCw size={13} /> Re-scan with Project Doctor</NoctraButton>
+            <NoctraButton variant="ghost" onClick={() => navigate("/app/doctor")}><RefreshCw size={13} /> Re-scan with Product Doctor</NoctraButton>
             {latestDoctorReport ? (
               <>
                 <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${latestDoctorReport.id}`)}>Full Scan Report <ArrowRight size={11} /></NoctraButton>

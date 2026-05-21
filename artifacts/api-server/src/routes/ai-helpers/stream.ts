@@ -98,7 +98,6 @@ export async function streamViaGroq(
   const providers = getConfiguredProviders();
   if (!providers.includes("groq")) return false;
 
-  let lastErr: unknown;
   for (const model of GROQ_MODEL_CHAIN) {
     try {
       const stream = await groq.chat.completions.create({
@@ -118,7 +117,6 @@ export async function streamViaGroq(
       res.end();
       return true;
     } catch (err) {
-      lastErr = err;
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("model") || msg.includes("not found") || msg.includes("deprecated")) continue;
       break;

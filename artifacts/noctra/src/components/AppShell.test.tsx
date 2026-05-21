@@ -42,22 +42,17 @@ describe('AppShell', () => {
 
   it('should render logo', () => {
     renderWithProviders(<AppShell><div>Content</div></AppShell>);
-    expect(screen.getByText('NOCTRA')).toBeInTheDocument();
-  });
-
-  it('should render dashboard link', () => {
-    renderWithProviders(<AppShell><div>Content</div></AppShell>);
-    expect(screen.getByText(/command center/i)).toBeInTheDocument();
+    expect(screen.getByText('DEVULTIMATE')).toBeInTheDocument();
   });
 
   it('should render navigation items', () => {
     renderWithProviders(<AppShell><div>Content</div></AppShell>);
-    expect(screen.getByText(/idea checker/i)).toBeInTheDocument();
+    expect(screen.getByText(/launch cockpit/i)).toBeInTheDocument();
   });
 
-  it('should render progress section', () => {
+  it('should render product doctor navigation', () => {
     renderWithProviders(<AppShell><div>Content</div></AppShell>);
-    expect(screen.getByText(/progress/i)).toBeInTheDocument();
+    expect(screen.getByText(/product doctor/i)).toBeInTheDocument();
   });
 
   it('should render sign out button', () => {

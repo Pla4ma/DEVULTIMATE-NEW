@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase, supabaseConfigError, isSupabaseConfigured } from "@/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+import type { User, Session, AuthError } from "@supabase/supabase-js";
 import { isDemoMode, enableDemoMode, disableDemoMode, getDemoUser } from "@/lib/demo-mode";
 
 const ANON_KEY = "noctra_anon_creds";
@@ -8,7 +8,12 @@ const ANON_KEY = "noctra_anon_creds";
 function getOrCreateAnonCreds(): { email: string; password: string } {
   const stored = localStorage.getItem(ANON_KEY);
   if (stored) {
-    try { return JSON.parse(stored); } catch { console.warn("Stored anon creds corrupted, generating new:"); }
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed?.email && parsed?.password) return parsed;
+    } catch {
+      // stored creds corrupted, generate new
+    }
   }
   const id = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
   const creds = {
@@ -16,7 +21,6 @@ function getOrCreateAnonCreds(): { email: string; password: string } {
     password: crypto.randomUUID(),
   };
   localStorage.setItem(ANON_KEY, JSON.stringify(creds));
-  console.info("Anonymous credentials stored in localStorage. These are only used for this session and are not sensitive. For full security, sign up with email.");
   return creds;
 }
 
@@ -66,12 +70,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-    supabase!.auth.getSession().then(({ data }) => {
+    const supabaseClient = supabase;
+    if (!supabaseClient) {
+      setLoading(false);
+      return;
+    }
+    supabaseClient.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setLoading(false);
-    }).catch((e) => { console.warn("Session fetch failed:", e); setLoading(false); });
-    const { data: { subscription } } = supabase!.auth.onAuthStateChange((_, s) => {
+    }).catch(() => { setLoading(false); });
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_, s) => {
       setSession(s);
       setUser(s?.user ?? null);
     });
@@ -82,7 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured()) {
       throw new Error(supabaseConfigError ?? "Supabase is not configured.");
     }
-    const { error } = await supabase!.auth.signInWithPassword({ email, password });
+    const supabaseClient = supabase;
+    if (!supabaseClient) throw new Error("Supabase client not available");
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
 
@@ -90,7 +101,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured()) {
       throw new Error(supabaseConfigError ?? "Supabase is not configured.");
     }
-    const { data, error } = await supabase!.auth.signUp({
+    const supabaseClient = supabase;
+    if (!supabaseClient) throw new Error("Supabase client not available");
+    const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: `${window.location.origin}/app` },
@@ -103,7 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured()) {
       throw new Error(supabaseConfigError ?? "Supabase is not configured.");
     }
-    const { error } = await supabase!.auth.signInWithOAuth({
+    const supabaseClient = supabase;
+    if (!supabaseClient) throw new Error("Supabase client not available");
+    const { error } = await supabaseClient.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/app` },
     });
@@ -122,7 +137,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       return;
     }
-    await supabase!.auth.signOut();
+    const supabaseClient = supabase;
+    if (supabaseClient) {
+      await supabaseClient.auth.signOut();
+    }
   };
 
   const signInDemo = async () => {
@@ -135,14 +153,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured()) {
       throw new Error(supabaseConfigError ?? "Supabase is not configured.");
     }
-    const { error: anonErr } = await supabase!.auth.signInAnonymously();
+    const supabaseClient = supabase;
+    if (!supabaseClient) throw new Error("Supabase client not available");
+    const { error: anonErr } = await supabaseClient.auth.signInAnonymously();
     if (!anonErr) return;
 
     const creds = getOrCreateAnonCreds();
-    const { error: signInErr } = await supabase!.auth.signInWithPassword(creds);
+    const { error: signInErr } = await supabaseClient.auth.signInWithPassword(creds);
     if (!signInErr) return;
 
-    const { data: signUpData, error: signUpErr } = await supabase!.auth.signUp({
+    const { data: signUpData, error: signUpErr } = await supabaseClient.auth.signUp({
       email: creds.email,
       password: creds.password,
       options: { data: { display_name: "Anonymous Founder" } },
@@ -150,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (signUpErr) throw signUpErr;
     if (signUpData.session) return;
 
-    const { error: finalErr } = await supabase!.auth.signInWithPassword(creds);
+    const { error: finalErr } = await supabaseClient.auth.signInWithPassword(creds);
     if (finalErr) {
       throw new Error(
         "Anonymous access is disabled in Supabase. Sign up with email or use Demo Mode.",

@@ -16,19 +16,19 @@ type PaletteAction = {
 };
 
 const ACTIONS: PaletteAction[] = [
-  { id: "dashboard", title: "Go to Command Center", description: "Command center — overview of all intelligence", href: "/app", icon: LayoutDashboard, group: "Navigate" },
+  { id: "dashboard", title: "Go to Launch Cockpit", description: "Launch readiness score, blockers, next fix", href: "/app", icon: LayoutDashboard, group: "Navigate" },
   { id: "pricing", title: "View Pricing", description: "Check out our pricing plans", href: "/pricing", icon: Rocket, group: "Navigate" },
-  { id: "idea", title: "New Idea Check", description: "Idea Checker — validate a startup idea", href: "/app/idea", icon: Lightbulb, group: "Tools" },
-  { id: "reality", title: "Run Reality Compiler", description: "Reality Compiler — stress-test assumptions", href: "/app/reality", icon: AlertTriangle, group: "Tools" },
-  { id: "proof", title: "Open Proof Engine", description: "Proof Engine — validate with evidence", href: "/app/proof", icon: FlaskConical, group: "Tools" },
-  { id: "swarm", title: "Run Market Swarm", description: "Simulate market demand with AI personas", href: "/app/swarm", icon: Users, group: "Tools" },
-  { id: "mvp", title: "Plan MVP", description: "MVP Planner — week-by-week build plan", href: "/app/mvp", icon: Map, group: "Tools" },
-  { id: "doctor", title: "Upload Project ZIP", description: "Project Doctor — scan code for launch blockers", href: "/app/doctor", icon: Stethoscope, group: "Tools" },
-  { id: "launch", title: "Launch Room", description: "Launch Room — go/no-go assessment", href: "/app/launch", icon: Rocket, group: "Tools" },
-  { id: "twin", title: "Ask Product Twin", description: "AI chat with full cross-tool memory", href: "/app/twin", icon: Brain, group: "Tools" },
-  { id: "tasks", title: "Open Tasks", description: "View and manage your action queue", href: "/app/tasks", icon: CheckSquare, group: "Workspace" },
+  { id: "doctor", title: "Run Product Doctor", description: "Scan codebase for launch blockers and fix tasks", href: "/app/doctor", icon: Stethoscope, group: "Launch Workflow" },
+  { id: "tasks", title: "Open Fix Tasks", description: "View and manage your fix task queue", href: "/app/tasks", icon: CheckSquare, group: "Launch Workflow" },
+  { id: "launch", title: "Launch Room", description: "Launch Room — go/no-go assessment", href: "/app/launch", icon: Rocket, group: "Launch Workflow" },
+  { id: "idea", title: "New Idea Check", description: "Idea Checker — validate a startup idea", href: "/app/idea", icon: Lightbulb, group: "Supporting Tools" },
+  { id: "reality", title: "Run Reality Compiler", description: "Reality Compiler — stress-test assumptions", href: "/app/reality", icon: AlertTriangle, group: "Supporting Tools" },
+  { id: "proof", title: "Open Proof Engine", description: "Proof Engine — validate with evidence", href: "/app/proof", icon: FlaskConical, group: "Supporting Tools" },
+  { id: "swarm", title: "Run Market Swarm", description: "Simulate market demand with AI personas", href: "/app/swarm", icon: Users, group: "Supporting Tools" },
+  { id: "mvp", title: "Plan MVP", description: "MVP Planner — week-by-week build plan", href: "/app/mvp", icon: Map, group: "Supporting Tools" },
+  { id: "twin", title: "Ask Product Twin", description: "AI chat with full cross-tool memory", href: "/app/twin", icon: Brain, group: "Supporting Tools" },
   { id: "projects", title: "Open Projects", description: "Browse and manage project workspaces", href: "/app/projects", icon: FolderOpen, group: "Workspace" },
-  { id: "reports", title: "Open Reports", description: "History of all intelligence analyses", href: "/app/reports", icon: FileText, group: "Workspace" },
+  { id: "reports", title: "Open Reports", description: "History of all analyses and scans", href: "/app/reports", icon: FileText, group: "Workspace" },
   { id: "passport", title: "Project Profile", description: "Complete project record and milestones", href: "/app/passport", icon: BookOpen, group: "Workspace" },
 ];
 
@@ -99,7 +99,6 @@ export function CommandPalette() {
         style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Search bar */}
         <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "var(--noctra-border)" }}>
           <Search size={15} style={{ color: "var(--noctra-text-muted)", flexShrink: 0 }} />
           <input
@@ -116,7 +115,6 @@ export function CommandPalette() {
           </button>
         </div>
 
-        {/* Results */}
         <div className="max-h-96 overflow-y-auto">
           {filtered.length === 0 ? (
             <p className="text-center py-8 text-sm" style={{ color: "var(--noctra-text-muted)" }}>
@@ -166,7 +164,6 @@ export function CommandPalette() {
           )}
         </div>
 
-        {/* Footer */}
         <div className="px-4 py-2 border-t flex items-center gap-3" style={{ borderColor: "var(--noctra-border)" }}>
           {[
             ["↑↓", "navigate"],

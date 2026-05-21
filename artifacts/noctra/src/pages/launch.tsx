@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { ToolScene } from "@/components/ToolScene";
@@ -8,6 +8,7 @@ import { callStructuredAI } from "@/lib/ai";
 import { saveReport, getProjects, getReports } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
+import { useProgression } from "@/lib/progression-context";
 import { Rocket, Wand2, Loader2, RotateCcw, CheckCircle, FolderOpen, RefreshCw, AlertTriangle, ExternalLink, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +20,7 @@ type Report = { id: string; tool: string; title: string; summary?: string | null
 export default function LaunchPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const { refreshProgression } = useProgression();
   const [input, setInput] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [result, setResult] = useState<Awaited<ReturnType<typeof callStructuredAI>> | null>(null);
@@ -34,7 +36,7 @@ export default function LaunchPage() {
   useEffect(() => {
     getProjects()
       .then((p) => setProjects((p as Project[]) ?? []))
-      .catch(() => setProjects([]));
+      .catch(() => { setProjects([]); toast({ title: "Failed to load projects", variant: "destructive" }); });
 
     // Load latest doctor report to surface RED gate warnings
     getReports("doctor")
@@ -48,7 +50,7 @@ export default function LaunchPage() {
         const redNames = gates.filter((g) => g.status === "RED").map((g) => g.name);
         setDoctorRedGates(redNames);
       })
-      .catch(() => {});
+      .catch(() => { toast({ title: "Failed to load doctor context", variant: "destructive" }); });
   }, []);
 
   async function loadProjectContext(projectId: string) {
@@ -64,6 +66,18 @@ export default function LaunchPage() {
       }
     } catch (e) { setContextReports([]); toast({ title: "Failed to load project context", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" }); } finally { setLoadingContext(false); }
   }
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (phase === "idle" && input.trim()) run();
+    }
+  }, [phase, input]);
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   async function run() {
     if (!input.trim()) return;
@@ -100,6 +114,7 @@ export default function LaunchPage() {
       setSavedReportId(r?.id ?? null);
       if (r?.id) await generateTasksFromReport({ id: r.id, tool: "launch", payload: { data: res.data }, project_id: selectedProjectId || null });
       setSaved(true);
+      refreshProgression();
     } catch (e) {
       toast({ title: "Auto-save failed", description: e instanceof Error ? e.message : "Report results visible but not stored.", variant: "destructive" });
     }
@@ -195,10 +210,15 @@ export default function LaunchPage() {
         <textarea
           value={input} onChange={(e) => setInput(e.target.value)}
           placeholder="e.g. SaaS tool for indie hackers. Built for 3 months. MVP is working. Have 50 beta users, 3 paid. No formal marketing yet. Planning Product Hunt launch next week."
-          rows={7} disabled={phase === "running"}
+          rows={7} disabled={phase === "running"} maxLength={4000}
           className="w-full px-3 py-2.5 rounded-lg text-sm resize-none outline-none"
           style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }}
         />
+        {input.length > 0 && (
+          <div className="flex justify-end mt-1">
+            <span className="text-[10px]" style={{ color: input.length > 3500 ? "var(--noctra-amber)" : "var(--noctra-text-muted)" }}>{input.length}/4000</span>
+          </div>
+        )}
           {contextReports.length > 0 && (
             <button onClick={() => loadProjectContext(selectedProjectId).catch((err) => toast({ title: "Failed to reload context", description: err?.message, variant: "destructive" }))} className="flex items-center gap-1 mt-1.5 text-xs" style={{ color: "var(--noctra-text-muted)" }}>
               <RefreshCw size={10} /> Reload context into input
@@ -218,6 +238,7 @@ export default function LaunchPage() {
           {phase === "running" ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />}
           {phase === "running" ? "Running sequence…" : "Run Launch Sequence"}
         </NoctraButton>
+        {phase === "idle" && <span className="flex items-center text-xs px-2" style={{ color: "var(--noctra-text-muted)" }}>⌘↵</span>}
         {phase === "done" && <NoctraButton variant="ghost" onClick={reset}><RotateCcw size={13} /></NoctraButton>}
       </div>
 
@@ -297,6 +318,7 @@ export default function LaunchPage() {
         label={TOOL.label}
         accent={TOOL.accent}
         phase={phase}
+        description="Readiness check, gate verification, and go/no-go decision"
         inputPanel={InputPanel}
         outputPanel={OutputPanel}
         errorMessage={phase === "error" ? error : undefined}

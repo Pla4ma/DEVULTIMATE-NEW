@@ -17,7 +17,7 @@ export function generateProjectBrief(params: {
   const lines: string[] = [];
 
   lines.push(`# Project Brief: ${project.name}`);
-  lines.push(`*Generated ${today} · Phase: ${state.phase} · Readiness: ${state.readiness}%*`);
+  lines.push(`*Generated ${today} · Phase: ${state.stage} · Readiness: ${state.readiness}%*`);
   lines.push("");
 
   lines.push("## Summary");
@@ -25,7 +25,7 @@ export function generateProjectBrief(params: {
   lines.push("");
 
   lines.push("## Current Phase");
-  lines.push(`**${state.phase}** — ${state.readiness}% launch-ready`);
+  lines.push(`**${state.stage}** — ${state.readiness}% launch-ready`);
   lines.push("");
 
   const SCORE_MAP: Record<string, number> = {
@@ -156,7 +156,7 @@ export function generateDevAgentPrompt(params: {
   lines.push("## Project Context");
   lines.push(`**Project:** ${project.name}`);
   lines.push(`**Idea:** ${project.idea ?? "Not specified"}`);
-  lines.push(`**Phase:** ${state.phase} · **Readiness:** ${state.readiness}%`);
+  lines.push(`**Phase:** ${state.stage} · **Readiness:** ${state.readiness}%`);
   if (state.topBlocker) lines.push(`**Top Blocker:** ${state.topBlocker}`);
   lines.push("");
 

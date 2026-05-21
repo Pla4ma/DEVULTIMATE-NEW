@@ -12,75 +12,55 @@ interface QuotaConfig {
 }
 
 const PLAN_QUOTAS: Record<string, QuotaConfig> = {
-  demo: {
-    scansPerDay: 2,
-    scansTotal: 2,
-    aiCallsPerDay: 5,
-    structuredReportsPerDay: 3,
-    streamingEnabled: false,
-    maxProjects: 2,
-  },
-  free: {
-    scansPerDay: 3,
-    scansTotal: 10,
-    aiCallsPerDay: 10,
-    structuredReportsPerDay: 5,
-    streamingEnabled: false,
-    maxProjects: 5,
-  },
-  pro: {
-    scansPerDay: 100,
-    scansTotal: -1,
-    aiCallsPerDay: 200,
-    structuredReportsPerDay: 200,
-    streamingEnabled: true,
-    maxProjects: 50,
-  },
-  team: {
-    scansPerDay: 500,
-    scansTotal: -1,
-    aiCallsPerDay: 1000,
-    structuredReportsPerDay: 1000,
-    streamingEnabled: true,
-    maxProjects: 200,
-  },
-  enterprise: {
-    scansPerDay: -1,
-    scansTotal: -1,
-    aiCallsPerDay: -1,
-    structuredReportsPerDay: -1,
-    streamingEnabled: true,
-    maxProjects: -1,
-  },
-  admin: {
-    scansPerDay: -1,
-    scansTotal: -1,
-    aiCallsPerDay: -1,
-    structuredReportsPerDay: -1,
-    streamingEnabled: true,
-    maxProjects: -1,
-  },
+  demo: { scansPerDay: 2, scansTotal: 2, aiCallsPerDay: 5, structuredReportsPerDay: 3, streamingEnabled: false, maxProjects: 2 },
+  free: { scansPerDay: 3, scansTotal: 10, aiCallsPerDay: 10, structuredReportsPerDay: 5, streamingEnabled: false, maxProjects: 5 },
+  pro: { scansPerDay: 100, scansTotal: -1, aiCallsPerDay: 200, structuredReportsPerDay: 200, streamingEnabled: true, maxProjects: 50 },
+  team: { scansPerDay: 500, scansTotal: -1, aiCallsPerDay: 1000, structuredReportsPerDay: 1000, streamingEnabled: true, maxProjects: 200 },
+  enterprise: { scansPerDay: -1, scansTotal: -1, aiCallsPerDay: -1, structuredReportsPerDay: -1, streamingEnabled: true, maxProjects: -1 },
+  admin: { scansPerDay: -1, scansTotal: -1, aiCallsPerDay: -1, structuredReportsPerDay: -1, streamingEnabled: true, maxProjects: -1 },
 };
 
-const USAGE_STORE = new Map<string, Map<string, number>>();
+interface UsageEntry {
+  date: string;
+  counters: Map<string, number>;
+}
+
+const USAGE_STORE = new Map<string, UsageEntry[]>();
 
 function getDailyKey(userId: string): string {
   const today = new Date().toISOString().slice(0, 10);
   return `${userId}:${today}`;
 }
 
-function getIncrement(key: string, counter: string): number {
-  const store = USAGE_STORE.get(key);
-  if (!store) return 0;
-  return store.get(counter) ?? 0;
+function cleanup(): void {
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  for (const [key, entries] of USAGE_STORE) {
+    const valid = entries.filter((e) => Date.parse(e.date) > cutoff);
+    if (valid.length === 0) {
+      USAGE_STORE.delete(key);
+    } else {
+      USAGE_STORE.set(key, valid);
+    }
+  }
+}
+
+function getOrCreateCounter(key: string, counter: string): number {
+  let entries = USAGE_STORE.get(key);
+  if (!entries) {
+    entries = [{ date: key, counters: new Map() }];
+    USAGE_STORE.set(key, entries);
+  }
+  return entries[0]!.counters.get(counter) ?? 0;
 }
 
 function increment(key: string, counter: string): void {
-  if (!USAGE_STORE.has(key)) {
-    USAGE_STORE.set(key, new Map());
+  let entries = USAGE_STORE.get(key);
+  if (!entries) {
+    entries = [{ date: key, counters: new Map() }];
+    USAGE_STORE.set(key, entries);
   }
-  const store = USAGE_STORE.get(key)!;
-  store.set(counter, (store.get(counter) ?? 0) + 1);
+  const counters = entries[0]!.counters;
+  counters.set(counter, (counters.get(counter) ?? 0) + 1);
 }
 
 function isUnlimited(val: number): boolean {
@@ -117,7 +97,7 @@ export function requireQuota(counter: string, limitKey: keyof QuotaConfig) {
     }
 
     const dailyKey = getDailyKey(req.user.id);
-    const current = getIncrement(dailyKey, counter);
+    const current = getOrCreateCounter(dailyKey, counter);
 
     const error = checkLimit(counter, current, limit);
     if (error) {
@@ -175,7 +155,7 @@ export function requireUploadQuota() {
     const limit = quota.scansPerDay;
     if (!isUnlimited(limit)) {
       const dailyKey = getDailyKey(req.user.id);
-      const current = getIncrement(dailyKey, "scan-upload");
+      const current = getOrCreateCounter(dailyKey, "scan-upload");
 
       if (current >= limit) {
         logger.warn({ userId: req.user.id, plan, current, limit }, "Scan upload quota exceeded");
@@ -195,7 +175,7 @@ export function requireUploadQuota() {
 
     if (!isUnlimited(quota.scansTotal)) {
       const totalKey = `${req.user.id}:total`;
-      const total = getIncrement(totalKey, "scan-upload-total");
+      const total = getOrCreateCounter(totalKey, "scan-upload-total");
 
       if (total >= quota.scansTotal) {
         res.status(429).json({
@@ -216,10 +196,12 @@ export function requireUploadQuota() {
 }
 
 export function getCurrentUsage(userId: string, plan: string): Record<string, { used: number; limit: number | string }> {
+  cleanup();
   const quota = PLAN_QUOTAS[plan];
   const dailyKey = getDailyKey(userId);
   const totalKey = `${userId}:total`;
 
+  if (!quota) return {};
   const result: Record<string, { used: number; limit: number | string }> = {};
 
   const numericKeys: (keyof QuotaConfig)[] = ["scansPerDay", "scansTotal", "aiCallsPerDay", "structuredReportsPerDay", "maxProjects"];
@@ -229,12 +211,12 @@ export function getCurrentUsage(userId: string, plan: string): Record<string, { 
       : key === "aiCallsPerDay" ? "ai-call"
       : key;
 
-    const used = getIncrement(dailyKey, counter);
+    const used = getOrCreateCounter(dailyKey, counter);
     const limit = quota[key] as number;
     result[key] = { used, limit: isUnlimited(limit) ? "unlimited" : limit };
   }
 
-  const totalScansUsed = getIncrement(totalKey, "scan-upload-total");
+  const totalScansUsed = getOrCreateCounter(totalKey, "scan-upload-total");
   result["scansTotal"] = {
     used: totalScansUsed,
     limit: isUnlimited(quota.scansTotal) ? "unlimited" : quota.scansTotal,

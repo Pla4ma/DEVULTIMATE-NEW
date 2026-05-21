@@ -31,7 +31,7 @@ describe('LandingPage', () => {
     );
     
     await waitFor(() => {
-      expect(screen.getByText(/diagnose, validate, and ship/i)).toBeInTheDocument();
+      expect(screen.getByText(/launch readiness/i)).toBeInTheDocument();
     });
   });
 
@@ -67,7 +67,7 @@ describe('LandingPage', () => {
     );
     
     await waitFor(() => {
-      expect(screen.getByText(/codebase diagnosis/i)).toBeInTheDocument();
+      expect(screen.getByText(/launch readiness scan/i)).toBeInTheDocument();
       expect(screen.getByText(/idea validation/i)).toBeInTheDocument();
     });
   });
@@ -80,8 +80,8 @@ describe('LandingPage', () => {
     );
     
     await waitFor(() => {
-      expect(screen.getByText(/analyze/i)).toBeInTheDocument();
-      expect(screen.getByText(/diagnose/i)).toBeInTheDocument();
+      expect(screen.getByText(/scan/i)).toBeInTheDocument();
+      expect(screen.getByText(/rescan/i)).toBeInTheDocument();
     });
   });
 
@@ -148,7 +148,7 @@ describe('LandingPage', () => {
     );
     
     await waitFor(() => {
-      expect(screen.getByText(/© 2026 noctra/i)).toBeInTheDocument();
+      expect(screen.getByText(/devultimate/i)).toBeInTheDocument();
     });
   });
 });

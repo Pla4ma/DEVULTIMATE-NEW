@@ -31,7 +31,7 @@ export function DoctorGeneratedExecution({ report, pd, score, readinessScore, ga
     return generateDevAgentPrompt({
       project: { name: "Current Project", idea: pd.summary },
       state: {
-        phase: "launch-prep",
+        stage: "LAUNCH_READY",
         readiness: readinessScore,
         doctorScore: score,
         failedGates: [...new Set([...redGates.map(g => g.name), ...redGateNames])],
@@ -67,7 +67,7 @@ export function DoctorGeneratedExecution({ report, pd, score, readinessScore, ga
     setGeneratingPack(true);
     try {
       const pack = generatePromptPackFromReport(
-        { id: report.id, tool: "doctor", title: "Project Doctor Report", payload: report.payload },
+        { id: report.id, tool: "doctor", title: "Product Doctor Report", payload: report.payload },
         "Replit"
       );
       const md = exportPromptPackToMarkdown(pack);
