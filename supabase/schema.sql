@@ -34,18 +34,21 @@ create policy "profiles: delete own" on profiles
   for delete using (auth.uid() = id);
 
 -- ─────────────────────────────────────────────────────────────
--- TABLE: projects
+-- TABLE: projects (2026 enhanced)
 -- ─────────────────────────────────────────────────────────────
 create table if not exists projects (
-  id         uuid primary key default gen_random_uuid(),
-  user_id    uuid not null references auth.users(id) on delete cascade,
-  name       text not null,
-  idea       text,
-  stage      text not null default 'idea',
-  status     text not null default 'active',
-  meta       jsonb not null default '{}',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  name         text not null,
+  idea         text,
+  stage        text not null default 'idea',
+  status       text not null default 'active',
+  github_repo  text,
+  github_branch text default 'main',
+  last_scan_at timestamptz,
+  meta         jsonb not null default '{}',
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
 );
 
 alter table projects enable row level security;
@@ -439,3 +442,107 @@ as $$
     and created_at::date = p_date
   group by route;
 $$;
+
+-- ─────────────────────────────────────────────────────────────
+-- TABLE: project_members (collaboration)
+-- ─────────────────────────────────────────────────────────────
+create table if not exists project_members (
+  project_id uuid not null references projects(id) on delete cascade,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  role       text not null default 'viewer',
+  created_at timestamptz not null default now(),
+  primary key (project_id, user_id)
+);
+
+alter table project_members enable row level security;
+
+create policy "project_members: select own" on project_members
+  for select using (auth.uid() = user_id);
+
+create policy "project_members: insert own" on project_members
+  for insert with check (auth.uid() = user_id);
+
+create policy "project_members: delete own" on project_members
+  for delete using (auth.uid() = user_id);
+
+-- ─────────────────────────────────────────────────────────────
+-- TABLE: ai_sessions (chat persistence)
+-- ─────────────────────────────────────────────────────────────
+create table if not exists ai_sessions (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  project_id uuid references projects(id) on delete set null,
+  tool       text not null,
+  messages   jsonb not null default '[]',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table ai_sessions enable row level security;
+
+create policy "ai_sessions: select own" on ai_sessions
+  for select using (auth.uid() = user_id);
+
+create policy "ai_sessions: insert own" on ai_sessions
+  for insert with check (auth.uid() = user_id);
+
+create policy "ai_sessions: update own" on ai_sessions
+  for update using (auth.uid() = user_id);
+
+create policy "ai_sessions: delete own" on ai_sessions
+  for delete using (auth.uid() = user_id);
+
+create index if not exists idx_ai_sessions_user_project
+  on ai_sessions(user_id, project_id);
+
+-- ─────────────────────────────────────────────────────────────
+-- TABLE: github_webhooks (webhook tracking)
+-- ─────────────────────────────────────────────────────────────
+create table if not exists github_webhooks (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  project_id  uuid references projects(id) on delete set null,
+  event_type  text not null,
+  payload     jsonb not null default '{}',
+  processed   boolean not null default false,
+  created_at  timestamptz not null default now()
+);
+
+alter table github_webhooks enable row level security;
+
+create policy "github_webhooks: select own" on github_webhooks
+  for select using (auth.uid() = user_id);
+
+create policy "github_webhooks: insert own" on github_webhooks
+  for insert with check (auth.uid() = user_id);
+
+create index if not exists idx_github_webhooks_user_project
+  on github_webhooks(user_id, project_id);
+
+-- ─────────────────────────────────────────────────────────────
+-- TABLE: notifications (user notifications)
+-- ─────────────────────────────────────────────────────────────
+create table if not exists notifications (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  type       text not null,
+  title      text not null,
+  message    text,
+  read       boolean not null default false,
+  meta       jsonb not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+alter table notifications enable row level security;
+
+create policy "notifications: select own" on notifications
+  for select using (auth.uid() = user_id);
+
+create policy "notifications: update own" on notifications
+  for update using (auth.uid() = user_id);
+
+create policy "notifications: delete own" on notifications
+  for delete using (auth.uid() = user_id);
+
+create index if not exists idx_notifications_user_read
+  on notifications(user_id, read, created_at desc);
