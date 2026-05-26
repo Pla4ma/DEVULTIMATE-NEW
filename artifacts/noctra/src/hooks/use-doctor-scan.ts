@@ -98,7 +98,7 @@ export function useDoctorScan(projectId?: string) {
       await saveScan({
         fileName: file.name,
         summary: scan.summaryMarkdown ?? "",
-        payload: scan as unknown as Record<string, unknown>,
+        payload: scan as Record<string, unknown>,
         projectId,
       }).catch(() => {});
     } catch (scanErr) {

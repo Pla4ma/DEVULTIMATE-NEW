@@ -1,52 +1,11 @@
 import { create } from "zustand";
 import { getReports, getTasks, getProjects, getProofSignals } from "@/lib/repository";
+import type { ReportRecord, TaskRecord, ProjectRecord, ProofSignalRecord } from "@/lib/repository";
 
-interface ReportSummary {
-  id: string;
-  tool: string;
-  title: string;
-  summary?: string | null;
-  score?: number | null;
-  created_at: string;
-  payload?: unknown;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  stage?: string | null;
-  status?: string;
-  github_repo?: string | null;
-  github_branch?: string | null;
-  last_scan_at?: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  detail?: string | null;
-  priority: string;
-  status: string;
-  category?: string | null;
-  project_id?: string | null;
-  source_report_id?: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface ProofSignal {
-  id: string;
-  label: string;
-  kind: string;
-  value?: number | null;
-  weight?: number;
-  source?: string | null;
-  evidence?: string | null;
-  project_id?: string | null;
-  created_at?: string;
-}
+export type Project = ProjectRecord;
+export type Task = TaskRecord;
+export type ProofSignal = ProofSignalRecord;
+export type ReportSummary = ReportRecord;
 
 interface DataState {
   reports: ReportSummary[];
@@ -90,50 +49,60 @@ export const useDataStore = create<DataState>()((set, get) => ({
     set({ loading: true, error: null });
     try {
       const [reports, tasks, projects, signals] = await Promise.all([
-        getReports().catch(() => []),
-        getTasks().catch(() => []),
-        getProjects().catch(() => []),
-        getProofSignals().catch(() => []),
+        getReports().catch((e) => { console.error("[data-store] fetchReports failed:", e); return []; }),
+        getTasks().catch((e) => { console.error("[data-store] fetchTasks failed:", e); return []; }),
+        getProjects().catch((e) => { console.error("[data-store] fetchProjects failed:", e); return []; }),
+        getProofSignals().catch((e) => { console.error("[data-store] fetchSignals failed:", e); return []; }),
       ]);
       set({
-        reports: (reports as ReportSummary[]) ?? [],
-        tasks: (tasks as Task[]) ?? [],
-        projects: (projects as Project[]) ?? [],
-        signals: (signals as ProofSignal[]) ?? [],
+        reports: reports ?? [],
+        tasks: tasks ?? [],
+        projects: projects ?? [],
+        signals: signals ?? [],
         loading: false,
         lastFetched: now,
       });
     } catch (err) {
-      set({ loading: false, error: err instanceof Error ? err.message : "Failed to load data" });
+      const message = err instanceof Error ? err.message : "Failed to load data";
+      console.error("[data-store] fetchAll failed:", message);
+      set({ loading: false, error: message });
     }
   },
 
   fetchReports: async () => {
     try {
       const reports = await getReports();
-      set({ reports: (reports as ReportSummary[]) ?? [] });
-    } catch {}
+      set({ reports: reports ?? [] });
+    } catch (e) {
+      console.error("[data-store] fetchReports failed:", e);
+    }
   },
 
   fetchTasks: async () => {
     try {
       const tasks = await getTasks();
-      set({ tasks: (tasks as Task[]) ?? [] });
-    } catch {}
+      set({ tasks: tasks ?? [] });
+    } catch (e) {
+      console.error("[data-store] fetchTasks failed:", e);
+    }
   },
 
   fetchProjects: async () => {
     try {
       const projects = await getProjects();
-      set({ projects: (projects as Project[]) ?? [] });
-    } catch {}
+      set({ projects: projects ?? [] });
+    } catch (e) {
+      console.error("[data-store] fetchProjects failed:", e);
+    }
   },
 
   fetchSignals: async () => {
     try {
       const signals = await getProofSignals();
-      set({ signals: (signals as ProofSignal[]) ?? [] });
-    } catch {}
+      set({ signals: signals ?? [] });
+    } catch (e) {
+      console.error("[data-store] fetchSignals failed:", e);
+    }
   },
 
   addReport: (report) => set((s) => ({ reports: [report, ...s.reports] })),

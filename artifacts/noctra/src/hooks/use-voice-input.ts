@@ -7,6 +7,33 @@ interface VoiceInputState {
   isSupported: boolean;
 }
 
+interface SpeechRecognitionEvent {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+interface SpeechRecognitionInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognitionInstance;
+    webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+  }
+}
+
 export function useVoiceInput() {
   const [state, setState] = useState<VoiceInputState>({
     isListening: false,
@@ -14,10 +41,10 @@ export function useVoiceInput() {
     error: null,
     isSupported: false,
   });
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       setState((prev) => ({ ...prev, isSupported: true }));
       const recognition = new SpeechRecognition();
@@ -25,15 +52,18 @@ export function useVoiceInput() {
       recognition.interimResults = true;
       recognition.lang = "en-US";
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         let finalTranscript = "";
         let interimTranscript = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
-          } else {
-            interimTranscript += transcript;
+          const result = event.results[i];
+          if (result) {
+            const transcript = result[0]?.transcript ?? "";
+            if (result.isFinal) {
+              finalTranscript += transcript;
+            } else {
+              interimTranscript += transcript;
+            }
           }
         }
         setState((prev) => ({
@@ -42,7 +72,7 @@ export function useVoiceInput() {
         }));
       };
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         setState((prev) => ({
           ...prev,
           error: event.error,

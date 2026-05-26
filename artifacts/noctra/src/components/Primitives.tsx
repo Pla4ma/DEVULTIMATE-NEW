@@ -184,14 +184,16 @@ export function NoctraButton({
     ghost:     "background: transparent; color: var(--noctra-text-soft);",
     danger:    "background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.3); color: var(--noctra-rose);",
   };
+  const resolvedVariant = variant ?? "primary";
+  const baseStyleValue = baseStyle[resolvedVariant] ?? baseStyle.primary ?? "";
 
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-opacity ${buttonStyles[variant]} ${disabled ? "opacity-40 cursor-not-allowed" : "hover:opacity-80"} ${className}`}
-      style={{ ...Object.fromEntries(baseStyle[variant].split(";").filter(Boolean).map((s) => { const [k, ...v] = s.split(":"); return [k.trim().replace(/-([a-z])/g, (_, c) => c.toUpperCase()), v.join(":").trim()]; })), ...style }}
+      className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-opacity ${buttonStyles[resolvedVariant]} ${disabled ? "opacity-40 cursor-not-allowed" : "hover:opacity-80"} ${className}`}
+      style={{ ...Object.fromEntries(baseStyleValue.split(";").filter(Boolean).map((s) => { const [k, ...v] = s.split(":"); return [k?.trim().replace(/-([a-z])/g, (_, c: string) => c.toUpperCase()) ?? "", v.join(":").trim()]; })), ...style }}
     >
       {children}
     </button>

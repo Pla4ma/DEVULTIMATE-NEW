@@ -25,6 +25,7 @@ export function RealityReportView({ report, compact, prevScore, scoreDelta }: {
     data.go_signal === "GO" ? "PASSED" : data.go_signal === "NO-GO" ? "FAILED" : "WARNING"
   );
   const statusCfg = STATUS_CONFIG[compileStatus as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.WARNING;
+  if (!statusCfg) return null;
   const StatusIcon = statusCfg.icon;
   const errors: CompilerError[] = Array.isArray(data.errors) ? data.errors : [];
   const warnings: string[] = Array.isArray(data.warnings) ? data.warnings : [];

@@ -6,6 +6,7 @@ import { downloadMarkdown } from "@/lib/export";
 import { generateDevAgentPrompt } from "@/lib/brief-generator";
 import { generatePromptPackFromReport, exportPromptPackToMarkdown } from "@/lib/prompt-pack";
 import type { DoctorData, Gate } from "./doctor-types";
+import { ROUTES } from "@/lib/routes";
 
 type Props = {
   report: { id: string; payload: unknown; score?: number | null; project_id?: string | null; [key: string]: unknown };
@@ -36,7 +37,7 @@ export function DoctorGeneratedExecution({ report, pd, score, readinessScore, ga
         doctorScore: score,
         failedGates: [...new Set([...redGates.map(g => g.name), ...redGateNames])],
         topBlocker: pd.top_blocker ?? null,
-        nextAction: { title: pd.recommended_action ?? "Fix launch blockers", href: "/app/tasks", reason: "", description: "", priority: "high", tool: "doctor" },
+        nextAction: { title: pd.recommended_action ?? "Fix launch blockers", href: ROUTES.tasks, reason: "", description: "", priority: "high", tool: "doctor" },
         ideaScore: 0, realityScore: 0, proofScore: 0, swarmScore: 0, mvpScore: 0, launchScore: 0,
         overallScore: 0, coveredTools: [], missingTools: [], openP0Tasks: 0, openP1Tasks: 0,
         latestReportByTool: {}, proofSignalCount: 0, scanCount: 0, totalReports: 0,

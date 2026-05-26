@@ -12,7 +12,7 @@ interface OnboardingStep {
 const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: "welcome",
-    title: "Welcome to NOCTRA",
+    title: "Welcome to DEVULTIMATE",
     description: "Your AI-powered launch intelligence platform. Let's get you started in under 2 minutes.",
   },
   {
@@ -48,7 +48,7 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: "complete",
     title: "You're ready!",
-    description: "Start by describing your idea or uploading your codebase. NOCTRA will guide you from there.",
+    description: "Start by describing your idea or uploading your codebase. DEVULTIMATE will guide you from there.",
   },
 ];
 

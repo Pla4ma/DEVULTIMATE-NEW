@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { ROUTES } from "@/lib/routes";
 import {
   LayoutDashboard, Lightbulb, AlertTriangle, FlaskConical,
   Users, Map, Stethoscope, Rocket, CheckSquare, FolderOpen,
@@ -16,24 +17,26 @@ type PaletteAction = {
 };
 
 const ACTIONS: PaletteAction[] = [
-  { id: "dashboard", title: "Go to Launch Cockpit", description: "Launch readiness score, blockers, next fix", href: "/app", icon: LayoutDashboard, group: "Navigate" },
-  { id: "pricing", title: "View Pricing", description: "Check out our pricing plans", href: "/pricing", icon: Rocket, group: "Navigate" },
-  { id: "doctor", title: "Run Product Doctor", description: "Scan codebase for launch blockers and fix tasks", href: "/app/doctor", icon: Stethoscope, group: "Launch Workflow" },
-  { id: "tasks", title: "Open Fix Tasks", description: "View and manage your fix task queue", href: "/app/tasks", icon: CheckSquare, group: "Launch Workflow" },
-  { id: "launch", title: "Launch Room", description: "Launch Room — go/no-go assessment", href: "/app/launch", icon: Rocket, group: "Launch Workflow" },
-  { id: "idea", title: "New Idea Check", description: "Idea Checker — validate a startup idea", href: "/app/idea", icon: Lightbulb, group: "Supporting Tools" },
-  { id: "reality", title: "Run Reality Compiler", description: "Reality Compiler — stress-test assumptions", href: "/app/reality", icon: AlertTriangle, group: "Supporting Tools" },
-  { id: "proof", title: "Open Proof Engine", description: "Proof Engine — validate with evidence", href: "/app/proof", icon: FlaskConical, group: "Supporting Tools" },
-  { id: "swarm", title: "Run Market Swarm", description: "Simulate market demand with AI personas", href: "/app/swarm", icon: Users, group: "Supporting Tools" },
-  { id: "mvp", title: "Plan MVP", description: "MVP Planner — week-by-week build plan", href: "/app/mvp", icon: Map, group: "Supporting Tools" },
-  { id: "twin", title: "Ask Product Twin", description: "AI chat with full cross-tool memory", href: "/app/twin", icon: Brain, group: "Supporting Tools" },
-  { id: "projects", title: "Open Projects", description: "Browse and manage project workspaces", href: "/app/projects", icon: FolderOpen, group: "Workspace" },
-  { id: "reports", title: "Open Reports", description: "History of all analyses and scans", href: "/app/reports", icon: FileText, group: "Workspace" },
-  { id: "passport", title: "Project Profile", description: "Complete project record and milestones", href: "/app/passport", icon: BookOpen, group: "Workspace" },
+  { id: "dashboard", title: "Go to Launch Cockpit", description: "Launch readiness score, blockers, next fix", href: ROUTES.app, icon: LayoutDashboard, group: "Navigate" },
+  { id: "pricing", title: "View Pricing", description: "Check out our pricing plans", href: ROUTES.pricing, icon: Rocket, group: "Navigate" },
+  { id: "doctor", title: "Run Product Doctor", description: "Scan codebase for launch blockers and fix tasks", href: ROUTES.doctor, icon: Stethoscope, group: "Launch Workflow" },
+  { id: "tasks", title: "Open Fix Tasks", description: "View and manage your fix task queue", href: ROUTES.tasks, icon: CheckSquare, group: "Launch Workflow" },
+  { id: "launch", title: "Launch Room", description: "Launch Room — go/no-go assessment", href: ROUTES.launch, icon: Rocket, group: "Launch Workflow" },
+  { id: "idea", title: "New Idea Check", description: "Idea Checker — validate a startup idea", href: ROUTES.idea, icon: Lightbulb, group: "Supporting Tools" },
+  { id: "reality", title: "Run Reality Compiler", description: "Reality Compiler — stress-test assumptions", href: ROUTES.reality, icon: AlertTriangle, group: "Supporting Tools" },
+  { id: "proof", title: "Open Proof Engine", description: "Proof Engine — validate with evidence", href: ROUTES.proof, icon: FlaskConical, group: "Supporting Tools" },
+  { id: "swarm", title: "Run Market Swarm", description: "Simulate market demand with AI personas", href: ROUTES.swarm, icon: Users, group: "Supporting Tools" },
+  { id: "mvp", title: "Plan MVP", description: "MVP Planner — week-by-week build plan", href: ROUTES.mvp, icon: Map, group: "Supporting Tools" },
+  { id: "twin", title: "Ask Product Twin", description: "AI chat with full cross-tool memory", href: ROUTES.twin, icon: Brain, group: "Supporting Tools" },
+  { id: "projects", title: "Open Projects", description: "Browse and manage project workspaces", href: ROUTES.projects, icon: FolderOpen, group: "Workspace" },
+  { id: "reports", title: "Open Reports", description: "History of all analyses and scans", href: ROUTES.reports, icon: FileText, group: "Workspace" },
+  { id: "passport", title: "Project Profile", description: "Complete project record and milestones", href: ROUTES.passport, icon: BookOpen, group: "Workspace" },
 ];
 
-export function CommandPalette() {
-  const [open, setOpen] = useState(false);
+export function CommandPalette({ open: controlledOpen, onClose: controlledOnClose }: { open?: boolean; onClose?: () => void } = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnClose ? (v: boolean) => { if (!v) controlledOnClose(); } : setInternalOpen;
   const [query, setQuery] = useState("");
   const [, navigate] = useLocation();
   const [highlighted, setHighlighted] = useState(0);
@@ -43,15 +46,22 @@ export function CommandPalette() {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        setOpen((o) => !o);
+        // Use setInternalOpen with callback to avoid stale closure
+        setInternalOpen((prev) => !prev);
         setQuery("");
         setHighlighted(0);
       }
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        if (controlledOnClose) {
+          controlledOnClose();
+        } else {
+          setInternalOpen(false);
+        }
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [controlledOnClose]);
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 40);

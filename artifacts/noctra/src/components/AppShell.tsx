@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { EXPERIENCES, EXPERIENCE_BY_KEY, type Experience, type ExperienceKey } from "@/lib/noctra-tools";
 import { useProgression } from "@/lib/progression-context";
 import { isDemoMode } from "@/lib/demo-mode";
+import { CommandPalette } from "@/components/CommandPalette";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Menu, X, Zap, Command, Search, Sun, Moon,
@@ -33,104 +34,6 @@ function ExperienceTab({ experience, active, onClick }: { experience: Experience
         />
       )}
     </button>
-  );
-}
-
-function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [, navigate] = useLocation();
-  const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    if (!open) setQuery("");
-  }, [open]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        if (open) onClose();
-      }
-      if (e.key === "Escape" && open) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
-
-  const filteredExperiences = EXPERIENCES.filter((e) =>
-    e.label.toLowerCase().includes(query.toLowerCase()) ||
-    e.description.toLowerCase().includes(query.toLowerCase())
-  );
-
-  if (!open) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: -20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: -20 }}
-        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className="relative w-full max-w-lg rounded-xl border overflow-hidden"
-        style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-xl)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-          <Search size={16} style={{ color: "var(--text-tertiary)" }} />
-          <input
-            autoFocus
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search experiences, tools, or actions..."
-            className="flex-1 bg-transparent outline-none text-sm"
-            style={{ color: "var(--text-primary)" }}
-          />
-          <kbd className="px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}>
-            ESC
-          </kbd>
-        </div>
-
-        <div className="p-2 max-h-80 overflow-y-auto">
-          {filteredExperiences.map((exp) => {
-            const Icon = exp.icon;
-            return (
-              <button
-                key={exp.key}
-                onClick={() => { navigate(exp.route); onClose(); }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left hover:bg-white/5"
-              >
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${exp.accent}15` }}>
-                  <Icon size={16} style={{ color: exp.accent }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{exp.label}</p>
-                  <p className="text-xs truncate" style={{ color: "var(--text-tertiary)" }}>{exp.description}</p>
-                </div>
-                <ChevronRight size={14} style={{ color: "var(--text-quaternary)" }} />
-              </button>
-            );
-          })}
-
-          {query && filteredExperiences.length === 0 && (
-            <div className="px-3 py-8 text-center">
-              <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>No results for "{query}"</p>
-            </div>
-          )}
-        </div>
-
-        <div className="px-4 py-2 border-t flex items-center gap-4" style={{ borderColor: "var(--border-subtle)" }}>
-          <span className="text-[10px]" style={{ color: "var(--text-quaternary)" }}>Navigate with ↑↓ • Select with ↵ • Close with ESC</span>
-        </div>
-      </motion.div>
-    </motion.div>
   );
 }
 
@@ -179,7 +82,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               <div className="w-8 h-8 rounded-lg flex items-center justify-center animate-glow" style={{ background: "var(--accent-cyan)" }}>
                 <Zap size={16} className="text-black" />
               </div>
-              <span className="font-bold text-sm tracking-wide hidden sm:inline" style={{ color: "var(--text-primary)" }}>NOCTRA</span>
+              <span className="font-bold text-sm tracking-wide hidden sm:inline" style={{ color: "var(--text-primary)" }}>DEVULTIMATE</span>
             </Link>
 
             <nav className="hidden lg:flex items-center gap-1 ml-4">
@@ -304,7 +207,7 @@ function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--accent-cyan)" }}>
               <Zap size={16} className="text-black" />
             </div>
-            <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>NOCTRA</span>
+            <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>DEVULTIMATE</span>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5" style={{ color: "var(--text-tertiary)" }}>
             <X size={18} />

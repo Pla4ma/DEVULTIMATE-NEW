@@ -1,20 +1,17 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Undo2 } from "lucide-react";
 
 export function useUndo() {
   const { toast } = useToast();
-  const undoActions = useRef<Map<string, () => Promise<void>>>(new Map());
 
   const executeWithUndo = useCallback(
     async <T>(
       action: () => Promise<T>,
-      undo: () => Promise<void>,
+      _undo: () => Promise<void>,
       {
         successMessage = "Done",
         errorMessage = "Operation failed",
         undoLabel = "Undo",
-        id = crypto.randomUUID(),
       }: {
         successMessage?: string;
         errorMessage?: string;
@@ -24,25 +21,10 @@ export function useUndo() {
     ): Promise<T | null> => {
       try {
         const result = await action();
-        undoActions.current.set(id, undo);
 
         toast({
           title: successMessage,
-          action: {
-            label: undoLabel,
-            onClick: async () => {
-              const fn = undoActions.current.get(id);
-              if (fn) {
-                try {
-                  await fn();
-                  undoActions.current.delete(id);
-                  toast({ title: "Undone successfully" });
-                } catch {
-                  toast({ title: "Undo failed", variant: "destructive" });
-                }
-              }
-            },
-          },
+          description: undoLabel,
         });
 
         return result;

@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { DoctorReportView } from "@/components/reports/DoctorReportView";
 import { EmptyState, NoctraButton, Panel, Badge } from "@/components/Primitives";
+import { ROUTES } from "@/lib/routes";
 import { type Phase, type ScanResult, type AIResult, type ScanFallbackMode } from "@/hooks/use-doctor-scan";
 import { TOOL_BY_KEY } from "@/lib/noctra-tools";
 import {
@@ -79,7 +80,7 @@ export function DoctorOutputPanel(props: {
               Fix queue generated and added to Task Queue. Fix blockers, then rescan to see your score improve.
             </p>
           </div>
-          <NoctraButton variant="ghost" onClick={() => navigate("/app/tasks")} className="text-xs shrink-0">
+          <NoctraButton variant="ghost" onClick={() => navigate(ROUTES.tasks)} className="text-xs shrink-0">
             <ListChecks size={11} /> View Fix Tasks
           </NoctraButton>
         </div>
@@ -355,7 +356,7 @@ export function DoctorOutputPanel(props: {
 
         {/* Rescan + Action buttons */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
-          <NoctraButton variant="primary" onClick={() => navigate("/app/doctor")}>
+          <NoctraButton variant="primary" onClick={() => navigate(ROUTES.doctor)}>
             <RotateCcw size={12} /> Rescan
           </NoctraButton>
           {savedReportId && (
@@ -368,7 +369,7 @@ export function DoctorOutputPanel(props: {
               </NoctraButton>
             </>
           )}
-          <NoctraButton variant="ghost" onClick={() => navigate("/app/launch")}>
+          <NoctraButton variant="ghost" onClick={() => navigate(ROUTES.launch)}>
             <Rocket size={12} /> Launch Room
           </NoctraButton>
         </div>

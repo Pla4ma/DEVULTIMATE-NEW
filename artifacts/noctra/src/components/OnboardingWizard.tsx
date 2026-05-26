@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { ROUTES } from "@/lib/routes";
 import { Zap, ArrowRight, Stethoscope, Lightbulb, CheckCircle, Rocket, X } from "lucide-react";
 
 const STEPS = [
@@ -55,6 +56,7 @@ export function OnboardingWizard() {
       const timer = setTimeout(() => setOpen(true), 600);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, []);
 
   useEffect(() => {
@@ -72,7 +74,7 @@ export function OnboardingWizard() {
     if (isLast) {
       markOnboardingDone();
       setOpen(false);
-      navigate("/app/doctor");
+      navigate(ROUTES.doctor);
     } else {
       setStep((s) => s + 1);
     }

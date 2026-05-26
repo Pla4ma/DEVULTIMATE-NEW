@@ -37,7 +37,7 @@ export function useRealtimeProject(projectId: string | null) {
         const state = channel.presenceState();
         const users: PresenceState[] = [];
         for (const key in state) {
-          const presences = state[key] as any[];
+          const presences = state[key] as PresenceState[];
           users.push(...presences);
         }
         setPresence(users);
