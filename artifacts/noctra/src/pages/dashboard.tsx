@@ -18,7 +18,7 @@ import { ArrowRight, FileText, CheckSquare, FolderOpen, Zap, AlertTriangle, Tren
 import { UsageBar } from "./dashboard/UsageBar";
 
 type DashData = {
-  reports: Array<{ id: string }>;
+  reports: Array<{ id: string; tool?: string; score?: number | null; created_at?: string }>;
   tasks: Array<{ id: string }>;
 };
 
@@ -61,7 +61,7 @@ export default function DashboardPage() {
     let loadedReports: ReportSummary[] = [];
     let loadedTasks: typeof allTasks = [];
     let loadedSignals: typeof proofSignals = [];
-    const dashPromise = getDashboardData().then(setData).catch(() => { toast({ title: "Failed to load dashboard data", description: "Some widgets may be unavailable.", variant: "destructive" }); return null; });
+    const dashPromise = getDashboardData().then((d) => setData(d as unknown as DashData | null)).catch(() => { toast({ title: "Failed to load dashboard data", description: "Some widgets may be unavailable.", variant: "destructive" }); return null; });
     const reportsPromise = getReports().then((r) => { loadedReports = (r as ReportSummary[]) ?? []; setReports(loadedReports); }).catch(() => { toast({ title: "Failed to load reports", variant: "destructive" }); return null; });
     const signalsPromise = getProofSignals().then((s) => { loadedSignals = (s as { id: string }[]) ?? []; setProofSignals(loadedSignals); }).catch(() => { toast({ title: "Failed to load proof signals", variant: "destructive" }); return null; });
     const projectsPromise = getProjects().then((p) => setAllProjects((p as { id: string; name: string; stage?: string | null }[]) ?? [])).catch(() => { toast({ title: "Failed to load projects", variant: "destructive" }); return null; });
@@ -95,12 +95,13 @@ export default function DashboardPage() {
     ? computeScoreHistory(reports as Array<{ id: string; tool: string; score?: number | null; created_at: string }>)
     : [];
   const doctorScoreHist = scoreHistoryEntries.filter((e: ScoreHistoryEntry) => e.tool === "doctor");
-  const prevScore = doctorScoreHist.length > 0 ? doctorScoreHist[0].previousScore : null;
+  const prevScore = doctorScoreHist.length > 0 ? doctorScoreHist[0]?.previousScore ?? null : null;
   const scoreDelta = launchScore != null && prevScore != null ? launchScore - prevScore : null;
   const healthTrend = useMemo(() => {
     const doctorEntries = scoreHistoryEntries.filter((e: ScoreHistoryEntry) => e.tool === "doctor");
     if (doctorEntries.length < 2) return null;
     const last = doctorEntries[doctorEntries.length - 1];
+    if (!last) return null;
     return { direction: last.direction, delta: last.delta, previousScore: last.previousScore, latestScore: last.latestScore };
   }, [scoreHistoryEntries]);
 
@@ -384,7 +385,8 @@ export default function DashboardPage() {
                   <div className="space-y-1.5">
                     {[...doctorReports].reverse().slice(-5).reverse().map((r: ReportSummary, i: number) => {
                       const score = typeof r.score === "number" ? r.score : null;
-                      const prevScore = i > 0 && doctorReports[doctorReports.length - 1 - i + 1] ? typeof doctorReports[doctorReports.length - 1 - i + 1].score === "number" ? doctorReports[doctorReports.length - 1 - i + 1].score : null : null;
+                      const prevReport = doctorReports[doctorReports.length - 1 - i + 1];
+                      const prevScore = i > 0 && prevReport ? typeof prevReport.score === "number" ? prevReport.score : null : null;
                       const delta = score != null && prevScore != null ? score - prevScore : null;
                       return (
                         <div key={r.id} className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:opacity-80" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}
