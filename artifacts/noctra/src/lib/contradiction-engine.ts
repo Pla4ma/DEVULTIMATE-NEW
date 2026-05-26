@@ -1,7 +1,10 @@
 // contradiction-engine.ts — Enhanced cross-report contradiction detection
 // Pure utility: no React, no side effects.
 
-import type { ReportSummary } from "./intelligence";
+import type { ReportSummary } from "./report-utils";
+import { extractData, getScore, latestByTool, toolLabel } from "./report-utils";
+
+export type { ReportSummary } from "./report-utils";
 
 export interface EnhancedContradiction {
   id: string;
@@ -32,46 +35,6 @@ export interface ContradictionEngineResult {
   topResolution: string | null;
 }
 
-const TOOL_LABELS: Record<string, string> = {
-  idea: "Idea Checker",
-  reality: "Reality Compiler",
-  proof: "Proof Engine",
-  swarm: "Market Swarm",
-  mvp: "MVP Planner",
-  doctor: "Project Doctor",
-  launch: "Launch Room",
-};
-
-function extractData(report: ReportSummary): Record<string, unknown> {
-  const p = report.payload as Record<string, unknown> | null;
-  if (!p) return {};
-  return ((p.data ?? p) as Record<string, unknown>) ?? {};
-}
-
-function getScore(report: ReportSummary): number {
-  if (typeof report.score === "number") return report.score;
-  const d = extractData(report);
-  const keys = ["signal_score", "reality_score", "proof_score", "health_score", "mvp_score", "swarm_score", "launch_score", "score"];
-  for (const k of keys) {
-    if (typeof d[k] === "number") return d[k] as number;
-  }
-  return 0;
-}
-
-function latestByTool(reports: ReportSummary[]): Map<string, ReportSummary> {
-  const byTool = new Map<string, ReportSummary>();
-  for (const r of [...reports].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  )) {
-    if (!byTool.has(r.tool)) byTool.set(r.tool, r);
-  }
-  return byTool;
-}
-
-function label(tool: string): string {
-  return TOOL_LABELS[tool] ?? tool;
-}
-
 export function runContradictionEngine(reports: ReportSummary[]): ContradictionEngineResult {
   const contradictions: EnhancedContradiction[] = [];
   const byTool = latestByTool(reports);
@@ -96,8 +59,8 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         title: "High idea score but Reality compiler failed",
         severity: "critical",
         conflictType: "assumption-conflict",
-        sourceA: { tool: "idea", label: label("idea"), reportId: idea.id },
-        sourceB: { tool: "reality", label: label("reality"), reportId: reality.id },
+        sourceA: { tool: "idea", label: toolLabel("idea"), reportId: idea.id },
+        sourceB: { tool: "reality", label: toolLabel("reality"), reportId: reality.id },
         explanation: `Idea Checker scored ${ideaScore}/100 (strong) but Reality Compiler returned ${goSignal}. Your strongest assumptions may be the most dangerous ones — confirmation bias is likely distorting the idea score.`,
         whyItMatters: "Founders who score their idea highly while failing reality checks are the most at risk of building something nobody needs. The gap between these two signals is a red flag.",
         recommendedResolution: "Re-run Reality Compiler focusing on each assumption the Idea Checker deemed strong. Look for hidden market size assumptions, user behavior assumptions, and competition blind spots.",
@@ -111,8 +74,8 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         title: "Weak idea signal but Reality says GO",
         severity: "high",
         conflictType: "assumption-conflict",
-        sourceA: { tool: "idea", label: label("idea"), reportId: idea.id },
-        sourceB: { tool: "reality", label: label("reality"), reportId: reality.id },
+        sourceA: { tool: "idea", label: toolLabel("idea"), reportId: idea.id },
+        sourceB: { tool: "reality", label: toolLabel("reality"), reportId: reality.id },
         explanation: `Idea Checker scored ${ideaScore}/100 (weak) but Reality Compiler returned GO. You may be pressure-testing a different version of the idea than what was originally analyzed.`,
         whyItMatters: "A GO on a weak idea suggests the reality check input was too optimistic. The idea needs to be reformulated with honest market assumptions before the GO signal is trustworthy.",
         recommendedResolution: "Sharpen the idea formulation, re-run Idea Checker with the refined version, then re-run Reality Compiler using consistent assumptions.",
@@ -131,8 +94,8 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         title: "Launch-ready signal on a failing codebase",
         severity: "critical",
         conflictType: "health-launch-conflict",
-        sourceA: { tool: "launch", label: label("launch"), reportId: launch.id },
-        sourceB: { tool: "doctor", label: label("doctor"), reportId: doctor.id },
+        sourceA: { tool: "launch", label: toolLabel("launch"), reportId: launch.id },
+        sourceB: { tool: "doctor", label: toolLabel("doctor"), reportId: doctor.id },
         explanation: `Launch Room shows ${launchScore}/100 readiness but Project Doctor health is ${doctorScore}/100. You're planning to launch on a broken technical foundation.`,
         whyItMatters: "Launching with a sub-50 health score means production incidents within hours. User trust, once broken at launch, is extremely hard to recover.",
         recommendedResolution: `Resolve all RED gates from Project Doctor first. Re-run Doctor scan after fixes. Only proceed to launch when Doctor score exceeds 70/100.`,
@@ -151,8 +114,8 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         title: "Launching without proof of demand",
         severity: "high",
         conflictType: "proof-launch-conflict",
-        sourceA: { tool: "proof", label: label("proof"), reportId: proof.id },
-        sourceB: { tool: "launch", label: label("launch"), reportId: launch.id },
+        sourceA: { tool: "proof", label: toolLabel("proof"), reportId: proof.id },
+        sourceB: { tool: "launch", label: toolLabel("launch"), reportId: launch.id },
         explanation: `Proof Engine score is ${proofScore}/100 (insufficient validation) but Launch Room scores ${launchScore}/100. You may be launching without evidence that anyone wants this product.`,
         whyItMatters: "Products that launch without proof of demand fail within 3 months. A low proof score means you're optimizing for launch speed at the expense of product-market fit.",
         recommendedResolution: "Collect at least 5 strong proof signals (user interviews, landing page signups, LOIs, pilot agreements) before treating the Launch score as valid.",
@@ -175,8 +138,8 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         title: "Swarm shows low willingness to pay but MVP assumes paid model",
         severity: "high",
         conflictType: "pricing-mismatch",
-        sourceA: { tool: "swarm", label: label("swarm"), reportId: swarm.id },
-        sourceB: { tool: "mvp", label: label("mvp"), reportId: mvp.id },
+        sourceA: { tool: "swarm", label: toolLabel("swarm"), reportId: swarm.id },
+        sourceB: { tool: "mvp", label: toolLabel("mvp"), reportId: mvp.id },
         explanation: `Market Swarm simulated ${willingnessToPay}% willingness to pay but MVP Planner plans a paid model. You risk building a paid product nobody will purchase.`,
         whyItMatters: "Willingness-to-pay signals below 50% mean your pricing model must either change or your value proposition needs significant strengthening.",
         recommendedResolution: "Either run a freemium model first to prove retention, or redesign the value proposition to justify the price. Re-run Swarm after the pivot.",
@@ -191,16 +154,19 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   if (mvpReports.length >= 2) {
-    const latestScore = getScore(mvpReports[0]);
-    const prevScore = getScore(mvpReports[1]);
+    const latest = mvpReports[0];
+    const prev = mvpReports[1];
+    if (!latest || !prev) return { contradictions, alignmentScore: 0, topResolution: null };
+    const latestScore = getScore(latest);
+    const prevScore = getScore(prev);
     if (latestScore < prevScore - 10) {
       contradictions.push({
         id: "mvp-scope-creep",
         title: "MVP scope is growing across runs",
         severity: "medium",
         conflictType: "scope-conflict",
-        sourceA: { tool: "mvp", label: label("mvp"), reportId: mvpReports[1].id },
-        sourceB: { tool: "mvp", label: label("mvp"), reportId: mvpReports[0].id },
+        sourceA: { tool: "mvp", label: toolLabel("mvp"), reportId: prev.id },
+        sourceB: { tool: "mvp", label: toolLabel("mvp"), reportId: latest.id },
         explanation: `MVP score dropped from ${prevScore} to ${latestScore} across MVP Planner runs — scope is likely expanding instead of contracting.`,
         whyItMatters: "Scope creep is the most common reason MVPs take 3x longer to ship. Each added feature is a bet that customers need it — without proof.",
         recommendedResolution: "Return to first principles: what is the single user action that proves this MVP works? Cut everything else. Ship the smallest version first.",
@@ -220,8 +186,8 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         title: "Planning to build without any validation",
         severity: "medium",
         conflictType: "timing-conflict",
-        sourceA: { tool: "idea", label: label("idea"), reportId: idea.id },
-        sourceB: { tool: "mvp", label: label("mvp"), reportId: mvp.id },
+        sourceA: { tool: "idea", label: toolLabel("idea"), reportId: idea.id },
+        sourceB: { tool: "mvp", label: toolLabel("mvp"), reportId: mvp.id },
         explanation: "Idea Checker and MVP Planner run on the same day with no Proof Engine — you may be planning a full build before validating demand.",
         whyItMatters: "Running idea and MVP tools on the same day without proof means you're planning to build based on untested assumptions. This is the #1 startup mistake.",
         recommendedResolution: "Run Proof Engine before finalizing MVP scope. Build only what validated demand requires.",
@@ -241,8 +207,8 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
         title: "Proof score may be inflated despite evidence gaps",
         severity: "medium",
         conflictType: "assumption-conflict",
-        sourceA: { tool: "proof", label: label("proof"), reportId: proof.id },
-        sourceB: { tool: "proof", label: label("proof"), reportId: proof.id },
+        sourceA: { tool: "proof", label: toolLabel("proof"), reportId: proof.id },
+        sourceB: { tool: "proof", label: toolLabel("proof"), reportId: proof.id },
         explanation: `Proof Engine scores ${proofScore}/100 but flagged ${gaps} unaddressed evidence gaps. The score may be inflated by low-quality or self-reported signals.`,
         whyItMatters: "A proof score that's high due to weak signals gives false confidence. Investors and customers will probe these gaps directly.",
         recommendedResolution: "Close at least 2 of the flagged evidence gaps with external, verifiable validation before treating the proof score as launch-ready.",
@@ -265,7 +231,7 @@ export function runContradictionEngine(reports: ReportSummary[]): ContradictionE
     ? contradictions.sort((a, b) => {
         const order = { critical: 0, high: 1, medium: 2, low: 3 };
         return order[a.severity] - order[b.severity];
-      })[0].recommendedResolution
+      })[0]?.recommendedResolution ?? null
     : null;
 
   return {

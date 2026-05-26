@@ -1,7 +1,8 @@
 // execution-autopilot.ts — Generates an executable build package from all intelligence
 // Pure utility: no React, no side effects.
 
-import type { ReportSummary } from "./intelligence";
+import type { ReportSummary } from "./report-utils";
+import { extractData, getScore, latestByTool } from "./report-utils";
 
 export interface AutopilotTask {
   title: string;
@@ -32,22 +33,6 @@ type TaskLike = {
 
 type ProofSignalLike = { id: string };
 
-function extractData(report: ReportSummary): Record<string, unknown> {
-  const p = report.payload as Record<string, unknown> | null;
-  if (!p) return {};
-  return ((p.data ?? p) as Record<string, unknown>) ?? {};
-}
-
-function getScore(report: ReportSummary): number {
-  if (typeof report.score === "number") return report.score;
-  const d = extractData(report);
-  const keys = ["signal_score", "reality_score", "proof_score", "health_score", "mvp_score", "swarm_score", "launch_score", "score"];
-  for (const k of keys) {
-    if (typeof d[k] === "number") return d[k] as number;
-  }
-  return 0;
-}
-
 export function generateExecutionPackage(params: {
   reports: ReportSummary[];
   tasks: TaskLike[];
@@ -56,12 +41,7 @@ export function generateExecutionPackage(params: {
   const { reports, tasks, proofSignals } = params;
 
   // Latest report per tool
-  const byTool = new Map<string, ReportSummary>();
-  for (const r of [...reports].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  )) {
-    if (!byTool.has(r.tool)) byTool.set(r.tool, r);
-  }
+  const byTool = latestByTool(reports);
 
   const doctor = byTool.get("doctor");
   const mvp = byTool.get("mvp");

@@ -1,7 +1,7 @@
 // codebase-alignment.ts — Codebase-to-Product Alignment analysis
 // Pure utility: no React, no side effects.
 
-import type { ReportSummary } from "./intelligence";
+import type { ReportSummary } from "./report-utils";
 
 export interface AlignmentIssue {
   title: string;
@@ -211,8 +211,8 @@ export function analyzeCodebaseAlignment(params: {
   // MVP features coverage (for known features)
   for (const feat of mvpFeatures.slice(0, 6)) {
     const featName = String(feat.name ?? feat.title ?? feat.feature ?? "Feature");
-    const featKeyword = featName.toLowerCase().split(" ")[0];
-    if (scannedFiles.length > 0) {
+    const featKeyword = featName.toLowerCase().split(" ")[0] ?? "";
+    if (scannedFiles.length > 0 && featKeyword) {
       const found = fileListContains(scannedFiles, featKeyword);
       MVPFeatureCoverage.push({ feature: featName.slice(0, 50), status: found ? "found" : "partial" });
     } else {

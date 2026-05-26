@@ -1,20 +1,17 @@
-export interface ReportSummary {
-  id: string;
-  tool: string;
-  title: string;
-  score?: number | null;
-  created_at: string;
-  payload?: unknown;
-  summary?: string | null;
-}
+// intelligence.ts — Intelligence analysis: trends, coverage, insight briefs
+// Shared utilities imported from report-utils.ts. Contradiction detection via contradiction-engine.ts.
 
-export interface Contradiction {
-  type: "score" | "signal" | "assumption" | "scope" | "timing";
-  severity: "high" | "medium" | "low";
-  description: string;
-  tools: string[];
-  resolution: string;
-}
+import {
+  type ReportSummary,
+  INTELLIGENCE_TOOLS,
+  TOOL_LABELS,
+  TOOL_JOURNEY_ORDER,
+  extractData,
+} from "./report-utils";
+import { runContradictionEngine, type EnhancedContradiction } from "./contradiction-engine";
+
+// Re-export for backward compatibility — consumers import ReportSummary from here
+export type { EnhancedContradiction } from "./contradiction-engine";
 
 export interface ScoreTrend {
   tool: string;
@@ -42,40 +39,8 @@ export interface InsightBrief {
   avgScore: number;
 }
 
-const INTELLIGENCE_TOOLS = ["doctor", "idea", "reality", "proof", "swarm", "mvp", "launch"];
-
-const TOOL_LABELS: Record<string, string> = {
-  idea: "Idea Checker",
-  reality: "Reality Compiler",
-  proof: "Proof Engine",
-  swarm: "Market Swarm",
-  mvp: "MVP Planner",
-  doctor: "Product Doctor",
-  launch: "Launch Room",
-  twin: "Product Twin",
-};
-
-const TOOL_JOURNEY_ORDER = ["doctor", "idea", "reality", "swarm", "proof", "mvp", "launch"];
-
-function extractData(report: ReportSummary): Record<string, unknown> {
-  const p = report.payload as Record<string, unknown> | null;
-  if (!p) return {};
-  const d = (p.data ?? p) as Record<string, unknown>;
-  return d ?? {};
-}
-
-function getScore(report: ReportSummary): number | null {
-  if (typeof report.score === "number") return report.score;
-  const d = extractData(report);
-  const keys = [`${report.tool}_score`, "signal_score", "health_score", "proof_score", "mvp_score", "swarm_score", "launch_score", "reality_score", "score"];
-  for (const k of keys) {
-    if (typeof d[k] === "number") return d[k] as number;
-  }
-  return null;
-}
-
 export function computeToolCoverage(reports: ReportSummary[]): ToolCoverage {
-  const toolsDone = new Set(reports.map((r) => r.tool).filter((t) => INTELLIGENCE_TOOLS.includes(t)));
+  const toolsDone = new Set(reports.map((r) => r.tool).filter((t) => (INTELLIGENCE_TOOLS as readonly string[]).includes(t)));
   const covered = INTELLIGENCE_TOOLS.filter((t) => toolsDone.has(t));
   const missing = INTELLIGENCE_TOOLS.filter((t) => !toolsDone.has(t));
   const percentage = Math.round((covered.length / INTELLIGENCE_TOOLS.length) * 100);
@@ -86,7 +51,7 @@ export function computeToolCoverage(reports: ReportSummary[]): ToolCoverage {
 export function extractScoreTrends(reports: ReportSummary[]): ScoreTrend[] {
   const byTool = new Map<string, ReportSummary[]>();
   for (const r of reports) {
-    if (!INTELLIGENCE_TOOLS.includes(r.tool)) continue;
+    if (!(INTELLIGENCE_TOOLS as readonly string[]).includes(r.tool)) continue;
     if (!byTool.has(r.tool)) byTool.set(r.tool, []);
     byTool.get(r.tool)!.push(r);
   }
@@ -97,11 +62,12 @@ export function extractScoreTrends(reports: ReportSummary[]): ScoreTrend[] {
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
     const latest = sorted[0];
+    if (!latest) continue;
     const previous = sorted[1];
-    const latestScore = getScore(latest);
+    const latestScore = getScoreOrNull(latest);
     if (latestScore == null) continue;
 
-    const previousScore = previous ? getScore(previous) ?? undefined : undefined;
+    const previousScore = previous ? getScoreOrNull(previous) ?? undefined : undefined;
     const delta = previousScore != null ? latestScore - previousScore : undefined;
     const direction: ScoreTrend["direction"] =
       delta == null ? "new" : delta > 3 ? "up" : delta < -3 ? "down" : "stable";
@@ -125,119 +91,9 @@ export function extractScoreTrends(reports: ReportSummary[]): ScoreTrend[] {
   });
 }
 
-export function detectContradictions(reports: ReportSummary[]): Contradiction[] {
-  const contradictions: Contradiction[] = [];
-
-  // Take most recent report per tool
-  const byTool = new Map<string, ReportSummary>();
-  for (const r of [...reports].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  )) {
-    if (!byTool.has(r.tool)) byTool.set(r.tool, r);
-  }
-
-  const idea = byTool.get("idea");
-  const reality = byTool.get("reality");
-  const launch = byTool.get("launch");
-  const doctor = byTool.get("doctor");
-  const proof = byTool.get("proof");
-  const mvp = byTool.get("mvp");
-
-  if (idea && reality) {
-    const ideaData = extractData(idea);
-    const realityData = extractData(reality);
-    const ideaScore = getScore(idea) ?? (ideaData.signal_score as number | null) ?? 0;
-    const goSignal = String(realityData.go_signal ?? "");
-
-    if (ideaScore >= 70 && goSignal === "NO-GO") {
-      contradictions.push({
-        type: "signal",
-        severity: "high",
-        description: `Idea Checker scored ${ideaScore}/100 (strong) but Reality Compiler returned NO-GO — your strongest assumptions may be the most dangerous ones`,
-        tools: ["idea", "reality"],
-        resolution: "Re-run Reality Compiler with explicit focus on why high-scoring ideas still fail. Address each critical risk before proceeding.",
-      });
-    }
-    if (ideaScore < 45 && goSignal === "GO") {
-      contradictions.push({
-        type: "signal",
-        severity: "medium",
-        description: `Idea Checker scored ${ideaScore}/100 (weak signal) but Reality Compiler returned GO — you may be pressure-testing the wrong version of the idea`,
-        tools: ["idea", "reality"],
-        resolution: "Sharpen the idea formulation and re-run Idea Checker before treating the GO signal as valid.",
-      });
-    }
-  }
-
-  if (launch && doctor) {
-    const launchScore = getScore(launch) ?? 0;
-    const doctorScore = getScore(doctor) ?? 0;
-    if (launchScore >= 70 && doctorScore < 50) {
-      contradictions.push({
-        type: "score",
-        severity: "high",
-        description: `Launch Room shows ${launchScore}/100 readiness but Project Doctor health is only ${doctorScore}/100 — you're planning to launch on a broken foundation`,
-        tools: ["launch", "doctor"],
-        resolution: "Resolve all RED gates from Project Doctor first. A ${doctorScore}/100 health score means production incidents are likely within hours of launch.",
-      });
-    }
-  }
-
-  if (proof) {
-    const proofData = extractData(proof);
-    const proofScore = getScore(proof) ?? (proofData.proof_score as number | null) ?? 0;
-    const gaps = Array.isArray(proofData.evidence_gaps) ? proofData.evidence_gaps.length : 0;
-    if (proofScore >= 65 && gaps >= 3) {
-      contradictions.push({
-        type: "assumption",
-        severity: "medium",
-        description: `Proof Engine scores ${proofScore}/100 but flagged ${gaps} unaddressed evidence gaps — the score may be inflated by low-quality signals`,
-        tools: ["proof"],
-        resolution: "Close at least 2 of the flagged evidence gaps before treating the proof score as launch validation.",
-      });
-    }
-  }
-
-  if (mvp) {
-    const mvpReports = reports
-      .filter((r) => r.tool === "mvp")
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    if (mvpReports.length >= 2) {
-      const latestScore = getScore(mvpReports[0]) ?? 0;
-      const prevScore = getScore(mvpReports[1]) ?? 0;
-      if (latestScore < prevScore - 10) {
-        contradictions.push({
-          type: "scope",
-          severity: "medium",
-          description: `MVP score dropped from ${prevScore} to ${latestScore} across runs — scope is likely expanding instead of contracting`,
-          tools: ["mvp"],
-          resolution: "Return to first principles: what is the single user action that proves this MVP works? Cut everything else.",
-        });
-      }
-    }
-  }
-
-  if (idea && mvp && !proof) {
-    const ideaDate = new Date(idea.created_at).getTime();
-    const mvpDate = new Date(mvp.created_at).getTime();
-    const daysBetween = (mvpDate - ideaDate) / (1000 * 60 * 60 * 24);
-    if (daysBetween < 1) {
-      contradictions.push({
-        type: "timing",
-        severity: "low",
-        description: "Idea Checker and MVP Planner run on the same day with no Proof Engine — you may be planning to build before validating",
-        tools: ["idea", "mvp"],
-        resolution: "Run Proof Engine before finalizing the MVP scope. Build only what validated demand requires.",
-      });
-    }
-  }
-
-  return contradictions;
-}
-
 export function generateInsightBrief(reports: ReportSummary[]): InsightBrief {
   const trends = extractScoreTrends(reports);
-  const contradictions = detectContradictions(reports);
+  const { contradictions } = runContradictionEngine(reports);
   const coverage = computeToolCoverage(reports);
 
   const avgScore =
@@ -247,7 +103,7 @@ export function generateInsightBrief(reports: ReportSummary[]): InsightBrief {
 
   const improvingCount = trends.filter((t) => t.direction === "up").length;
   const decliningCount = trends.filter((t) => t.direction === "down").length;
-  const criticalContradictions = contradictions.filter((c) => c.severity === "high").length;
+  const criticalContradictions = contradictions.filter((c) => c.severity === "critical" || c.severity === "high").length;
 
   const status: InsightBrief["status"] =
     criticalContradictions > 0 || decliningCount > improvingCount + 1
@@ -275,7 +131,7 @@ export function generateInsightBrief(reports: ReportSummary[]): InsightBrief {
       : `Early stage — ${avgScore}/100 average, significant validation work ahead`;
 
   const topRisk =
-    contradictions[0]?.description ??
+    contradictions[0]?.explanation ??
     (worstTrend
       ? `${worstTrend.label} dropped ${Math.abs(worstTrend.delta ?? 0)} points — losing momentum`
       : coverage.missing[0]
@@ -291,7 +147,7 @@ export function generateInsightBrief(reports: ReportSummary[]): InsightBrief {
 
   const immediateAction =
     contradictions.length > 0
-      ? contradictions[0].resolution
+      ? contradictions[0]?.recommendedResolution ?? "Address identified contradictions"
       : coverage.nextRecommended
       ? `Run ${TOOL_LABELS[coverage.nextRecommended] ?? coverage.nextRecommended}`
       : worstTrend
