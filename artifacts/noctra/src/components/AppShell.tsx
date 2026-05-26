@@ -1,210 +1,399 @@
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
-import { TOOLS, TOOL_GROUPS, GROUP_DESCRIPTION, type Tool } from "@/lib/noctra-tools";
+import { EXPERIENCES, EXPERIENCE_BY_KEY, type Experience, type ExperienceKey } from "@/lib/noctra-tools";
 import { useProgression } from "@/lib/progression-context";
 import { isDemoMode } from "@/lib/demo-mode";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  LogOut, Menu, X, ChevronLeft, Zap, Shield, Command, Check, LayoutDashboard,
-  Lightbulb, AlertTriangle, FlaskConical, Users, Map, Stethoscope, Rocket, Brain,
-  FileText, CheckSquare, FolderOpen, BookOpen, Circle,
+  LogOut, Menu, X, Zap, Command, Search, Sun, Moon,
+  ChevronRight, Bell, Settings, User,
 } from "lucide-react";
 
-const TOOL_ICONS: Record<string, typeof Zap> = {
-  dashboard: LayoutDashboard, idea: Lightbulb, reality: AlertTriangle, proof: FlaskConical,
-  swarm: Users, mvp: Map, doctor: Stethoscope, launch: Rocket, twin: Brain,
-};
-
-function NavItem({ tool, collapsed, onClick }: { tool: Tool; collapsed: boolean; onClick?: () => void }) {
-  const [location] = useLocation();
-  const { usedTools } = useProgression();
-  const active = location === tool.route || (tool.route !== "/app" && location.startsWith(tool.route));
-  const Icon = TOOL_ICONS[tool.key] || tool.icon;
-  const hasBeenUsed = usedTools.has(tool.key);
+function ExperienceTab({ experience, active, onClick }: { experience: Experience; active: boolean; onClick: () => void }) {
+  const Icon = experience.icon;
 
   return (
-    <Link href={tool.route} onClick={onClick}>
-      <div
-        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all cursor-pointer group relative ${
-          active ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"
-        }`}
-        style={{
-          borderLeft: active ? `2px solid ${tool.accent}` : "2px solid transparent",
-          boxShadow: active ? `inset 0 1px 0 ${tool.accent}10` : "none",
-        }}
-        title={collapsed ? tool.label : undefined}
-      >
-        <Icon className="shrink-0" size={16} style={{ color: active ? tool.accent : "var(--noctra-text-muted)" }} />
-        {!collapsed && (
-          <span
-            className={`text-sm font-medium truncate flex-1 transition-colors ${
-              active ? "" : "group-hover:text-[var(--noctra-text)]"
-            }`}
-            style={{ color: active ? tool.accent : "var(--noctra-text-soft)" }}
-          >
-            {tool.label}
-          </span>
-        )}
-        {!collapsed && hasBeenUsed && (
-          <Check size={10} style={{ color: "var(--noctra-emerald)" }} />
-        )}
-      </div>
-    </Link>
+    <button
+      onClick={onClick}
+      className="relative flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm font-medium"
+      style={{
+        color: active ? experience.accent : "var(--text-tertiary)",
+        background: active ? `${experience.accent}10` : "transparent",
+      }}
+    >
+      <Icon size={16} style={{ color: active ? experience.accent : "var(--text-tertiary)" }} />
+      <span className="hidden lg:inline">{experience.short}</span>
+      {active && (
+        <motion.div
+          layoutId="activeTab"
+          className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full"
+          style={{ background: experience.accent }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        />
+      )}
+    </button>
   );
 }
 
-function SidebarContent({ collapsed, onNav }: { collapsed: boolean; onNav?: () => void }) {
-  const { signOut, user } = useAuth();
-  const { capabilityStatus, coverageScore } = useProgression();
-  const [confirmSignOut, setConfirmSignOut] = useState(false);
+function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [, navigate] = useLocation();
+  const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    if (!open) setQuery("");
+  }, [open]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        if (open) onClose();
+      }
+      if (e.key === "Escape" && open) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
+
+  const filteredExperiences = EXPERIENCES.filter((e) =>
+    e.label.toLowerCase().includes(query.toLowerCase()) ||
+    e.description.toLowerCase().includes(query.toLowerCase())
+  );
+
+  if (!open) return null;
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2.5 px-4 h-14 border-b shrink-0" style={{ borderColor: "var(--noctra-border)" }}>
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "var(--noctra-cyan)", boxShadow: "0 0 12px var(--noctra-cyan-glow)" }}>
-          <Zap size={14} className="text-black" />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: -20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: -20 }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        className="relative w-full max-w-lg rounded-xl border overflow-hidden"
+        style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-xl)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+          <Search size={16} style={{ color: "var(--text-tertiary)" }} />
+          <input
+            autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search experiences, tools, or actions..."
+            className="flex-1 bg-transparent outline-none text-sm"
+            style={{ color: "var(--text-primary)" }}
+          />
+          <kbd className="px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}>
+            ESC
+          </kbd>
         </div>
-        {!collapsed && <span className="font-bold text-sm tracking-wide" style={{ color: "var(--noctra-text)" }}>DEVULTIMATE</span>}
-      </div>
 
-      <nav className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
-        {TOOL_GROUPS.map((group) => {
-          const groupTools = TOOLS.filter((t) => t.group === group).sort((a, b) => a.order - b.order);
-          if (groupTools.length === 0) return null;
-          return (
-            <div key={group}>
-              {!collapsed && (
-                <div className="px-3 pt-4 pb-1">
-                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--noctra-text-muted)" }}>{group}</span>
-                  <p className="text-[9px] mt-0.5" style={{ color: "var(--noctra-text-muted)", opacity: 0.5 }}>{GROUP_DESCRIPTION[group]}</p>
+        <div className="p-2 max-h-80 overflow-y-auto">
+          {filteredExperiences.map((exp) => {
+            const Icon = exp.icon;
+            return (
+              <button
+                key={exp.key}
+                onClick={() => { navigate(exp.route); onClose(); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left hover:bg-white/5"
+              >
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${exp.accent}15` }}>
+                  <Icon size={16} style={{ color: exp.accent }} />
                 </div>
-              )}
-              {groupTools.map((t) => <NavItem key={t.key} tool={t} collapsed={collapsed} onClick={onNav} />)}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{exp.label}</p>
+                  <p className="text-xs truncate" style={{ color: "var(--text-tertiary)" }}>{exp.description}</p>
+                </div>
+                <ChevronRight size={14} style={{ color: "var(--text-quaternary)" }} />
+              </button>
+            );
+          })}
+
+          {query && filteredExperiences.length === 0 && (
+            <div className="px-3 py-8 text-center">
+              <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>No results for "{query}"</p>
             </div>
+          )}
+        </div>
+
+        <div className="px-4 py-2 border-t flex items-center gap-4" style={{ borderColor: "var(--border-subtle)" }}>
+          <span className="text-[10px]" style={{ color: "var(--text-quaternary)" }}>Navigate with ↑↓ • Select with ↵ • Close with ESC</span>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
+  const { signOut, user } = useAuth();
+  const [location, navigate] = useLocation();
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const currentExperience = EXPERIENCES.find((e) =>
+    location === e.route || (e.route !== "/app" && location.startsWith(e.route))
+  ) ?? EXPERIENCES[0];
+
+  useEffect(() => {
+    const saved = localStorage.getItem("theme") as "dark" | "light" | null;
+    if (saved) {
+      setTheme(saved);
+      document.documentElement.classList.toggle("light", saved === "light");
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.classList.toggle("light", newTheme === "light");
+    document.documentElement.setAttribute("data-theme", newTheme);
+  };
+
+  return (
+    <>
+      <header className="sticky top-0 z-40 border-b glass" style={{ borderColor: "var(--border-subtle)" }}>
+        <div className="flex items-center justify-between h-14 px-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onMenuClick}
+              className="lg:hidden p-2 rounded-lg transition-colors hover:bg-white/5"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              <Menu size={18} />
+            </button>
+
+            <Link href="/app" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center animate-glow" style={{ background: "var(--accent-cyan)" }}>
+                <Zap size={16} className="text-black" />
+              </div>
+              <span className="font-bold text-sm tracking-wide hidden sm:inline" style={{ color: "var(--text-primary)" }}>NOCTRA</span>
+            </Link>
+
+            <nav className="hidden lg:flex items-center gap-1 ml-4">
+              {EXPERIENCES.map((exp) => (
+                <ExperienceTab
+                  key={exp.key}
+                  experience={exp}
+                  active={currentExperience?.key === exp.key}
+                  onClick={() => navigate(exp.route)}
+                />
+              ))}
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowCommandPalette(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors hover:bg-white/5"
+              style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}
+            >
+              <Search size={14} style={{ color: "var(--text-tertiary)" }} />
+              <span className="text-xs hidden sm:inline" style={{ color: "var(--text-tertiary)" }}>Search...</span>
+              <kbd className="px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ background: "var(--surface-1)", border: "1px solid var(--border-default)", color: "var(--text-quaternary)" }}>
+                ⌘K
+              </kbd>
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg transition-colors hover:bg-white/5"
+              style={{ color: "var(--text-tertiary)" }}
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+
+            <button className="relative p-2 rounded-lg transition-colors hover:bg-white/5" style={{ color: "var(--text-tertiary)" }}>
+              <Bell size={16} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ background: "var(--color-danger)" }} />
+            </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 p-1.5 rounded-lg transition-colors hover:bg-white/5"
+              >
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "var(--accent-cyan)", color: "black" }}>
+                  {user?.email?.[0]?.toUpperCase() || "U"}
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {showUserMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-56 rounded-xl border overflow-hidden"
+                    style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-lg)" }}
+                  >
+                    <div className="p-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+                      <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{user?.email}</p>
+                      <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Pro Plan</p>
+                    </div>
+                    <div className="p-1">
+                      <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5" style={{ color: "var(--text-secondary)" }}>
+                        <User size={14} /> Profile
+                      </button>
+                      <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5" style={{ color: "var(--text-secondary)" }}>
+                        <Settings size={14} /> Settings
+                      </button>
+                    </div>
+                    <div className="p-1 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+                      <button
+                        onClick={() => { signOut(); setShowUserMenu(false); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
+                        style={{ color: "var(--color-danger)" }}
+                      >
+                        <LogOut size={14} /> Sign out
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <AnimatePresence>
+        {showCommandPalette && (
+          <CommandPalette open={showCommandPalette} onClose={() => setShowCommandPalette(false)} />
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [location, navigate] = useLocation();
+
+  if (!open) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 lg:hidden"
+    >
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <motion.aside
+        initial={{ x: -280 }}
+        animate={{ x: 0 }}
+        exit={{ x: -280 }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        className="absolute left-0 top-0 h-full w-72 border-r"
+        style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}
+      >
+        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--accent-cyan)" }}>
+              <Zap size={16} className="text-black" />
+            </div>
+            <span className="font-bold text-sm" style={{ color: "var(--text-primary)" }}>NOCTRA</span>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5" style={{ color: "var(--text-tertiary)" }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <nav className="p-3 space-y-1">
+          {EXPERIENCES.map((exp) => {
+            const Icon = exp.icon;
+            const active = location === exp.route || (exp.route !== "/app" && location.startsWith(exp.route));
+            return (
+              <button
+                key={exp.key}
+                onClick={() => { navigate(exp.route); onClose(); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left"
+                style={{
+                  background: active ? `${exp.accent}10` : "transparent",
+                  color: active ? exp.accent : "var(--text-secondary)",
+                }}
+              >
+                <Icon size={18} style={{ color: active ? exp.accent : "var(--text-tertiary)" }} />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{exp.label}</p>
+                  <p className="text-[11px]" style={{ color: "var(--text-quaternary)" }}>{exp.description}</p>
+                </div>
+                {active && (
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: exp.accent }} />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </motion.aside>
+    </motion.div>
+  );
+}
+
+function BottomTabBar() {
+  const [location, navigate] = useLocation();
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t glass" style={{ borderColor: "var(--border-subtle)" }}>
+      <div className="flex items-center justify-around h-16 px-2">
+        {EXPERIENCES.map((exp) => {
+          const Icon = exp.icon;
+          const active = location === exp.route || (exp.route !== "/app" && location.startsWith(exp.route));
+          return (
+            <button
+              key={exp.key}
+              onClick={() => navigate(exp.route)}
+              className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all"
+              style={{ color: active ? exp.accent : "var(--text-quaternary)" }}
+            >
+              <Icon size={20} />
+              <span className="text-[10px] font-medium">{exp.short}</span>
+              {active && (
+                <motion.div
+                  layoutId="bottomTab"
+                  className="absolute top-0 w-8 h-0.5 rounded-full"
+                  style={{ background: exp.accent }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
+            </button>
           );
         })}
-      </nav>
-
-      {!collapsed && (
-        <div className="px-3 py-3 border-t space-y-3" style={{ borderColor: "var(--noctra-border)" }}>
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Workspace Coverage</span>
-              <span className="text-[10px] font-mono" style={{ color: coverageScore >= 70 ? "var(--noctra-emerald)" : coverageScore >= 40 ? "var(--noctra-amber)" : "var(--noctra-cyan)" }}>
-                {coverageScore}%
-              </span>
-            </div>
-            <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: "var(--noctra-surface2)" }}>
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${coverageScore}%`,
-                  background: coverageScore >= 70 ? "var(--noctra-emerald)" : coverageScore >= 40 ? "var(--noctra-amber)" : "var(--noctra-cyan)",
-                  boxShadow: `0 0 8px ${coverageScore >= 70 ? "var(--noctra-emerald)" : coverageScore >= 40 ? "var(--noctra-amber)" : "var(--noctra-cyan)"}44`,
-                }}
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            {capabilityStatus.map((cs) => (
-              <div key={cs.phase} className="flex items-center justify-between py-0.5">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  {cs.percentage === 100 ? (
-                    <Check size={8} style={{ color: "var(--noctra-emerald)" }} />
-                  ) : cs.percentage > 0 ? (
-                    <Circle size={8} style={{ color: "var(--noctra-amber)" }} />
-                  ) : (
-                    <Circle size={8} style={{ color: "var(--noctra-text-muted)" }} />
-                  )}
-                  <span className="text-[9px] truncate" style={{ color: "var(--noctra-text-muted)" }}>{cs.label}</span>
-                </div>
-                <span className="text-[9px] font-mono shrink-0" style={{ color: "var(--noctra-text-muted)" }}>{cs.used}/{cs.total}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="border-t p-3 space-y-1" style={{ borderColor: "var(--noctra-border)" }}>
-        {isDemoMode() && !collapsed && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg mb-1" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}>
-            <Zap size={11} style={{ color: "var(--noctra-amber)" }} />
-            <span className="text-xs" style={{ color: "var(--noctra-amber)" }}>Demo mode</span>
-          </div>
-        )}
-        {!collapsed && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
-            <Command size={11} style={{ color: "var(--noctra-text-muted)" }} />
-            <span className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>
-              <kbd className="px-1 py-0.5 rounded text-[9px] font-mono" style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)" }}>Ctrl+K</kbd> Quick nav
-            </span>
-          </div>
-        )}
-        {!collapsed && user && (
-          <div className="px-2 pb-1">
-            <p className="text-xs truncate" style={{ color: "var(--noctra-text-muted)" }}>{user.email}</p>
-          </div>
-        )}
-        {confirmSignOut ? (
-          <div className="flex items-center gap-2 px-3 py-2">
-            <span className="text-xs" style={{ color: "var(--noctra-rose)" }}>Sign out?</span>
-            <button onClick={() => { signOut(); setConfirmSignOut(false); }} className="text-xs px-2 py-0.5 rounded font-medium" style={{ color: "#fff", background: "var(--noctra-rose)" }}>Yes</button>
-            <button onClick={() => setConfirmSignOut(false)} className="text-xs px-2 py-0.5 rounded" style={{ color: "var(--noctra-text-muted)" }}>No</button>
-          </div>
-        ) : (
-          <button onClick={() => setConfirmSignOut(true)} className="flex items-center gap-2 w-full px-3 py-2 rounded-lg transition-colors hover:bg-white/[0.03] text-left group" style={{ color: "var(--noctra-text-soft)" }}>
-            <LogOut size={14} />
-            {!collapsed && <span className="text-sm group-hover:text-[var(--noctra-rose)] transition-colors">Sign out</span>}
-          </button>
-        )}
       </div>
-    </div>
+    </nav>
   );
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "var(--noctra-bg)" }}>
-      <aside
-        className="hidden md:flex flex-col shrink-0 border-r relative transition-all duration-200 ease-out"
-        style={{ width: collapsed ? 56 : 232, borderColor: "var(--noctra-border)", background: "var(--noctra-surface)" }}
-      >
-        <SidebarContent collapsed={collapsed} />
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          className="absolute -right-3 top-5 w-6 h-6 rounded-full border flex items-center justify-center transition-colors hover:bg-white/[0.05] z-10"
-          style={{ background: "var(--noctra-surface)", borderColor: "var(--noctra-border)", color: "var(--noctra-text-muted)" }}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          <ChevronLeft size={12} style={{ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
-        </button>
-      </aside>
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--surface-0)" }}>
+      <TopBar onMenuClick={() => setMobileNavOpen(true)} />
 
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 h-full w-64 border-r z-10 animate-fade-in" style={{ background: "var(--noctra-surface)", borderColor: "var(--noctra-border)" }}>
-            <div className="flex justify-end p-3">
-              <button onClick={() => setMobileOpen(false)} style={{ color: "var(--noctra-text-soft)" }}><X size={18} /></button>
-            </div>
-            <SidebarContent collapsed={false} onNav={() => setMobileOpen(false)} />
-          </aside>
-        </div>
-      )}
+      <AnimatePresence>
+        {mobileNavOpen && (
+          <MobileNav open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+        )}
+      </AnimatePresence>
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="md:hidden flex items-center gap-3 px-4 h-14 border-b shrink-0 z-10" style={{ background: "var(--noctra-surface)", borderColor: "var(--noctra-border)" }}>
-          <button onClick={() => setMobileOpen(true)} style={{ color: "var(--noctra-text-soft)" }}><Menu size={20} /></button>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: "var(--noctra-cyan)" }}><Zap size={12} className="text-black" /></div>
-            <span className="font-bold text-sm" style={{ color: "var(--noctra-text)" }}>DEVULTIMATE</span>
-          </div>
-        </header>
-        <main className="flex-1 overflow-y-auto scrollbar-thin">{children}</main>
-      </div>
+      <main className="flex-1 pb-16 lg:pb-0">
+        {children}
+      </main>
+
+      <BottomTabBar />
     </div>
   );
 }
