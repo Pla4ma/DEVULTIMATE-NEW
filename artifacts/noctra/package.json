@@ -88,5 +88,8 @@
     "vitest": "^1.4.0",
     "wouter": "catalog:",
     "zod": "catalog:"
+  },
+  "dependencies": {
+    "zustand": "^5.0.13"
   }
 }
