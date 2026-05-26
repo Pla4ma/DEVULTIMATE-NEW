@@ -1,5 +1,13 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { validateConfig } from "./config";
+
+try {
+  validateConfig();
+} catch (error) {
+  logger.error(error, "Configuration error");
+  process.exit(1);
+}
 
 const port = Number(process.env["PORT"] || 8080);
 

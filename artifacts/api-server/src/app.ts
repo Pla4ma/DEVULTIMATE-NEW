@@ -9,7 +9,19 @@ import { logger } from "./lib/logger";
 const app: Express = express();
 
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: process.env.NODE_ENV === "production" ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", process.env.SUPABASE_URL || ""],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  } : false,
   crossOriginEmbedderPolicy: false,
 }));
 
@@ -42,7 +54,14 @@ app.use(
   }),
 );
 
-const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:5173,http://localhost:4173").split(",").map(s => s.trim());
+const allowedOrigins = process.env.NODE_ENV === "production"
+  ? (() => {
+      if (!process.env.CORS_ORIGINS) {
+        throw new Error("CORS_ORIGINS must be configured in production");
+      }
+      return process.env.CORS_ORIGINS.split(",").map(s => s.trim());
+    })()
+  : ["http://localhost:5173", "http://localhost:4173"];
 
 app.use(cors({
   origin(origin, callback) {
