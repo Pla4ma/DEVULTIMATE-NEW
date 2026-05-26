@@ -1,4 +1,8 @@
-import { computeToolCoverage, detectContradictions, type ReportSummary } from "./intelligence";
+import { computeToolCoverage } from "./intelligence";
+import { runContradictionEngine } from "./contradiction-engine";
+import type { ReportSummary } from "./report-utils";
+
+export type { ReportSummary } from "./report-utils";
 
 export interface DailyBriefing {
   greeting: string;
@@ -62,7 +66,7 @@ export function generateDailyBriefing(params: {
   const { reports, tasks, proofSignals } = params;
 
   const coverage = computeToolCoverage(reports);
-  const contradictions = detectContradictions(reports);
+  const { contradictions } = runContradictionEngine(reports);
 
   const byTool = new Map<string, ReportSummary>();
   for (const r of [...reports].sort(
@@ -104,7 +108,7 @@ export function generateDailyBriefing(params: {
     priorities.push(`Resolve critical task: "${taskTitle ?? "critical blocker"}" — blocking all downstream work`);
   }
   if (contradictions.filter((c) => c.severity === "high").length > 0) {
-    priorities.push(contradictions.find((c) => c.severity === "high")!.resolution);
+    priorities.push(contradictions.find((c) => c.severity === "high")!.recommendedResolution);
   }
   if (nextTool && priorities.length < 3) {
     priorities.push(`Run ${TOOL_LABELS[nextTool] ?? nextTool} — eliminates a critical intelligence blind spot`);
@@ -125,7 +129,7 @@ export function generateDailyBriefing(params: {
   let biggestRisk = "No critical risks detected — keep shipping.";
   const highContradiction = contradictions.find((c) => c.severity === "high");
   if (highContradiction) {
-    biggestRisk = highContradiction.description;
+    biggestRisk = highContradiction.explanation;
   } else if (scores.doctor && scores.doctor < 50) {
     biggestRisk = `Project Doctor health score is ${scores.doctor}/100 — production launch with this score risks immediate failures.`;
   } else if (scores.reality && scores.reality < 40) {

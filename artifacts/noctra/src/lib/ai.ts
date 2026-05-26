@@ -198,19 +198,21 @@ export async function streamStructuredAI(
   const stages = TOOL_STAGES[tool] ?? ["Analyzing…", "Identifying patterns…", "Compiling intelligence…"];
 
   let stageIdx = 0;
-  onStage?.(stages[0]);
+  if (stages[0]) onStage?.(stages[0]);
 
   const interval = setInterval(() => {
     if (stageIdx < stages.length - 2) {
       stageIdx++;
-      onStage?.(stages[stageIdx]);
+      const stage = stages[stageIdx];
+      if (stage) onStage?.(stage);
     }
   }, 2400);
 
   try {
     const result = await callStructuredAI(tool, input, context);
     clearInterval(interval);
-    onStage?.(stages[stages.length - 1]);
+    const lastStage = stages[stages.length - 1];
+    if (lastStage) onStage?.(lastStage);
     return result;
   } catch (err) {
     clearInterval(interval);

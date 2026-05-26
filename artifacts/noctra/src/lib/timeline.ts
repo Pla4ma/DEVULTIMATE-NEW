@@ -1,6 +1,8 @@
 // timeline.ts — Build a chronological event log from Noctra data
 // Pure utility: no React, no side effects.
 
+import { ROUTES } from "./routes";
+
 export type TimelineEventType =
   | "idea_checked"
   | "reality_compiled"
@@ -141,7 +143,7 @@ export function buildTimeline(params: {
       title: `Proof signal: ${s.label}`,
       description: `${s.kind} signal logged`,
       date: s.created_at,
-      href: "/app/proof",
+      href: ROUTES.proof,
     });
   }
 

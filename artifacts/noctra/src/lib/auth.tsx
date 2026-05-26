@@ -34,7 +34,7 @@ function buildDemoUser(): User {
     app_metadata: { provider: "demo", providers: ["demo"] },
     user_metadata: { display_name: "Demo Founder", demo: true },
     created_at: new Date().toISOString(),
-  } as unknown as User;
+  } as User;
 }
 
 type AuthCtx = {

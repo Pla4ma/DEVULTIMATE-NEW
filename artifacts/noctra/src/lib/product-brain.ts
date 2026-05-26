@@ -1,7 +1,9 @@
 // product-brain.ts — Product Brain: extract knowledge graph nodes/edges/clusters/insights
 // Pure utility: no React, no side effects.
 
-import type { ReportSummary } from "./intelligence";
+import type { ReportSummary } from "./report-utils";
+import { extractData, getScore, latestByTool } from "./report-utils";
+import { ROUTES } from "./routes";
 
 export type NodeType =
   | "idea"
@@ -91,22 +93,6 @@ function nid(prefix: string): string {
   return `${prefix}-${++_nodeCounter}`;
 }
 
-function extractData(report: ReportSummary): Record<string, unknown> {
-  const p = report.payload as Record<string, unknown> | null;
-  if (!p) return {};
-  return ((p.data ?? p) as Record<string, unknown>) ?? {};
-}
-
-function getScore(report: ReportSummary): number {
-  if (typeof report.score === "number") return report.score;
-  const d = extractData(report);
-  const keys = ["signal_score", "reality_score", "proof_score", "health_score", "mvp_score", "swarm_score", "launch_score", "score"];
-  for (const k of keys) {
-    if (typeof d[k] === "number") return d[k] as number;
-  }
-  return 0;
-}
-
 function scoreToSeverity(score: number): BrainNode["severity"] {
   if (score < 40) return "critical";
   if (score < 55) return "high";
@@ -127,12 +113,7 @@ export function buildProductBrain(params: {
   const edges: BrainEdge[] = [];
   const insights: BrainInsight[] = [];
 
-  const byTool = new Map<string, ReportSummary>();
-  for (const r of [...reports].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  )) {
-    if (!byTool.has(r.tool)) byTool.set(r.tool, r);
-  }
+  const byTool = latestByTool(reports);
 
   const idea = byTool.get("idea");
   const reality = byTool.get("reality");
@@ -235,7 +216,7 @@ export function buildProductBrain(params: {
         description: `Reality Compiler score is ${score}/100${errors.length > 0 ? ` with ${errors.filter((e) => Boolean(e.blocks_build)).length} build-blocking errors` : ""}. Address before building.`,
         severity: "critical",
         actionLabel: "Run Reality Compiler",
-        actionHref: "/app/reality",
+        actionHref: ROUTES.reality,
         sourceTool: "reality",
       });
     }
@@ -266,7 +247,7 @@ export function buildProductBrain(params: {
       description: "Your Product Brain has zero validation evidence. Every node is built on assumptions, not data.",
       severity: "critical",
       actionLabel: "Add proof signals",
-      actionHref: "/app/proof",
+      actionHref: ROUTES.proof,
       sourceTool: "proof",
     });
   } else if (proofSignals.length >= 5) {
@@ -276,7 +257,7 @@ export function buildProductBrain(params: {
       description: "Strong evidence base — your Product Brain has external validation anchoring the idea.",
       severity: "low",
       actionLabel: "View Proof Engine",
-      actionHref: "/app/proof",
+      actionHref: ROUTES.proof,
       sourceTool: "proof",
     });
   }
@@ -326,7 +307,7 @@ export function buildProductBrain(params: {
         description: `${failedGates.length} gate${failedGates.length !== 1 ? "s" : ""} failed in Project Doctor. This is a hard blocker for launch.`,
         severity: "critical",
         actionLabel: "View Doctor report",
-        actionHref: doctor.id ? `/app/reports/${doctor.id}` : "/app/doctor",
+        actionHref: doctor.id ? `/app/reports/${doctor.id}` : ROUTES.doctor,
         sourceTool: "doctor",
       });
     }
@@ -378,7 +359,7 @@ export function buildProductBrain(params: {
           description: "Market Swarm simulated low market payment willingness. Reconsider pricing model or strengthen value proposition.",
           severity: "high",
           actionLabel: "View Swarm results",
-          actionHref: swarm.id ? `/app/reports/${swarm.id}` : "/app/swarm",
+          actionHref: swarm.id ? `/app/reports/${swarm.id}` : ROUTES.swarm,
           sourceTool: "swarm",
         });
       } else if (wtp >= 60) {
@@ -388,7 +369,7 @@ export function buildProductBrain(params: {
           description: "Market Swarm shows high market payment willingness — your pricing model is supported.",
           severity: "low",
           actionLabel: "View Swarm results",
-          actionHref: swarm.id ? `/app/reports/${swarm.id}` : "/app/swarm",
+          actionHref: swarm.id ? `/app/reports/${swarm.id}` : ROUTES.swarm,
           sourceTool: "swarm",
         });
       }
@@ -466,7 +447,7 @@ export function buildProductBrain(params: {
         description: `Launch Room scores ${launchScore}/100${goNoGo ? ` — ${goNoGo}` : ""}. Proceed to final checks.`,
         severity: "low",
         actionLabel: "View Launch Room",
-        actionHref: launch.id ? `/app/reports/${launch.id}` : "/app/launch",
+        actionHref: launch.id ? `/app/reports/${launch.id}` : ROUTES.launch,
         sourceTool: "launch",
       });
     } else if (launchScore < 60) {
@@ -476,7 +457,7 @@ export function buildProductBrain(params: {
         description: "Launch Room signals are not ready. Resolve blockers before shipping.",
         severity: "high",
         actionLabel: "View Launch Room",
-        actionHref: launch.id ? `/app/reports/${launch.id}` : "/app/launch",
+        actionHref: launch.id ? `/app/reports/${launch.id}` : ROUTES.launch,
         sourceTool: "launch",
       });
     }
@@ -491,7 +472,7 @@ export function buildProductBrain(params: {
       description: "No intelligence tools have been run yet. Start with Idea Checker to build your first intelligence layer.",
       severity: "critical",
       actionLabel: "Run Idea Checker",
-      actionHref: "/app/idea",
+      actionHref: ROUTES.idea,
       sourceTool: "idea",
     });
   } else if (coveredTools.size < 3) {

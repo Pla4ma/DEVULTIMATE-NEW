@@ -179,9 +179,9 @@ export function computeProjectState(params: {
   let topBlocker: string | null = null;
   if (failedGates.length > 0) {
     topBlocker = `${failedGates.length} failed gate${failedGates.length > 1 ? "s" : ""} in Product Doctor: ${failedGates[0]}`;
-  } else if (scores.doctor > 0 && scores.doctor < 50) {
+  } else if ((scores.doctor ?? 0) > 0 && (scores.doctor ?? 0) < 50) {
     topBlocker = `Product Doctor score is ${scores.doctor}/100 — critical launch blockers detected`;
-  } else if (scores.reality > 0 && scores.reality < 50) {
+  } else if ((scores.reality ?? 0) > 0 && (scores.reality ?? 0) < 50) {
     topBlocker = `Reality Compiler score is ${scores.reality}/100 — core assumptions are failing`;
   } else if (openP0Tasks > 0) {
     topBlocker = `${openP0Tasks} critical task${openP0Tasks > 1 ? "s" : ""} unresolved in the queue`;

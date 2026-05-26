@@ -1,7 +1,7 @@
 // retention.ts — Retention loop intelligence from all report payloads
 // Pure utility: no React, no side effects.
 
-import type { ReportSummary } from "./intelligence";
+import type { ReportSummary } from "./report-utils";
 
 export interface RetentionIntelligence {
   retentionScore: number;

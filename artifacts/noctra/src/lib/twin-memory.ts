@@ -43,7 +43,7 @@ async function getCurrentUserId(): Promise<string | null> {
   }
 }
 
-async function safeQuery<T>(supabaseClient: SupabaseClient, query: Promise<{ data: T | null }>): Promise<T | null> {
+async function safeQuery<T>(supabaseClient: SupabaseClient, query: PromiseLike<{ data: T | null }>): Promise<T | null> {
   try {
     const { data } = await query;
     return data;
@@ -105,24 +105,24 @@ function processReports(reports: Array<Record<string, unknown>>): {
 async function loadDemoMemoryContext(projectId?: string): Promise<MemoryContext> {
   const userId = getDemoUser()?.id ?? DEMO_USER_FALLBACK_ID;
 
-  const allReports = demoStore.getReports(userId) as unknown as Array<Record<string, unknown>>;
+  const allReports = demoStore.getReports(userId) as Array<Record<string, unknown>>;
   const reports = allReports.slice(0, 15);
 
   const allTasks = demoStore.getTasks(userId);
   const openTasks = allTasks
     .filter((t) => t.status === "todo")
-    .slice(0, 25) as unknown as Array<Record<string, unknown>>;
+    .slice(0, 25) as Array<Record<string, unknown>>;
 
   const proofSignals = demoStore.getProofSignals(userId)
-    .slice(0, 50) as unknown as Array<Record<string, unknown>>;
+    .slice(0, 50) as Array<Record<string, unknown>>;
 
   const scans = demoStore.getScans(userId)
-    .slice(0, 5) as unknown as Array<Record<string, unknown>>;
+    .slice(0, 5) as Array<Record<string, unknown>>;
 
   let selectedProject: Record<string, unknown> | null = null;
   if (projectId) {
     const proj = demoStore.getProject(userId, projectId);
-    selectedProject = proj as unknown as Record<string, unknown> | null;
+    selectedProject = proj as Record<string, unknown> | null;
   }
 
   const { failedGates, latestScores } = processReports(reports);
@@ -156,16 +156,16 @@ export class TwinMemory {
               supabaseClient.from("projects").select("*").eq("id", projectId).eq("user_id", userId).single()
             )
           : Promise.resolve(null),
-        safeQuery(supabaseClient,
+        safeQuery<Array<Record<string, unknown>>>(supabaseClient,
           supabaseClient.from("reports").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(15)
         ),
-        safeQuery(supabaseClient,
+        safeQuery<Array<Record<string, unknown>>>(supabaseClient,
           supabaseClient.from("tasks").select("*").eq("user_id", userId).eq("status", "todo").order("created_at", { ascending: false }).limit(25)
         ),
-        safeQuery(supabaseClient,
+        safeQuery<Array<Record<string, unknown>>>(supabaseClient,
           supabaseClient.from("proof_signals").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(50)
         ),
-        safeQuery(supabaseClient,
+        safeQuery<Array<Record<string, unknown>>>(supabaseClient,
           supabaseClient.from("scans").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(5)
         ),
       ]);

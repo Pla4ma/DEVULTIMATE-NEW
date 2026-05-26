@@ -4,6 +4,7 @@ import {
   Lightbulb, AlertTriangle, FlaskConical, Map, Terminal, Zap,
   type LucideIcon,
 } from "lucide-react";
+import { ROUTES } from "./routes";
 
 export type ToolKey =
   | "dashboard" | "idea" | "reality" | "mvp" | "proof" | "swarm"
@@ -54,7 +55,7 @@ export const EXPERIENCES: Experience[] = [
     description: "Your launch readiness command center — score, blockers, next fix, and rescan.",
     icon: LayoutDashboard,
     accent: cyan,
-    route: "/app",
+    route: ROUTES.app,
     tools: ["dashboard"],
   },
   {
@@ -64,7 +65,7 @@ export const EXPERIENCES: Experience[] = [
     description: "Validate ideas, stress-test assumptions, and simulate market demand.",
     icon: Lightbulb,
     accent: violet,
-    route: "/app/idea-lab",
+    route: ROUTES.ideaLab,
     tools: ["idea", "reality", "swarm", "proof"],
   },
   {
@@ -74,7 +75,7 @@ export const EXPERIENCES: Experience[] = [
     description: "Scan codebases, diagnose launch blockers, and get go/no-go signals.",
     icon: Stethoscope,
     accent: rose,
-    route: "/app/code-health",
+    route: ROUTES.codeHealth,
     tools: ["doctor", "launch"],
   },
   {
@@ -84,7 +85,7 @@ export const EXPERIENCES: Experience[] = [
     description: "Plan MVP scope, generate build plans, and track execution.",
     icon: Map,
     accent: emerald,
-    route: "/app/build",
+    route: ROUTES.build,
     tools: ["mvp", "tasks"],
   },
   {
@@ -94,25 +95,25 @@ export const EXPERIENCES: Experience[] = [
     description: "Your persistent product memory — AI chat, decision log, and project intelligence.",
     icon: Brain,
     accent: magenta,
-    route: "/app/brain",
+    route: ROUTES.brain,
     tools: ["twin", "passport", "projects", "reports"],
   },
 ];
 
 export const TOOLS: Tool[] = [
-  { key: "dashboard", route: "/app", label: "Command Center", short: "Dashboard", long: "Launch readiness score, top blocker, next fix, and rescan — all in one place.", icon: LayoutDashboard, accent: cyan, accent2: violet, group: "Command Center", order: 0, experience: "command" },
-  { key: "idea", route: "/app/idea-lab", label: "Idea Checker", short: "Idea analysis", long: "Describe your idea. Get signal score, red flags, and what to validate next.", icon: ScanSearch, accent: violet, accent2: cyan, group: "Idea Lab", order: 1, experience: "idea-lab" },
-  { key: "reality", route: "/app/idea-lab", label: "Reality Compiler", short: "Assumption testing", long: "Every assumption tested across feasibility, market viability, and blind spots.", icon: Terminal, accent: amber, accent2: rose, group: "Idea Lab", order: 2, experience: "idea-lab" },
-  { key: "swarm", route: "/app/idea-lab", label: "Market Swarm", short: "Market simulation", long: "Simulate demand, test pricing, and identify market segments.", icon: Users, accent: cyan, accent2: violet, group: "Idea Lab", order: 3, experience: "idea-lab" },
-  { key: "proof", route: "/app/idea-lab", label: "Proof Engine", short: "Evidence tracking", long: "Track evidence, measure validation depth, and find critical gaps before you build.", icon: FlaskConical, accent: emerald, accent2: gold, group: "Idea Lab", order: 4, experience: "idea-lab" },
-  { key: "doctor", route: "/app/code-health", label: "Product Doctor", short: "Codebase scan & fix", long: "Upload your repo. Get launch readiness, blockers, fix queue, and build prompt.", icon: Stethoscope, accent: rose, accent2: cyan, group: "Code Health", order: 5, experience: "code-health" },
-  { key: "launch", route: "/app/code-health", label: "Launch Room", short: "Launch readiness", long: "Readiness check, gate verification, and go/no-go decision.", icon: Rocket, accent: amber, accent2: cyan, group: "Code Health", order: 6, experience: "code-health" },
-  { key: "mvp", route: "/app/build", label: "MVP Planner", short: "Build plan", long: "Lock scope, define success metrics, and generate a week-by-week build plan.", icon: Map, accent: cyan, accent2: emerald, group: "Build Planner", order: 7, experience: "build" },
-  { key: "tasks", route: "/app/build", label: "Fix Tasks", short: "Task queue", long: "Tasks generated from Product Doctor and other reports. Prioritized, categorized, ready to execute.", icon: CheckSquare, accent: emerald, accent2: cyan, group: "Build Planner", order: 8, experience: "build" },
-  { key: "twin", route: "/app/brain", label: "Product Twin", short: "Product memory", long: "Your persistent product memory. Ask about decisions, patterns, and next steps.", icon: Brain, accent: magenta, accent2: violet, group: "Project Brain", order: 9, experience: "brain" },
-  { key: "passport", route: "/app/brain", label: "Project Profile", short: "Project record", long: "Complete project record — scores, milestones, and progress.", icon: BarChart3, accent: gold, accent2: cyan, group: "Project Brain", order: 10, experience: "brain" },
-  { key: "projects", route: "/app/brain", label: "Projects", short: "Projects", long: "Organize your work into projects. Link reports, tasks, and proof signals.", icon: FolderOpen, accent: cyan, accent2: emerald, group: "Project Brain", order: 11, experience: "brain" },
-  { key: "reports", route: "/app/brain", label: "Reports", short: "Reports", long: "Every report — filterable, exportable, and linked to your projects.", icon: FileText, accent: "var(--text-tertiary)", accent2: violet, group: "Project Brain", order: 12, experience: "brain" },
+  { key: "dashboard", route: ROUTES.app, label: "Command Center", short: "Dashboard", long: "Launch readiness score, top blocker, next fix, and rescan — all in one place.", icon: LayoutDashboard, accent: cyan, accent2: violet, group: "Command Center", order: 0, experience: "command" },
+  { key: "idea", route: ROUTES.ideaLab, label: "Idea Checker", short: "Idea analysis", long: "Describe your idea. Get signal score, red flags, and what to validate next.", icon: ScanSearch, accent: violet, accent2: cyan, group: "Idea Lab", order: 1, experience: "idea-lab" },
+  { key: "reality", route: ROUTES.ideaLab, label: "Reality Compiler", short: "Assumption testing", long: "Every assumption tested across feasibility, market viability, and blind spots.", icon: Terminal, accent: amber, accent2: rose, group: "Idea Lab", order: 2, experience: "idea-lab" },
+  { key: "swarm", route: ROUTES.ideaLab, label: "Market Swarm", short: "Market simulation", long: "Simulate demand, test pricing, and identify market segments.", icon: Users, accent: cyan, accent2: violet, group: "Idea Lab", order: 3, experience: "idea-lab" },
+  { key: "proof", route: ROUTES.ideaLab, label: "Proof Engine", short: "Evidence tracking", long: "Track evidence, measure validation depth, and find critical gaps before you build.", icon: FlaskConical, accent: emerald, accent2: gold, group: "Idea Lab", order: 4, experience: "idea-lab" },
+  { key: "doctor", route: ROUTES.codeHealth, label: "Product Doctor", short: "Codebase scan & fix", long: "Upload your repo. Get launch readiness, blockers, fix queue, and build prompt.", icon: Stethoscope, accent: rose, accent2: cyan, group: "Code Health", order: 5, experience: "code-health" },
+  { key: "launch", route: ROUTES.codeHealth, label: "Launch Room", short: "Launch readiness", long: "Readiness check, gate verification, and go/no-go decision.", icon: Rocket, accent: amber, accent2: cyan, group: "Code Health", order: 6, experience: "code-health" },
+  { key: "mvp", route: ROUTES.build, label: "MVP Planner", short: "Build plan", long: "Lock scope, define success metrics, and generate a week-by-week build plan.", icon: Map, accent: cyan, accent2: emerald, group: "Build Planner", order: 7, experience: "build" },
+  { key: "tasks", route: ROUTES.build, label: "Fix Tasks", short: "Task queue", long: "Tasks generated from Product Doctor and other reports. Prioritized, categorized, ready to execute.", icon: CheckSquare, accent: emerald, accent2: cyan, group: "Build Planner", order: 8, experience: "build" },
+  { key: "twin", route: ROUTES.brain, label: "Product Twin", short: "Product memory", long: "Your persistent product memory. Ask about decisions, patterns, and next steps.", icon: Brain, accent: magenta, accent2: violet, group: "Project Brain", order: 9, experience: "brain" },
+  { key: "passport", route: ROUTES.brain, label: "Project Profile", short: "Project record", long: "Complete project record — scores, milestones, and progress.", icon: BarChart3, accent: gold, accent2: cyan, group: "Project Brain", order: 10, experience: "brain" },
+  { key: "projects", route: ROUTES.brain, label: "Projects", short: "Projects", long: "Organize your work into projects. Link reports, tasks, and proof signals.", icon: FolderOpen, accent: cyan, accent2: emerald, group: "Project Brain", order: 11, experience: "brain" },
+  { key: "reports", route: ROUTES.brain, label: "Reports", short: "Reports", long: "Every report — filterable, exportable, and linked to your projects.", icon: FileText, accent: "var(--text-tertiary)", accent2: violet, group: "Project Brain", order: 12, experience: "brain" },
 ];
 
 export const TOOL_BY_KEY: Record<ToolKey, Tool> = Object.fromEntries(

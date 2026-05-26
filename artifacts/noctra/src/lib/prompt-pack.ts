@@ -109,7 +109,7 @@ export function generatePromptPackFromReport(
     const yellowGates = effectiveGates.filter((g) => g.status === "YELLOW") ?? [];
     const healthScore = data.health_score ?? data.score ?? 0;
     const launchReadiness = data.launch_readiness as string ?? (redGates.length === 0 ? "CONDITIONAL" : "NO-GO");
-    const topBlocker = data.top_blocker as string ?? (redGates.length > 0 ? `${redGates[0].name} gate failed` : "");
+    const topBlocker = data.top_blocker as string ?? (redGates.length > 0 ? `${redGates[0]?.name ?? "Unknown"} gate failed` : "");
     const evidence = data.evidence as Array<{ filePath: string; lineNumber?: number; explanation: string; severity: string }> | null;
     const alignment = data.alignment as Record<string, unknown> | null;
     const alignmentTasks = (alignment?.recommendedCodeTasks as Array<{ title: string }> | undefined) ?? [];

@@ -42,8 +42,12 @@ export const apiClient = {
     scanUpload: async (file: File, projectId?: string): ApiResult<ScanResponse> => {
       const formData = new FormData();
       formData.append("file", file);
-      if (projectId) formData.append("projectId", projectId);
-      const res = await authenticatedFetch("/api/projects/scan-upload", {
+
+      const endpoint = projectId
+        ? `/api/projects/${projectId}/scan-upload`
+        : "/api/projects/scan";
+
+      const res = await authenticatedFetch(endpoint, {
         method: "POST",
         body: formData,
       });

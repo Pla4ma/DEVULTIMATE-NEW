@@ -75,8 +75,9 @@ export function computeScoreHistory(reports: ReportLike[]): ScoreHistoryEntry[] 
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
     const latest = sorted[0];
+    if (!latest) continue;
     const previous = sorted[1];
-    const latestScore = latest.score!;
+    const latestScore = latest.score ?? 0;
     const prevScore = previous?.score ?? undefined;
     const delta = prevScore != null ? latestScore - prevScore : undefined;
     const direction: ScoreDirection =
