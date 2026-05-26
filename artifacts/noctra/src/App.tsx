@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, Suspense, lazy } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,27 +7,18 @@ import { AuthProvider } from "@/lib/auth";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProgressionProvider } from "@/lib/progression-context";
-import { CommandPalette } from "@/components/CommandPalette";
 
-import LandingPage from "@/pages/landing";
-import PricingPage from "@/pages/pricing";
-import DashboardPage from "@/pages/dashboard";
-import IdeaPage from "@/pages/idea";
-import RealityPage from "@/pages/reality";
-import MvpPage from "@/pages/mvp";
-import ProofPage from "@/pages/proof";
-import SwarmPage from "@/pages/swarm";
-import DoctorPage from "@/pages/doctor";
-import LaunchPage from "@/pages/launch";
-import TwinPage from "@/pages/twin";
-import PassportPage from "@/pages/passport";
-import ReportsPage from "@/pages/reports";
-import ReportDetailPage from "@/pages/report-detail";
-import TasksPage from "@/pages/tasks";
-import ProjectsPage from "@/pages/projects";
-import ProjectDetailPage from "@/pages/project-detail";
-import NotFound from "@/pages/not-found";
-import PrivacyPage from "@/pages/privacy";
+const LandingPage = lazy(() => import("@/pages/landing"));
+const PricingPage = lazy(() => import("@/pages/pricing"));
+const PrivacyPage = lazy(() => import("@/pages/privacy"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+const CommandCenterPage = lazy(() => import("@/pages/command-center"));
+const IdeaLabPage = lazy(() => import("@/pages/idea-lab"));
+const CodeHealthPage = lazy(() => import("@/pages/code-health"));
+const BuildPlannerPage = lazy(() => import("@/pages/build-planner"));
+const ProjectBrainPage = lazy(() => import("@/pages/project-brain"));
+const ReportDetailPage = lazy(() => import("@/pages/report-detail"));
+const ProjectDetailPage = lazy(() => import("@/pages/project-detail"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,20 +30,14 @@ const queryClient = new QueryClient({
 });
 
 const ROUTE_TITLES: Record<string, string> = {
-  "/": "DEVULTIMATE — AI Launch Readiness Platform",
-  "/app": "Launch Cockpit — DEVULTIMATE",
-  "/app/idea": "Idea Checker — DEVULTIMATE",
-  "/app/reality": "Reality Compiler — DEVULTIMATE",
-  "/app/proof": "Proof Engine — DEVULTIMATE",
-  "/app/swarm": "Market Swarm — DEVULTIMATE",
-  "/app/mvp": "MVP Planner — DEVULTIMATE",
-  "/app/doctor": "Product Doctor — DEVULTIMATE",
-  "/app/launch": "Launch Room — DEVULTIMATE",
-  "/app/twin": "Product Twin — DEVULTIMATE",
-  "/app/passport": "Project Profile — DEVULTIMATE",
-  "/app/reports": "Reports — DEVULTIMATE",
-  "/app/tasks": "Fix Tasks — DEVULTIMATE",
-  "/app/projects": "Projects — DEVULTIMATE",
+  "/": "NOCTRA — Ship with evidence, not hope",
+  "/app": "Command Center — NOCTRA",
+  "/app/idea-lab": "Idea Lab — NOCTRA",
+  "/app/code-health": "Code Health — NOCTRA",
+  "/app/build": "Build Planner — NOCTRA",
+  "/app/brain": "Project Brain — NOCTRA",
+  "/pricing": "Pricing — NOCTRA",
+  "/privacy": "Privacy — NOCTRA",
 };
 
 function TitleSetter() {
@@ -64,11 +49,11 @@ function TitleSetter() {
       return;
     }
     if (location.startsWith("/app/reports/")) {
-      document.title = "Report — DEVULTIMATE";
+      document.title = "Report — NOCTRA";
     } else if (location.startsWith("/app/projects/")) {
-      document.title = "Project — DEVULTIMATE";
+      document.title = "Project — NOCTRA";
     } else {
-      document.title = "DEVULTIMATE — AI Launch Readiness Platform";
+      document.title = "NOCTRA — Ship with evidence, not hope";
     }
   }, [location]);
   return null;
@@ -82,65 +67,70 @@ function ScrollToTop() {
   return null;
 }
 
+function LoadingScreen() {
+  return (
+    <div className="flex items-center justify-center h-screen" style={{ background: "var(--surface-0)" }}>
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 border-2 border-[var(--accent-cyan)] border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Loading NOCTRA...</p>
+      </div>
+    </div>
+  );
+}
+
 function AppRoutes() {
   return (
-    <>
-      <CommandPalette />
-      <OnboardingWizard />
+    <Suspense fallback={<LoadingScreen />}>
       <Switch>
-<Route path="/" component={LandingPage} />
-      <Route path="/pricing" component={PricingPage} />
-      <Route path="/privacy" component={PrivacyPage} />
-      <Route path="/app">
+        <Route path="/" component={LandingPage} />
+        <Route path="/pricing" component={PricingPage} />
+        <Route path="/privacy" component={PrivacyPage} />
+
+        <Route path="/app">
           <AuthGuard>
-            <DashboardPage />
+            <CommandCenterPage />
           </AuthGuard>
         </Route>
-      <Route path="/app/idea">
-        <AuthGuard><IdeaPage /></AuthGuard>
-      </Route>
-      <Route path="/app/reality">
-        <AuthGuard><RealityPage /></AuthGuard>
-      </Route>
-      <Route path="/app/mvp">
-        <AuthGuard><MvpPage /></AuthGuard>
-      </Route>
-      <Route path="/app/proof">
-        <AuthGuard><ProofPage /></AuthGuard>
-      </Route>
-      <Route path="/app/swarm">
-        <AuthGuard><SwarmPage /></AuthGuard>
-      </Route>
-      <Route path="/app/doctor">
-        <AuthGuard><DoctorPage /></AuthGuard>
-      </Route>
-      <Route path="/app/launch">
-        <AuthGuard><LaunchPage /></AuthGuard>
-      </Route>
-      <Route path="/app/twin">
-        <AuthGuard><TwinPage /></AuthGuard>
-      </Route>
-      <Route path="/app/passport">
-        <AuthGuard><PassportPage /></AuthGuard>
-      </Route>
-      <Route path="/app/reports/:id">
-        <AuthGuard><ReportDetailPage /></AuthGuard>
-      </Route>
-      <Route path="/app/reports">
-        <AuthGuard><ReportsPage /></AuthGuard>
-      </Route>
-      <Route path="/app/tasks">
-        <AuthGuard><TasksPage /></AuthGuard>
-      </Route>
-      <Route path="/app/projects/:id">
-        <AuthGuard><ProjectDetailPage /></AuthGuard>
-      </Route>
-      <Route path="/app/projects">
-        <AuthGuard><ProjectsPage /></AuthGuard>
-      </Route>
-      <Route component={NotFound} />
-    </Switch>
-    </>
+
+        <Route path="/app/idea-lab">
+          <AuthGuard>
+            <IdeaLabPage />
+          </AuthGuard>
+        </Route>
+
+        <Route path="/app/code-health">
+          <AuthGuard>
+            <CodeHealthPage />
+          </AuthGuard>
+        </Route>
+
+        <Route path="/app/build">
+          <AuthGuard>
+            <BuildPlannerPage />
+          </AuthGuard>
+        </Route>
+
+        <Route path="/app/brain">
+          <AuthGuard>
+            <ProjectBrainPage />
+          </AuthGuard>
+        </Route>
+
+        <Route path="/app/reports/:id">
+          <AuthGuard>
+            <ReportDetailPage />
+          </AuthGuard>
+        </Route>
+
+        <Route path="/app/projects/:id">
+          <AuthGuard>
+            <ProjectDetailPage />
+          </AuthGuard>
+        </Route>
+
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
