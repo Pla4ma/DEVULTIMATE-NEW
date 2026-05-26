@@ -21,7 +21,20 @@ export async function createProject(params: { name: string; idea?: string; stage
   });
 }
 
-export async function getProjects() {
+export interface ProjectRecord {
+  id: string;
+  name: string;
+  stage?: string | null;
+  status?: string;
+  idea?: string | null;
+  github_repo?: string | null;
+  github_branch?: string | null;
+  last_scan_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getProjects(): Promise<ProjectRecord[]> {
   if (isDemoMode()) {
     const userId = await requireUserId();
     return demoStore.getProjects(userId);

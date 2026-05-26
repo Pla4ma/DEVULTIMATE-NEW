@@ -1,6 +1,10 @@
 import type { DraftTask } from "./types";
 import { asArray, asObj, str, truncate, normalizePriority } from "./utils";
 
+function appendAC(detail: string, ac?: string[]): string {
+  return ac && ac.length > 0 ? `${detail}\nAC: ${ac.join("; ")}`.trim() : detail;
+}
+
 export function generateIdeaTasks(data: Record<string, unknown>, push: (t: Omit<DraftTask, "sourceReportId" | "projectId">) => void): void {
   asArray(data.next_actions).slice(0, 6).forEach((a) => {
     const title = str(a);
@@ -16,7 +20,7 @@ export function generateIdeaTasks(data: Record<string, unknown>, push: (t: Omit<
       detail: test || `Test assumption: ${assumption}`,
       priority: normalizePriority(a.risk),
       category: "validation",
-      acceptance_criteria: test ? [`Assumption "${assumption}" is tested and validated`] : undefined,
+      acceptanceCriteria: test ? [`Assumption "${assumption}" is tested and validated`] : undefined,
     });
   });
   asArray(data.errors).slice(0, 4).forEach((e) => {
@@ -194,10 +198,31 @@ export function generateMvpTasks(data: Record<string, unknown>, push: (t: Omit<D
 }
 
 export function generateDoctorTasks(data: Record<string, unknown>, push: (t: Omit<DraftTask, "sourceReportId" | "projectId">) => void, draftCount: () => number): void {
-  function appendAC(detail: string, ac?: string[]): string {
-    return ac && ac.length > 0 ? `${detail}\nAC: ${ac.join("; ")}`.trim() : detail;
-  }
+  // Generate tasks from blockers first
+  const blockersData = asArray(data.blockers);
+  blockersData.forEach((raw) => {
+    const b = asObj(raw);
+    const title = str(b.title);
+    const severity = str(b.severity);
+    const category = str(b.category);
+    const evidence = str(b.evidence);
+    const whyItMatters = str(b.why_it_matters);
+    const recommendedFix = str(b.recommended_fix);
+    const acceptanceCriteria = str(b.acceptance_criteria);
+    if (!title) return;
+    const detailParts = [recommendedFix ? `Fix: ${recommendedFix}` : "", whyItMatters ? `Why: ${whyItMatters}` : "", evidence ? `Evidence: ${evidence}` : ""].filter(Boolean);
+    push({
+      title: truncate(severity === "P0" ? `[BLOCKER] ${title}` : `Fix: ${title}`),
+      detail: appendAC(detailParts.join(" | "), acceptanceCriteria ? [acceptanceCriteria] : [`"${title}" is resolved and verified`]),
+      priority: severity === "P0" ? "high" : severity === "P1" ? "medium" : "low",
+      category: category === "security" ? "technical" : category === "testing" ? "testing" : category === "deployment" ? "ops" : "technical",
+      evidence: evidence || undefined,
+      estimatedDifficulty: severity === "P0" ? "hard" : severity === "P1" ? "medium" : "easy",
+      suggestedAiPrompt: recommendedFix ? `Fix: ${recommendedFix}. Evidence: ${evidence}. Acceptance: ${acceptanceCriteria}` : undefined,
+    });
+  });
 
+  // Fallback: generate from gates
   const gatesData = asArray(data.gates ?? data.launch_gates);
   gatesData.forEach((raw) => {
     const g = asObj(raw);
@@ -316,44 +341,6 @@ export function generateDoctorTasks(data: Record<string, unknown>, push: (t: Omi
   asArray(data.deployment_gaps).forEach((d) => {
     const title = str(typeof d === "string" ? d : asObj(d).gap ?? asObj(d).description ?? d);
     if (title) push({ title: truncate(`[DEPLOY] ${title}`), priority: "medium", category: "technical", detail: appendAC("", [`Deployment gap "${title}" is resolved`]) });
-  });
-  const alignment = asObj(data.alignment ?? {});
-  const alignmentTasks = asArray(alignment.recommendedCodeTasks);
-  alignmentTasks.forEach((raw) => {
-    const t = asObj(raw);
-    const title = str(t.title);
-    const reason = str(t.reason);
-    if (!title) return;
-    push({
-      title: truncate(title),
-      detail: appendAC(reason || "", [`${title} is done and verified`]),
-      priority: normalizePriority(t.priority ?? "medium"),
-      category: "technical",
-    });
-  });
-  const missingReqs = asArray(alignment.missingProductRequirements);
-  missingReqs.forEach((raw) => {
-    const m = asObj(raw);
-    const title = str(m.title);
-    if (!title) return;
-    push({
-      title: truncate(`[PRODUCT GAP] ${title}`),
-      detail: appendAC(str(m.description) || "", [`Product requirement "${title}" is implemented`]),
-      priority: "high",
-      category: "development",
-    });
-  });
-  const riskyChoices = asArray(alignment.riskyImplementationChoices);
-  riskyChoices.forEach((raw) => {
-    const r = asObj(raw);
-    const title = str(r.title);
-    if (!title) return;
-    push({
-      title: truncate(`[RISK] Address: ${title}`),
-      detail: appendAC(str(r.description) || "", [`Risk "${title}" is mitigated`]),
-      priority: "medium",
-      category: "technical",
-    });
   });
   asArray(data.critical_issues).forEach((c) => {
     const title = str(c);

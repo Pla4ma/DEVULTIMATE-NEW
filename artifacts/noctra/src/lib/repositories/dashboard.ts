@@ -1,5 +1,6 @@
 import { isDemoMode } from "@/lib/demo-mode";
 import { demoStore } from "@/lib/demo-store";
+import { ROUTES } from "@/lib/routes";
 import { requireUserId, withErrorHandling, handleSupabaseError, getSupabaseClient } from "./common";
 
 interface NextBestAction {
@@ -16,18 +17,18 @@ const TOOL_JOURNEY: Array<{
   prereq?: string;
   reason: string;
 }> = [
-  { tool: "idea", title: "Run Idea Checker", route: "/app/idea", reason: "Start by validating your product idea before building anything" },
-  { tool: "reality", title: "Run Reality Compiler", route: "/app/reality", prereq: "idea", reason: "Your idea scored well — now pressure-test every assumption" },
-  { tool: "proof", title: "Run Proof Engine", route: "/app/proof", prereq: "reality", reason: "Time to collect evidence — assumptions need real-world validation" },
-  { tool: "swarm", title: "Run Market Swarm", route: "/app/swarm", prereq: "idea", reason: "Simulate your target market before committing to a direction" },
-  { tool: "mvp", title: "Run MVP Planner", route: "/app/mvp", prereq: "idea", reason: "Define your ruthless MVP scope — cut what doesn't ship value" },
-  { tool: "doctor", title: "Run Project Doctor", route: "/app/doctor", prereq: "mvp", reason: "Scan your codebase for launch blockers before going live" },
-  { tool: "launch", title: "Run Launch Room", route: "/app/launch", prereq: "doctor", reason: "Get your go/no-go signal before launching" },
+  { tool: "idea", title: "Run Idea Checker", route: ROUTES.idea, reason: "Start by validating your product idea before building anything" },
+  { tool: "reality", title: "Run Reality Compiler", route: ROUTES.reality, prereq: "idea", reason: "Your idea scored well — now pressure-test every assumption" },
+  { tool: "proof", title: "Run Proof Engine", route: ROUTES.proof, prereq: "reality", reason: "Time to collect evidence — assumptions need real-world validation" },
+  { tool: "swarm", title: "Run Market Swarm", route: ROUTES.swarm, prereq: "idea", reason: "Simulate your target market before committing to a direction" },
+  { tool: "mvp", title: "Run MVP Planner", route: ROUTES.mvp, prereq: "idea", reason: "Define your ruthless MVP scope — cut what doesn't ship value" },
+  { tool: "doctor", title: "Run Project Doctor", route: ROUTES.doctor, prereq: "mvp", reason: "Scan your codebase for launch blockers before going live" },
+  { tool: "launch", title: "Run Launch Room", route: ROUTES.launch, prereq: "doctor", reason: "Get your go/no-go signal before launching" },
 ];
 
 interface ReportLike {
   tool?: string;
-  score?: number;
+  score?: number | null;
   title?: string;
 }
 
@@ -55,7 +56,7 @@ function computeNextBestAction(
     return {
       title: "Clear Your Tasks",
       reason: `You have ${openTaskCount} open tasks — work through the backlog before generating more intelligence`,
-      route: "/app/tasks",
+      route: ROUTES.tasks,
     };
   }
 
@@ -63,7 +64,7 @@ function computeNextBestAction(
     return {
       title: "Create a Project Workspace",
       reason: "You have reports accumulating — create a project to link them and track progress in one place",
-      route: "/app/projects",
+      route: ROUTES.projects,
     };
   }
 
@@ -97,7 +98,7 @@ function computeNextBestAction(
     return {
       title: "Consult Product Twin",
       reason: "You've run the full intelligence suite — synthesize all signals with your digital twin",
-      route: "/app/twin",
+      route: ROUTES.twin,
       tool: "twin",
     };
   }
@@ -105,7 +106,7 @@ function computeNextBestAction(
   return {
     title: "Run Idea Checker",
     reason: "Validate your product idea before building further",
-    route: "/app/idea",
+    route: ROUTES.idea,
     tool: "idea",
   };
 }
@@ -200,7 +201,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       return {
         reports: [], projects: [], tasks: [], proofSignalCount: 0,
         latestScores: { ideaScore: 0, realityScore: 0, proofScore: 0, swarmScore: 0, mvpScore: 0, doctorScore: 0, launchScore: 0 },
-        nextBestAction: { title: "Run Idea Checker", reason: "Start by validating your product idea", route: "/app/idea", tool: "idea" },
+        nextBestAction: { title: "Run Idea Checker", reason: "Start by validating your product idea", route: ROUTES.idea, tool: "idea" },
         riskRadar: [],
       };
     }

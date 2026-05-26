@@ -20,7 +20,19 @@ export async function saveProofSignals(signals: Array<{ label: string; kind: str
   });
 }
 
-export async function getProofSignals(projectId?: string) {
+export interface ProofSignalRecord {
+  id: string;
+  label: string;
+  kind: string;
+  value?: number | null;
+  weight?: number;
+  source?: string | null;
+  evidence?: string | null;
+  project_id?: string | null;
+  created_at?: string;
+}
+
+export async function getProofSignals(projectId?: string): Promise<ProofSignalRecord[]> {
   if (isDemoMode()) {
     const userId = await requireUserId();
     return demoStore.getProofSignals(userId, projectId);

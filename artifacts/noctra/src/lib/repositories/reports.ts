@@ -40,7 +40,18 @@ export async function saveReport(params: {
   });
 }
 
-export async function getReports(tool?: string, projectId?: string) {
+export interface ReportRecord {
+  id: string;
+  tool: string;
+  title: string;
+  summary?: string | null;
+  score?: number | null;
+  created_at: string;
+  payload?: unknown;
+  project_id?: string | null;
+}
+
+export async function getReports(tool?: string, projectId?: string): Promise<ReportRecord[]> {
   if (isDemoMode()) {
     const userId = await requireUserId();
     return demoStore.getReports(userId, tool, projectId);

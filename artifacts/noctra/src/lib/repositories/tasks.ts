@@ -46,10 +46,23 @@ export async function createTask(task: { title: string; detail?: string; priorit
   });
 }
 
-export async function getTasks(projectId?: string) {
+export interface TaskRecord {
+  id: string;
+  title: string;
+  detail?: string | null;
+  priority: string;
+  status: string;
+  category?: string | null;
+  project_id?: string | null;
+  source_report_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getTasks(projectId?: string): Promise<TaskRecord[]> {
   if (isDemoMode()) {
     const userId = await requireUserId();
-    return demoStore.getTasks(userId, projectId);
+    return demoStore.getTasks(userId, projectId) as TaskRecord[];
   }
   return withErrorHandling("getTasks", async () => {
     const userId = await requireUserId();
@@ -59,7 +72,7 @@ export async function getTasks(projectId?: string) {
     if (projectId) q = q.eq("project_id", projectId);
     const { data, error } = await q;
     if (error) handleSupabaseError(error, "getTasks", { projectId } as Record<string, unknown>);
-    return data ?? [];
+    return (data ?? []) as TaskRecord[];
   });
 }
 

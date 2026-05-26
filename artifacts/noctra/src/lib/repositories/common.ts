@@ -2,7 +2,7 @@ import { supabase as _supabase, isSupabaseConfigured, supabaseConfigError } from
 import { isDemoMode, getDemoUser, DEMO_USER_FALLBACK_ID } from "@/lib/demo-mode";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const supabase: SupabaseClient | null = isSupabaseConfigured() ? _supabase as unknown as SupabaseClient : null;
+const supabase: SupabaseClient | null = isSupabaseConfigured() ? _supabase as SupabaseClient : null;
 
 export class RepositoryError extends Error {
   constructor(
@@ -48,7 +48,7 @@ export async function requireUserId(): Promise<string> {
     );
   }
   try {
-    const { data, error } = await supabase.auth.getUser() as unknown as UserResponse;
+    const { data, error } = await supabase.auth.getUser() as UserResponse;
     if (error) {
       throw new RepositoryError("Authentication failed", "AUTH_ERROR", "getUser", { originalError: error });
     }

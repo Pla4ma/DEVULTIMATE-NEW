@@ -36,7 +36,7 @@ export async function getBlockers(projectId: string): Promise<Blocker[]> {
       .select("*")
       .eq("user_id", userId)
       .eq("project_id", projectId)
-      .order("created_at", { ascending: false }) as unknown as QueryResponse<Blocker>;
+      .order("created_at", { ascending: false }) as QueryResponse<Blocker>;
     if (error) handleSupabaseError(error, "getBlockers", { projectId });
     return data ?? [];
   });
@@ -88,7 +88,7 @@ export async function createBlocker(params: {
         scan_id: params.scanId ?? null,
       })
       .select()
-      .single() as unknown as SingleResponse<Blocker>;
+      .single() as SingleResponse<Blocker>;
     if (error) handleSupabaseError(error, "createBlocker", { params } as Record<string, unknown>);
     return data as Blocker;
   });
@@ -109,7 +109,7 @@ export async function updateBlocker(id: string, patch: Partial<Blocker>): Promis
       .eq("id", id)
       .eq("user_id", userId)
       .select()
-      .single() as unknown as SingleResponse<Blocker>;
+      .single() as SingleResponse<Blocker>;
     if (error) handleSupabaseError(error, "updateBlocker", { id, patch } as Record<string, unknown>);
     return data as Blocker;
   });

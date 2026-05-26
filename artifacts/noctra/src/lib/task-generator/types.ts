@@ -33,7 +33,12 @@ export interface DraftTask {
   detail?: string;
   priority: "high" | "medium" | "low";
   category: string;
-  acceptance_criteria?: string[];
+  evidence?: string;
+  targetFilesOrAreas?: string;
+  estimatedDifficulty?: string;
+  acceptanceCriteria?: string[];
+  suggestedAiPrompt?: string;
+  linkedBlockerId?: string;
   sourceReportId?: string;
   projectId?: string | null;
 }
