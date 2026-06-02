@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import type { AuthenticatedUser } from "./auth-middleware";
 import { logger } from "./logger";
+import { getDailyUsage, recordUsage } from "./usage-store";
 
 interface QuotaConfig {
   scansPerDay: number;
@@ -20,59 +21,18 @@ const PLAN_QUOTAS: Record<string, QuotaConfig> = {
   admin: { scansPerDay: -1, scansTotal: -1, aiCallsPerDay: -1, structuredReportsPerDay: -1, streamingEnabled: true, maxProjects: -1 },
 };
 
-interface UsageEntry {
-  date: string;
-  counters: Map<string, number>;
-}
-
-const USAGE_STORE = new Map<string, UsageEntry[]>();
-
-function getDailyKey(userId: string): string {
-  const today = new Date().toISOString().slice(0, 10);
-  return `${userId}:${today}`;
-}
-
-function cleanup(): void {
-  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  for (const [key, entries] of USAGE_STORE) {
-    const valid = entries.filter((e) => Date.parse(e.date) > cutoff);
-    if (valid.length === 0) {
-      USAGE_STORE.delete(key);
-    } else {
-      USAGE_STORE.set(key, valid);
-    }
-  }
-}
-
-function getOrCreateCounter(key: string, counter: string): number {
-  let entries = USAGE_STORE.get(key);
-  if (!entries) {
-    entries = [{ date: key, counters: new Map() }];
-    USAGE_STORE.set(key, entries);
-  }
-  return entries[0]!.counters.get(counter) ?? 0;
-}
-
-function increment(key: string, counter: string): void {
-  let entries = USAGE_STORE.get(key);
-  if (!entries) {
-    entries = [{ date: key, counters: new Map() }];
-    USAGE_STORE.set(key, entries);
-  }
-  const counters = entries[0]!.counters;
-  counters.set(counter, (counters.get(counter) ?? 0) + 1);
-}
-
 function isUnlimited(val: number): boolean {
   return val === -1;
 }
 
-function checkLimit(label: string, current: number, limit: number): string | null {
-  if (isUnlimited(limit)) return null;
-  if (current >= limit) {
-    return `${label} limit reached (${current}/${limit} used)`;
-  }
-  return null;
+function clientIp(req: Request): string | undefined {
+  const fwd = req.headers["x-forwarded-for"];
+  if (typeof fwd === "string") return fwd.split(",")[0]?.trim();
+  return req.socket?.remoteAddress ?? undefined;
+}
+
+function resetsAt(): string {
+  return new Date(new Date().setHours(24, 0, 0, 0)).toISOString();
 }
 
 export function requireQuota(counter: string, limitKey: keyof QuotaConfig) {
@@ -90,31 +50,34 @@ export function requireQuota(counter: string, limitKey: keyof QuotaConfig) {
     }
 
     const limit = quota[limitKey] as number;
+    const userId = req.user.id;
+
     if (isUnlimited(limit)) {
-      increment(getDailyKey(req.user.id), counter);
+      recordUsage(userId, { route: counter, ipAddress: clientIp(req) });
       next();
       return;
     }
 
-    const dailyKey = getDailyKey(req.user.id);
-    const current = getOrCreateCounter(dailyKey, counter);
-
-    const error = checkLimit(counter, current, limit);
-    if (error) {
-      logger.warn({ userId: req.user.id, plan, counter, current, limit }, "Quota exceeded");
-      res.status(429).json({
-        error: "QUOTA_EXCEEDED",
-        message: error,
-        plan,
-        limit,
-        used: current,
-        resetsAt: new Date(new Date().setHours(24, 0, 0, 0)).toISOString(),
+    getDailyUsage(userId)
+      .then((counts) => {
+        const current = counts.get(counter) ?? 0;
+        if (current >= limit) {
+          logger.warn({ userId, plan, counter, current, limit }, "Quota exceeded");
+          res.status(429).json({
+            error: "QUOTA_EXCEEDED",
+            message: `${counter} limit reached (${current}/${limit} used)`,
+            plan, limit, used: current, resetsAt: resetsAt(),
+          });
+          return;
+        }
+        recordUsage(userId, { route: counter, ipAddress: clientIp(req) });
+        next();
+      })
+      .catch((err) => {
+        logger.error({ userId, err }, "Quota check failed — allowing request (fail-open)");
+        recordUsage(userId, { route: counter, ipAddress: clientIp(req) });
+        next();
       });
-      return;
-    }
-
-    increment(dailyKey, counter);
-    next();
   };
 }
 
@@ -152,75 +115,56 @@ export function requireUploadQuota() {
       return;
     }
 
-    const limit = quota.scansPerDay;
-    if (!isUnlimited(limit)) {
-      const dailyKey = getDailyKey(req.user.id);
-      const current = getOrCreateCounter(dailyKey, "scan-upload");
+    const userId = req.user.id;
+    const dailyLimit = quota.scansPerDay;
 
-      if (current >= limit) {
-        logger.warn({ userId: req.user.id, plan, current, limit }, "Scan upload quota exceeded");
-        res.status(429).json({
-          error: "QUOTA_EXCEEDED",
-          message: `Scan upload limit reached (${current}/${limit} per day)`,
-          plan,
-          limit,
-          used: current,
-          resetsAt: new Date(new Date().setHours(24, 0, 0, 0)).toISOString(),
-        });
-        return;
-      }
-
-      increment(dailyKey, "scan-upload");
+    if (isUnlimited(dailyLimit)) {
+      recordUsage(userId, { route: "scan-upload", ipAddress: clientIp(req) });
+      next();
+      return;
     }
 
-    if (!isUnlimited(quota.scansTotal)) {
-      const totalKey = `${req.user.id}:total`;
-      const total = getOrCreateCounter(totalKey, "scan-upload-total");
-
-      if (total >= quota.scansTotal) {
-        res.status(429).json({
-          error: "QUOTA_EXCEEDED",
-          message: `Total scan limit reached (${total}/${quota.scansTotal})`,
-          plan,
-          limit: quota.scansTotal,
-          used: total,
-        });
-        return;
-      }
-
-      increment(totalKey, "scan-upload-total");
-    }
-
-    next();
+    getDailyUsage(userId)
+      .then((counts) => {
+        const current = counts.get("scan-upload") ?? 0;
+        if (current >= dailyLimit) {
+          logger.warn({ userId, plan, current, limit: dailyLimit }, "Scan upload quota exceeded");
+          res.status(429).json({
+            error: "QUOTA_EXCEEDED",
+            message: `Scan upload limit reached (${current}/${dailyLimit} per day)`,
+            plan, limit: dailyLimit, used: current, resetsAt: resetsAt(),
+          });
+          return;
+        }
+        recordUsage(userId, { route: "scan-upload", ipAddress: clientIp(req) });
+        next();
+      })
+      .catch((err) => {
+        logger.error({ userId, err }, "Scan quota check failed — allowing request (fail-open)");
+        recordUsage(userId, { route: "scan-upload", ipAddress: clientIp(req) });
+        next();
+      });
   };
 }
 
-export function getCurrentUsage(userId: string, plan: string): Record<string, { used: number; limit: number | string }> {
-  cleanup();
+export async function getCurrentUsage(
+  userId: string,
+  plan: string,
+): Promise<Record<string, { used: number; limit: number | string }>> {
   const quota = PLAN_QUOTAS[plan];
-  const dailyKey = getDailyKey(userId);
-  const totalKey = `${userId}:total`;
-
   if (!quota) return {};
-  const result: Record<string, { used: number; limit: number | string }> = {};
 
-  const numericKeys: (keyof QuotaConfig)[] = ["scansPerDay", "scansTotal", "aiCallsPerDay", "structuredReportsPerDay", "maxProjects"];
-  for (const key of numericKeys) {
-    const counter = key === "scansPerDay" ? "scan-upload"
-      : key === "structuredReportsPerDay" ? "structured"
-      : key === "aiCallsPerDay" ? "ai-call"
-      : key;
+  const counts = await getDailyUsage(userId);
+  const aiCalls = (counts.get("ai-chat") ?? 0) + (counts.get("ai-stream") ?? 0);
+  const structured = (counts.get("ai-structured") ?? 0) + (counts.get("ai-insight-sweep") ?? 0);
+  const scans = counts.get("scan-upload") ?? 0;
 
-    const used = getOrCreateCounter(dailyKey, counter);
-    const limit = quota[key] as number;
-    result[key] = { used, limit: isUnlimited(limit) ? "unlimited" : limit };
-  }
+  const fmt = (used: number, limit: number) => ({ used, limit: isUnlimited(limit) ? "unlimited" : limit });
 
-  const totalScansUsed = getOrCreateCounter(totalKey, "scan-upload-total");
-  result["scansTotal"] = {
-    used: totalScansUsed,
-    limit: isUnlimited(quota.scansTotal) ? "unlimited" : quota.scansTotal,
+  return {
+    scansPerDay: fmt(scans, quota.scansPerDay),
+    aiCallsPerDay: fmt(aiCalls, quota.aiCallsPerDay),
+    structuredReportsPerDay: fmt(structured, quota.structuredReportsPerDay),
+    maxProjects: { used: 0, limit: isUnlimited(quota.maxProjects) ? "unlimited" : quota.maxProjects },
   };
-
-  return result;
 }

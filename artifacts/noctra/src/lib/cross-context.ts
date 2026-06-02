@@ -104,7 +104,7 @@ export async function loadCrossToolContext(
 
   try {
     const allReports = await getReports(undefined, projectId ?? undefined);
-    const reports = (allReports as Array<Record<string, unknown>>)
+    const reports = (allReports as unknown as Array<Record<string, unknown>>)
       .filter((r) => relevantTools.includes(String(r.tool ?? "")))
       .sort((a, b) => new Date(String(b.created_at)).getTime() - new Date(String(a.created_at)).getTime());
 

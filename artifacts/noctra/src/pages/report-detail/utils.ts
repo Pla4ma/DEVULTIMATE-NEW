@@ -1,4 +1,5 @@
 import type { Report } from "./types";
+import type { Sprint } from "@/lib/task-generator/types";
 
 export function scoreLabel(score: number): string {
   if (score >= 80) return "Strong";
@@ -29,19 +30,21 @@ export function getPayloadData<T>(report: Report): T | null {
   return (p?.data as T | null) ?? null;
 }
 
-export function sprintToMarkdown(sprint: Record<string, unknown>): string {
-  const days = (sprint?.days as Array<Record<string, unknown>>) ?? [];
-  const lines = [`# ${String(sprint?.title ?? "Sprint Plan")}`, ""];
+export function sprintToMarkdown(sprint: Sprint | Record<string, unknown>): string {
+  const title = String((sprint as Sprint).title ?? (sprint as Record<string, unknown>).title ?? "Sprint");
+  const days = ((sprint as Sprint).days ?? (sprint as Record<string, unknown>).days ?? []) as Array<{ day: string; goal?: string; tasks: string[] }>;
+  const risks = ((sprint as Sprint).risks ?? (sprint as Record<string, unknown>).risks ?? []) as string[];
+  const demoChecklist = ((sprint as Sprint).demo_checklist ?? (sprint as Record<string, unknown>).demo_checklist ?? []) as string[];
+
+  const lines = [`# ${title}`, ""];
   days.forEach((d) => {
-    lines.push(`## ${String(d?.day ?? "Day")}`);
-    if (d?.goal) lines.push(`Goal: ${String(d.goal)}`);
-    if (d?.tasks) { const tasks = d.tasks as string[]; tasks.forEach((t, i) => lines.push(`${i + 1}. ${t}`)); }
+    lines.push(`## ${d.day}`);
+    if (d.goal) lines.push(`Goal: ${d.goal}`);
+    d.tasks.forEach((t, i) => lines.push(`${i + 1}. ${t}`));
     lines.push("");
   });
-  const risks = sprint?.risks as string[] ?? [];
   if (risks.length > 0) { lines.push("## Risks"); risks.forEach((r) => lines.push(`- ${r}`)); lines.push(""); }
-  const demo = sprint?.demo_checklist as string[] ?? [];
-  if (demo.length > 0) { lines.push("## Demo Checklist"); demo.forEach((d) => lines.push(`- [ ] ${d}`)); lines.push(""); }
+  if (demoChecklist.length > 0) { lines.push("## Demo Checklist"); demoChecklist.forEach((d) => lines.push(`- [ ] ${d}`)); lines.push(""); }
   return lines.join("\n");
 }
 

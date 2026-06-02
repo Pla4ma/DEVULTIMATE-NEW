@@ -27,3 +27,4 @@ export {
   getScanSnapshots, getLatestScanSnapshot, getScanDelta, createScanSnapshot,
 } from "./repositories/scan-snapshots";
 export type { ScanSnapshot, ScanDelta } from "./repositories/scan-snapshots";
+export { getUsage } from "./repositories/usage";

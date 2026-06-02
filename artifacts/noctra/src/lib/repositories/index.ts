@@ -15,3 +15,4 @@ export {
 export { saveScan, getScans } from "./scans";
 export { getPassport, upsertPassport } from "./passport";
 export { getDashboardData } from "./dashboard";
+export { getUsage } from "./usage";

@@ -28,23 +28,23 @@ export type RadarRisk = {
 };
 
 export const RISK_SEV_COLOR: Record<RiskSeverity, string> = {
-  critical: "var(--noctra-rose)",
-  high: "var(--noctra-amber)",
-  medium: "var(--noctra-cyan)",
-  low: "var(--noctra-text-muted)",
+  critical: "var(--color-danger)",
+  high: "var(--color-warning)",
+  medium: "var(--signal)",
+  low: "var(--text-tertiary)",
 };
 
 export const RISK_CATEGORY_COLOR: Record<RiskCategory, string> = {
-  Market: "var(--noctra-violet)",
-  Product: "var(--noctra-cyan)",
-  Technical: "var(--noctra-rose)",
-  Security: "var(--noctra-rose)",
-  Testing: "var(--noctra-amber)",
-  Launch: "var(--noctra-magenta)",
-  Monetization: "var(--noctra-gold)",
-  Retention: "var(--noctra-emerald)",
-  "AI Replacement": "var(--noctra-rose)",
-  Scope: "var(--noctra-text-muted)",
+  Market: "var(--accent-violet)",
+  Product: "var(--signal)",
+  Technical: "var(--color-danger)",
+  Security: "var(--color-danger)",
+  Testing: "var(--color-warning)",
+  Launch: "var(--accent-magenta)",
+  Monetization: "var(--accent-gold)",
+  Retention: "var(--color-success)",
+  "AI Replacement": "var(--color-danger)",
+  Scope: "var(--text-tertiary)",
 };
 
 const SEV_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };

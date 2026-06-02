@@ -27,25 +27,25 @@ export type ProofSignal = {
 
 export const STAGES = ["IDEA", "PLANNED", "BUILDING", "SCANNED", "FIXING", "READY_SOON", "LAUNCH_READY", "LAUNCHED"];
 export const STAGE_COLORS: Record<string, string> = {
-  IDEA: "var(--noctra-violet)",
-  PLANNED: "var(--noctra-amber)",
-  BUILDING: "var(--noctra-cyan)",
-  SCANNED: "var(--noctra-blue)",
-  FIXING: "var(--noctra-rose)",
-  READY_SOON: "var(--noctra-emerald)",
-  LAUNCH_READY: "var(--noctra-gold)",
-  LAUNCHED: "var(--noctra-emerald)",
+  IDEA: "var(--accent-violet)",
+  PLANNED: "var(--color-warning)",
+  BUILDING: "var(--signal)",
+  SCANNED: "var(--color-info)",
+  FIXING: "var(--color-danger)",
+  READY_SOON: "var(--color-success)",
+  LAUNCH_READY: "var(--accent-gold)",
+  LAUNCHED: "var(--color-success)",
 };
 export const PRIORITY_COLOR: Record<string, string> = {
-  high: "var(--noctra-rose)", medium: "var(--noctra-amber)", low: "var(--noctra-emerald)",
-  critical: "var(--noctra-rose)",
+  high: "var(--color-danger)", medium: "var(--color-warning)", low: "var(--color-success)",
+  critical: "var(--color-danger)",
 };
 export const STATUS_COLOR: Record<string, string> = {
-  todo: "var(--noctra-text-muted)", "in-progress": "var(--noctra-cyan)",
-  completed: "var(--noctra-emerald)", blocked: "var(--noctra-rose)",
+  todo: "var(--text-tertiary)", "in-progress": "var(--signal)",
+  completed: "var(--color-success)", blocked: "var(--color-danger)",
 };
 export const INTELLIGENCE_TOOLS = ["idea", "reality", "proof", "swarm", "mvp", "doctor", "launch"] as const;
 export const SCORE_COLOR = (s: number) =>
-  s >= 70 ? "var(--noctra-emerald)" : s >= 50 ? "var(--noctra-amber)" : "var(--noctra-rose)";
+  s >= 70 ? "var(--color-success)" : s >= 50 ? "var(--color-warning)" : "var(--color-danger)";
 
 export type Tab = "overview" | "reports" | "execution" | "proof" | "doctor" | "blockers" | "twin" | "launch" | "history";

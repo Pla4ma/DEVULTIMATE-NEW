@@ -62,8 +62,8 @@ export function DoctorOutputPanel(props: {
     const repairQueue = (aiData?.repair_queue as string[] ?? []).slice(0, 5);
     const topBlockers = redGates.slice(0, 3);
     const healthColor = healthScore != null
-      ? (healthScore >= 70 ? "var(--noctra-emerald)" : healthScore >= 40 ? "var(--noctra-amber)" : "var(--noctra-rose)")
-      : "var(--noctra-text-muted)";
+      ? (healthScore >= 70 ? "var(--color-success)" : healthScore >= 40 ? "var(--color-warning)" : "var(--color-danger)")
+      : "var(--text-tertiary)";
     const statusLabel = healthScore != null
       ? (healthScore >= 70 ? "Launch Ready" : healthScore >= 40 ? "Needs Work" : "Blocked")
       : "Unknown";
@@ -72,11 +72,11 @@ export function DoctorOutputPanel(props: {
     return (
       <div className="space-y-4">
         {/* Scan→Fix→Rescan status banner */}
-        <div className="px-4 py-3 rounded-xl flex items-center gap-3" style={{ background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.2)" }}>
-          <CheckCircle size={14} style={{ color: "var(--noctra-emerald)" }} />
+        <div className="px-4 py-3 rounded-xl flex items-center gap-3" style={{ background: "var(--color-success-soft)", border: "1px solid var(--color-success-soft)" }}>
+          <CheckCircle size={14} style={{ color: "var(--color-success)" }} />
           <div className="flex-1">
-            <p className="text-sm font-medium" style={{ color: "var(--noctra-emerald)" }}>Diagnosis complete — report saved</p>
-            <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>
+            <p className="text-sm font-medium" style={{ color: "var(--color-success)" }}>Diagnosis complete — report saved</p>
+            <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
               Fix queue generated and added to Task Queue. Fix blockers, then rescan to see your score improve.
             </p>
           </div>
@@ -86,19 +86,19 @@ export function DoctorOutputPanel(props: {
         </div>
 
         {scanFallbackMode === "ai-only" && (
-          <div className="px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(244,63,94,0.07)", border: "1px solid rgba(244,63,94,0.3)" }}>
-            <AlertTriangle size={14} style={{ color: "var(--noctra-rose)", flexShrink: 0, marginTop: 1 }} />
+          <div className="px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "var(--color-danger-soft)", border: "1px solid var(--color-danger-soft)" }}>
+            <AlertTriangle size={14} style={{ color: "var(--color-danger)", flexShrink: 0, marginTop: 1 }} />
             <div>
-              <p className="text-sm font-bold" style={{ color: "var(--noctra-rose)" }}>Static scan failed — this is NOT a launch readiness report</p>
-              <p className="text-xs mt-1" style={{ color: "var(--noctra-text-muted)" }}>
+              <p className="text-sm font-bold" style={{ color: "var(--color-danger)" }}>Static scan failed — this is NOT a launch readiness report</p>
+              <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
                 The static scanner could not process your repo. This is an AI-only estimate based on file metadata alone, not real code analysis.
               </p>
-              <ul className="text-xs mt-1 space-y-0.5" style={{ color: "var(--noctra-amber)" }}>
+              <ul className="text-xs mt-1 space-y-0.5" style={{ color: "var(--color-warning)" }}>
                 <li>No code scan was performed</li>
                 <li>No launch gates were evaluated</li>
                 <li>No evidence index exists</li>
               </ul>
-              <p className="text-xs mt-2 font-bold" style={{ color: "var(--noctra-rose)" }}>
+              <p className="text-xs mt-2 font-bold" style={{ color: "var(--color-danger)" }}>
                 Do not use this report for any launch or deployment decision. Retry with a valid ZIP file for real diagnostics.
               </p>
             </div>
@@ -110,14 +110,14 @@ export function DoctorOutputPanel(props: {
           {/* Current Score */}
           {healthScore != null && (
             <Panel>
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-text-muted)" }}>Current Launch Score</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--text-tertiary)" }}>Current Launch Score</p>
               <div className="flex items-end gap-2">
                 <span className="text-3xl font-bold" style={{ color: healthColor }}>{healthScore}</span>
-                <span className="text-xs mb-1" style={{ color: "var(--noctra-text-muted)" }}>/ 100</span>
+                <span className="text-xs mb-1" style={{ color: "var(--text-tertiary)" }}>/ 100</span>
               </div>
               <div className="mt-1">
                 <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{
-                  background: healthScore >= 70 ? "rgba(52,211,153,0.1)" : healthScore >= 40 ? "rgba(245,158,11,0.1)" : "rgba(244,63,94,0.1)",
+                  background: healthScore >= 70 ? "var(--color-success-soft)" : healthScore >= 40 ? "var(--color-warning-soft)" : "var(--color-danger-soft)",
                   color: healthColor,
                 }}>{statusLabel}</span>
               </div>
@@ -126,14 +126,14 @@ export function DoctorOutputPanel(props: {
 
           {/* Previous Score (placeholder - real data comes from report history) */}
           <Panel>
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-text-muted)" }}>Score Change</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--text-tertiary)" }}>Score Change</p>
             <div className="flex items-center gap-2">
               <div className="flex items-end gap-1">
-                <span className="text-lg font-bold" style={{ color: "var(--noctra-text-muted)" }}>—</span>
-                <span className="text-xs mb-0.5" style={{ color: "var(--noctra-text-muted)" }}>previous</span>
+                <span className="text-lg font-bold" style={{ color: "var(--text-tertiary)" }}>—</span>
+                <span className="text-xs mb-0.5" style={{ color: "var(--text-tertiary)" }}>previous</span>
               </div>
             </div>
-            <p className="text-[10px] mt-1" style={{ color: "var(--noctra-text-muted)" }}>
+            <p className="text-[10px] mt-1" style={{ color: "var(--text-tertiary)" }}>
               First scan — rescan after fixing to track improvement
             </p>
           </Panel>
@@ -141,12 +141,12 @@ export function DoctorOutputPanel(props: {
           {/* Launch Readiness / Status */}
           {launchReadiness && (
             <Panel>
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-text-muted)" }}>Launch Readiness</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--text-tertiary)" }}>Launch Readiness</p>
               <p className="text-lg font-bold" style={{
-                color: launchReadiness === "GO" ? "var(--noctra-emerald)" :
-                  launchReadiness === "CONDITIONAL" ? "var(--noctra-amber)" : "var(--noctra-rose)"
+                color: launchReadiness === "GO" ? "var(--color-success)" :
+                  launchReadiness === "CONDITIONAL" ? "var(--color-warning)" : "var(--color-danger)"
               }}>{launchReadiness}</p>
-              <p className="text-[10px] mt-1" style={{ color: "var(--noctra-text-muted)" }}>
+              <p className="text-[10px] mt-1" style={{ color: "var(--text-tertiary)" }}>
                 {launchReadiness === "GO" ? "All gates clear — ready to ship"
                   : launchReadiness === "CONDITIONAL" ? "Fix yellow gates before launch"
                   : "Blockers must be resolved"}
@@ -159,18 +159,18 @@ export function DoctorOutputPanel(props: {
         {topBlockers.length > 0 && (
           <Panel>
             <div className="flex items-center gap-2 mb-2">
-              <XCircle size={12} style={{ color: "var(--noctra-rose)" }} />
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-rose)" }}>Top Blockers</p>
+              <XCircle size={12} style={{ color: "var(--color-danger)" }} />
+              <p className="eyebrow" style={{ color: "var(--color-danger)" }}>Top Blockers</p>
               {redGates.length > 3 && (
-                <span className="text-[10px] ml-auto" style={{ color: "var(--noctra-text-muted)" }}>+{redGates.length - 3} more</span>
+                <span className="text-[10px] ml-auto" style={{ color: "var(--text-tertiary)" }}>+{redGates.length - 3} more</span>
               )}
             </div>
             <div className="space-y-1.5">
               {topBlockers.map((g, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg" style={{ background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.2)" }}>
-                  <span className="text-[10px] font-bold opacity-60" style={{ color: "var(--noctra-rose)" }}>#{i + 1}</span>
-                  <XCircle size={11} style={{ color: "var(--noctra-rose)" }} />
-                  <span style={{ color: "var(--noctra-text)" }}>{g}</span>
+                <div key={i} className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg" style={{ background: "var(--color-danger-soft)", border: "1px solid var(--color-danger-soft)" }}>
+                  <span className="text-[10px] font-bold opacity-60" style={{ color: "var(--color-danger)" }}>#{i + 1}</span>
+                  <XCircle size={11} style={{ color: "var(--color-danger)" }} />
+                  <span style={{ color: "var(--text-primary)" }}>{g}</span>
                 </div>
               ))}
             </div>
@@ -181,13 +181,13 @@ export function DoctorOutputPanel(props: {
         {repairQueue.length > 0 && (
           <Panel>
             <div className="flex items-center gap-2 mb-2">
-              <Target size={12} style={{ color: "var(--noctra-amber)" }} />
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-amber)" }}>Next Recommended Fix</p>
+              <Target size={12} style={{ color: "var(--color-warning)" }} />
+              <p className="eyebrow" style={{ color: "var(--color-warning)" }}>Next Recommended Fix</p>
             </div>
-            <div className="px-3 py-2 rounded-lg" style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
-              <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>{repairQueue[0]}</p>
+            <div className="px-3 py-2 rounded-lg" style={{ background: "var(--color-warning-soft)", border: "1px solid var(--color-warning-soft)" }}>
+              <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>{repairQueue[0]}</p>
               {repairQueue.length > 1 && (
-                <p className="text-[10px] mt-1" style={{ color: "var(--noctra-text-muted)" }}>Then: {repairQueue.slice(1, 3).join(", ")}</p>
+                <p className="text-[10px] mt-1" style={{ color: "var(--text-tertiary)" }}>Then: {repairQueue.slice(1, 3).join(", ")}</p>
               )}
             </div>
           </Panel>
@@ -196,18 +196,18 @@ export function DoctorOutputPanel(props: {
         {/* Red/Yellow Gates */}
         {(redGates.length > 0 || yellowGates.length > 0) && (
           <Panel>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-rose)" }}>Launch Gates</p>
+            <p className="eyebrow mb-2" style={{ color: "var(--color-danger)" }}>Launch Gates</p>
             <div className="space-y-1">
               {redGates.map((g, i) => (
-                <div key={`r-${i}`} className="flex items-center gap-2 text-xs px-2 py-1.5 rounded-lg" style={{ background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.2)" }}>
-                  <XCircle size={11} style={{ color: "var(--noctra-rose)" }} />
-                  <span style={{ color: "var(--noctra-text)" }}>{g}</span>
+                <div key={`r-${i}`} className="flex items-center gap-2 text-xs px-2 py-1.5 rounded-lg" style={{ background: "var(--color-danger-soft)", border: "1px solid var(--color-danger-soft)" }}>
+                  <XCircle size={11} style={{ color: "var(--color-danger)" }} />
+                  <span style={{ color: "var(--text-primary)" }}>{g}</span>
                 </div>
               ))}
               {yellowGates.map((g, i) => (
-                <div key={`y-${i}`} className="flex items-center gap-2 text-xs px-2 py-1.5 rounded-lg" style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
-                  <AlertTriangle size={11} style={{ color: "var(--noctra-amber)" }} />
-                  <span style={{ color: "var(--noctra-text)" }}>{g}</span>
+                <div key={`y-${i}`} className="flex items-center gap-2 text-xs px-2 py-1.5 rounded-lg" style={{ background: "var(--color-warning-soft)", border: "1px solid var(--color-warning-soft)" }}>
+                  <AlertTriangle size={11} style={{ color: "var(--color-warning)" }} />
+                  <span style={{ color: "var(--text-primary)" }}>{g}</span>
                 </div>
               ))}
             </div>
@@ -217,18 +217,18 @@ export function DoctorOutputPanel(props: {
         {/* Fix Task Queue */}
         <Panel>
           <div className="flex items-center gap-2 mb-2">
-            <ListChecks size={12} style={{ color: "var(--noctra-emerald)" }} />
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Fix Task Queue</p>
-            <span className="ml-auto text-[10px]" style={{ color: "var(--noctra-text-muted)" }}>
+            <ListChecks size={12} style={{ color: "var(--color-success)" }} />
+            <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Fix Task Queue</p>
+            <span className="ml-auto text-[10px]" style={{ color: "var(--text-tertiary)" }}>
               Generated from this scan
             </span>
           </div>
           <div className="space-y-1.5">
             {repairQueue.slice(0, 5).map((item, i) => (
-              <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs" style={{ background: "var(--noctra-surface2)" }}>
-                <span className="text-[10px] font-mono opacity-50" style={{ color: "var(--noctra-text-muted)" }}>{String(i + 1).padStart(2, "0")}</span>
-                <span className="flex-1" style={{ color: "var(--noctra-text-soft)" }}>{item}</span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.1)", color: "var(--noctra-amber)" }}>
+              <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs" style={{ background: "var(--surface-2)" }}>
+                <span className="text-[10px] font-mono opacity-50" style={{ color: "var(--text-tertiary)" }}>{String(i + 1).padStart(2, "0")}</span>
+                <span className="flex-1" style={{ color: "var(--text-secondary)" }}>{item}</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: "var(--color-warning-soft)", color: "var(--color-warning)" }}>
                   {i === 0 ? "CRITICAL" : i < 3 ? "HIGH" : "MEDIUM"}
                 </span>
               </div>
@@ -239,20 +239,20 @@ export function DoctorOutputPanel(props: {
         {/* Launch Readiness Timeline - rescan loop */}
         <Panel>
           <div className="flex items-center gap-2 mb-2">
-            <Clock size={12} style={{ color: "var(--noctra-cyan)" }} />
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Launch Readiness Loop</p>
+            <Clock size={12} style={{ color: "var(--signal)" }} />
+            <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Launch Readiness Loop</p>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg" style={{ background: "rgba(61,216,255,0.08)", border: "1px solid rgba(61,216,255,0.2)" }}>
-              <span className="font-bold" style={{ color: "var(--noctra-cyan)" }}>Scan</span>
-              <ArrowRight size={10} style={{ color: "var(--noctra-text-muted)" }} />
-              <span className="font-bold" style={{ color: "var(--noctra-amber)" }}>Fix</span>
-              <ArrowRight size={10} style={{ color: "var(--noctra-text-muted)" }} />
-              <span className="font-bold" style={{ color: "var(--noctra-emerald)" }}>Rescan</span>
-              <ArrowRight size={10} style={{ color: "var(--noctra-text-muted)" }} />
-              <span className="font-bold" style={{ color: "var(--noctra-cyan)" }}>Launch</span>
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg" style={{ background: "var(--signal-soft)", border: "1px solid var(--signal-soft)" }}>
+              <span className="font-bold" style={{ color: "var(--signal)" }}>Scan</span>
+              <ArrowRight size={10} style={{ color: "var(--text-tertiary)" }} />
+              <span className="font-bold" style={{ color: "var(--color-warning)" }}>Fix</span>
+              <ArrowRight size={10} style={{ color: "var(--text-tertiary)" }} />
+              <span className="font-bold" style={{ color: "var(--color-success)" }}>Rescan</span>
+              <ArrowRight size={10} style={{ color: "var(--text-tertiary)" }} />
+              <span className="font-bold" style={{ color: "var(--signal)" }}>Launch</span>
             </div>
-            <span className="text-[10px]" style={{ color: "var(--noctra-text-muted)" }}>
+            <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
               Each rescan verifies fixes improved your score
             </span>
           </div>
@@ -261,11 +261,11 @@ export function DoctorOutputPanel(props: {
         {/* Top Issues */}
         {topIssues.length > 0 && (
           <Panel>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-rose)" }}>Top Issues</p>
+            <p className="eyebrow mb-2" style={{ color: "var(--color-danger)" }}>Top Issues</p>
             <div className="space-y-1">
               {topIssues.map((issue, i) => (
-                <p key={i} className="text-xs flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
-                  <span style={{ color: "var(--noctra-rose)" }}>—</span>{issue}
+                <p key={i} className="text-xs flex gap-2" style={{ color: "var(--text-secondary)" }}>
+                  <span style={{ color: "var(--color-danger)" }}>—</span>{issue}
                 </p>
               ))}
             </div>
@@ -276,17 +276,17 @@ export function DoctorOutputPanel(props: {
         {scanResult?.evidenceIndex && scanResult.evidenceIndex.length > 0 && (
           <Panel>
             <div className="flex items-center gap-2 mb-2">
-              <Bug size={13} style={{ color: "var(--noctra-amber)" }} />
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Evidence Index</p>
-              <span className="ml-auto text-xs font-mono" style={{ color: "var(--noctra-text-muted)" }}>{scanResult.evidenceIndex.length} items</span>
+              <Bug size={13} style={{ color: "var(--color-warning)" }} />
+              <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Evidence Index</p>
+              <span className="ml-auto text-xs font-mono" style={{ color: "var(--text-tertiary)" }}>{scanResult.evidenceIndex.length} items</span>
             </div>
             <div className="space-y-1.5 max-h-48 overflow-y-auto">
               {scanResult.evidenceIndex.slice(0, 15).map((e, i) => (
-                <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded-lg text-xs" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
-                  <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: e.severity === "error" ? "var(--noctra-rose)" : e.severity === "warning" ? "var(--noctra-amber)" : "var(--noctra-cyan)" }} />
+                <div key={i} className="flex items-start gap-2 px-2 py-1.5 rounded-lg text-xs" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+                  <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: e.severity === "error" ? "var(--color-danger)" : e.severity === "warning" ? "var(--color-warning)" : "var(--signal)" }} />
                   <div className="flex-1 min-w-0">
-                    <span className="font-mono text-[10px]" style={{ color: "var(--noctra-text-muted)" }}>{e.filePath}{e.lineNumber ? `:${e.lineNumber}` : ""}</span>
-                    <p className="mt-0.5" style={{ color: "var(--noctra-text-soft)" }}>{e.explanation || e.signal}</p>
+                    <span className="font-mono text-[10px]" style={{ color: "var(--text-tertiary)" }}>{e.filePath}{e.lineNumber ? `:${e.lineNumber}` : ""}</span>
+                    <p className="mt-0.5" style={{ color: "var(--text-secondary)" }}>{e.explanation || e.signal}</p>
                   </div>
                 </div>
               ))}
@@ -297,7 +297,7 @@ export function DoctorOutputPanel(props: {
         {/* Scan Summary */}
         {scanResult?.scan && (
           <Panel>
-            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>Scan Summary</p>
+            <p className="eyebrow mb-2" style={{ color: "var(--text-tertiary)" }}>Scan Summary</p>
             <div className="flex flex-wrap gap-2 text-xs">
               {scanResult.scan.fileCount != null && <Badge>{scanResult.scan.fileCount} files</Badge>}
               {scanResult.scan.totalLines != null && <Badge>{scanResult.scan.totalLines} lines</Badge>}
@@ -320,10 +320,10 @@ export function DoctorOutputPanel(props: {
 
         {/* Scan Warnings */}
         {scanResult?.warnings && scanResult.warnings.length > 0 && (
-          <div className="px-3 py-2 rounded-lg" style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
-            <p className="text-xs font-medium mb-1" style={{ color: "var(--noctra-amber)" }}>Scan Warnings</p>
+          <div className="px-3 py-2 rounded-lg" style={{ background: "var(--color-warning-soft)", border: "1px solid var(--color-warning-soft)" }}>
+            <p className="text-xs font-medium mb-1" style={{ color: "var(--color-warning)" }}>Scan Warnings</p>
             {scanResult.warnings.slice(0, 3).map((w, i) => (
-              <p key={i} className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{w}</p>
+              <p key={i} className="text-xs" style={{ color: "var(--text-tertiary)" }}>{w}</p>
             ))}
           </div>
         )}
@@ -333,17 +333,17 @@ export function DoctorOutputPanel(props: {
         {/* Build Prompt */}
         <Panel>
           <div className="flex items-center gap-2 mb-2">
-            <Terminal size={13} style={{ color: "var(--noctra-cyan)" }} />
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Next Build Prompt</p>
+            <Terminal size={13} style={{ color: "var(--signal)" }} />
+            <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Next Build Prompt</p>
           </div>
-          <p className="text-xs mb-2" style={{ color: "var(--noctra-text-muted)" }}>
+          <p className="text-xs mb-2" style={{ color: "var(--text-tertiary)" }}>
             Copy this prompt into Codex, Replit Agent, Cursor, or Windsurf to fix all identified issues.
           </p>
           <div className="flex gap-2 mb-2">
-            <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Codex</span>
-            <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Replit</span>
-            <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Cursor</span>
-            <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Windsurf</span>
+            <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "var(--signal-soft)", color: "var(--signal)" }}>Codex</span>
+            <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "var(--signal-soft)", color: "var(--signal)" }}>Replit</span>
+            <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "var(--signal-soft)", color: "var(--signal)" }}>Cursor</span>
+            <span className="text-[10px] px-2 py-0.5 rounded" style={{ background: "var(--signal-soft)", color: "var(--signal)" }}>Windsurf</span>
           </div>
           <div className="flex gap-2">
             {savedReportId && (
@@ -355,7 +355,7 @@ export function DoctorOutputPanel(props: {
         </Panel>
 
         {/* Rescan + Action buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t" style={{ borderColor: "var(--noctra-border)" }}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t" style={{ borderColor: "var(--border-default)" }}>
           <NoctraButton variant="primary" onClick={() => navigate(ROUTES.doctor)}>
             <RotateCcw size={12} /> Rescan
           </NoctraButton>
@@ -383,12 +383,12 @@ export function DoctorOutputPanel(props: {
     <div className="space-y-6 p-2">
       <div className="text-center">
         <Loader2 size={28} className="animate-spin mx-auto mb-3" style={{ color: accent }} />
-        <p className="text-sm font-medium" style={{ color: "var(--noctra-text)" }}>
+        <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
           {phase === "scanning" ? "Deep scanning repository structure and evaluating launch gates…"
             : phase === "diagnosing" ? "AI is diagnosing launch blockers, code risks, and missing requirements…"
             : "Generating fix tasks, next build prompt, and saving report…"}
         </p>
-        <p className="text-xs mt-1" style={{ color: "var(--noctra-text-muted)" }}>This takes 20–40 seconds</p>
+        <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>This takes 20–40 seconds</p>
       </div>
       <div className="space-y-3">
         {STEPS.map((step, i) => {
@@ -399,15 +399,15 @@ export function DoctorOutputPanel(props: {
             <div key={step.key} className="flex items-center gap-3">
               <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
                 style={{
-                  background: isDone ? "rgba(16,185,129,0.15)" : isActive ? `${accent}18` : "var(--noctra-surface2)",
-                  border: isDone ? "1px solid rgba(16,185,129,0.4)" : isActive ? `1px solid ${accent}60` : "1px solid var(--noctra-border)",
-                  color: isDone ? "var(--noctra-emerald)" : isActive ? accent : "var(--noctra-text-muted)",
+                  background: isDone ? "var(--color-success-soft)" : isActive ? `${accent}18` : "var(--surface-2)",
+                  border: isDone ? "1px solid var(--color-success-soft)" : isActive ? `1px solid ${accent}60` : "1px solid var(--border-default)",
+                  color: isDone ? "var(--color-success)" : isActive ? accent : "var(--text-tertiary)",
                 }}
               >
                 {isDone ? "✓" : isActive ? <Loader2 size={10} className="animate-spin" /> : i + 1}
               </div>
               <span className="text-xs" style={{
-                color: isDone ? "var(--noctra-emerald)" : isActive ? "var(--noctra-text)" : "var(--noctra-text-muted)",
+                color: isDone ? "var(--color-success)" : isActive ? "var(--text-primary)" : "var(--text-tertiary)",
                 fontWeight: isActive ? 500 : 400,
               }}>
                 {step.label}
@@ -416,7 +416,7 @@ export function DoctorOutputPanel(props: {
                 <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full" style={{ background: `${accent}14`, color: accent }}>Running</span>
               )}
               {isDone && (
-                <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full" style={{ background: "rgba(16,185,129,0.1)", color: "var(--noctra-emerald)" }}>Done</span>
+                <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full" style={{ background: "var(--color-success-soft)", color: "var(--color-success)" }}>Done</span>
               )}
             </div>
           );
@@ -425,7 +425,7 @@ export function DoctorOutputPanel(props: {
 
       {scanResult?.scan?.languages && Object.keys(scanResult.scan.languages).length > 0 && (
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>Languages Detected</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--text-tertiary)" }}>Languages Detected</p>
           <div className="flex flex-wrap gap-2">
             {Object.entries(scanResult.scan.languages).slice(0, 8).map(([lang, lines]) => (
               <Badge key={lang} style={{ background: `${accent}18`, color: accent }}>{lang} ({lines} lines)</Badge>
@@ -435,10 +435,10 @@ export function DoctorOutputPanel(props: {
       )}
 
       {scanResult?.warnings && scanResult.warnings.length > 0 && (
-        <div className="px-3 py-2 rounded-lg" style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
-          <p className="text-xs font-medium mb-1" style={{ color: "var(--noctra-amber)" }}>Scan Warnings</p>
+        <div className="px-3 py-2 rounded-lg" style={{ background: "var(--color-warning-soft)", border: "1px solid var(--color-warning-soft)" }}>
+          <p className="text-xs font-medium mb-1" style={{ color: "var(--color-warning)" }}>Scan Warnings</p>
           {scanResult.warnings.slice(0, 3).map((w, i) => (
-            <p key={i} className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{w}</p>
+            <p key={i} className="text-xs" style={{ color: "var(--text-tertiary)" }}>{w}</p>
           ))}
         </div>
       )}

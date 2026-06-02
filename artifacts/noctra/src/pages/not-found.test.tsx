@@ -13,13 +13,13 @@ describe('NotFound', () => {
     expect(screen.getByText(/404/i)).toBeInTheDocument();
   });
 
-  it('should render page not found text', () => {
+  it('should render signal lost text', () => {
     render(
       <MemoryRouter>
         <NotFound />
       </MemoryRouter>
     );
-    expect(screen.getByText(/page not found/i)).toBeInTheDocument();
+    expect(screen.getByText(/signal lost/i)).toBeInTheDocument();
   });
 
   it('should have back to home button', () => {

@@ -1,24 +1,30 @@
+import { StarfieldCanvas } from "@/components/StarfieldCanvas";
+import { VoidButton } from "@/components/VoidButton";
 import { useLocation } from "wouter";
-import { ArrowLeft, Zap } from "lucide-react";
 
 export default function NotFound() {
   const [, navigate] = useLocation();
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ background: "var(--noctra-bg)" }}>
-      <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "var(--noctra-cyan)" }}>
-        <Zap size={24} className="text-black" />
+    <div className="min-h-screen bg-void-0 flex items-center justify-center relative">
+      <StarfieldCanvas opacity={0.5} />
+      <div className="text-center relative z-10">
+        <h1
+          className="font-bold tracking-tight mb-4"
+          style={{
+            color: "var(--text-primary)",
+            fontSize: "clamp(4rem, 15vw, 12rem)",
+          }}
+        >
+          404
+        </h1>
+        <p className="text-lg mb-8" style={{ color: "var(--text-secondary)" }}>
+          This signal has been lost to the void.
+        </p>
+        <VoidButton variant="primary" onClick={() => navigate("/")}>
+          Return to base
+        </VoidButton>
       </div>
-      <div className="text-center">
-        <p className="text-6xl font-bold mb-2" style={{ color: "var(--noctra-text)" }}>404</p>
-        <p className="text-sm" style={{ color: "var(--noctra-text-soft)" }}>Page not found</p>
-      </div>
-      <button
-        onClick={() => navigate("/app")}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
-        style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-soft)" }}
-      >
-        <ArrowLeft size={14} /> Return to Command Center
-      </button>
     </div>
   );
 }

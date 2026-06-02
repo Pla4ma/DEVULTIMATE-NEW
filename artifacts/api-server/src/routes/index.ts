@@ -10,11 +10,12 @@ import scanSnapshotsRouter from "./scan-snapshots";
 import badgeRouter from "./badge";
 import webhooksRouter from "./webhooks";
 import { requireAuth } from "../lib/auth-middleware";
+import { aiLimiter } from "../lib/rate-limits";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
-router.use("/ai", requireAuth, aiRouter);
+router.use("/ai", requireAuth, aiLimiter, aiRouter);
 router.use("/projects", requireAuth, projectsRouter);
 router.use("/user", requireAuth, usageRouter);
 router.use("/billing", billingRouter);

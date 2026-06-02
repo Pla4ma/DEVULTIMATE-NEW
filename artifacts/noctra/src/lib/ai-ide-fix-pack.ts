@@ -33,7 +33,7 @@ function buildFilesToInspect(allFindings: LaunchFinding[]): string[] {
 
 export function generateAIFixPack(
   findings: LaunchFinding[],
-  projectName: string = "DEVULTIMATE"
+  projectName: string = "NOCTRA"
 ): AIFixPack {
   const p0Findings = findings.filter(f => f.severity === "P0");
   const p1Findings = findings.filter(f => f.severity === "P1");

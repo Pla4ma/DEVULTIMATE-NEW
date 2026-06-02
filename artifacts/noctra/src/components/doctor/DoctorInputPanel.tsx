@@ -4,12 +4,12 @@ import { NoctraButton } from "@/components/Primitives";
 import { Stethoscope, Loader2, CheckCircle, ArrowRight, AlertTriangle, RotateCcw, XCircle, FileCode, Github, Shield, Upload, AlertCircle } from "lucide-react";
 
 const GATE_ICON: Record<string, React.ReactNode> = {
-  GREEN: <CheckCircle size={13} style={{ color: "var(--noctra-emerald)" }} />,
-  YELLOW: <AlertTriangle size={13} style={{ color: "var(--noctra-amber)" }} />,
-  RED: <XCircle size={13} style={{ color: "var(--noctra-rose)" }} />,
+  GREEN: <CheckCircle size={13} style={{ color: "var(--color-success)" }} />,
+  YELLOW: <AlertTriangle size={13} style={{ color: "var(--color-warning)" }} />,
+  RED: <XCircle size={13} style={{ color: "var(--color-danger)" }} />,
 };
 const GATE_COLOR: Record<string, string> = {
-  GREEN: "var(--noctra-emerald)", YELLOW: "var(--noctra-amber)", RED: "var(--noctra-rose)",
+  GREEN: "var(--color-success)", YELLOW: "var(--color-warning)", RED: "var(--color-danger)",
 };
 
 const EXAMPLE_REPOS = [
@@ -41,8 +41,8 @@ export function DoctorInputPanel(props: {
         onClick={() => phase === "idle" && fileRef.current?.click()}
         className="border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200"
         style={{
-          borderColor: dragOver ? accent : phase === "done" ? "var(--noctra-emerald)" : phase !== "idle" ? accent : "var(--noctra-border)",
-          background: dragOver ? `${accent}10` : phase === "done" ? "rgba(16,185,129,0.05)" : "var(--noctra-surface2)",
+          borderColor: dragOver ? accent : phase === "done" ? "var(--color-success)" : phase !== "idle" ? accent : "var(--border-default)",
+          background: dragOver ? `${accent}10` : phase === "done" ? "var(--color-success-soft)" : "var(--surface-2)",
           cursor: phase === "idle" ? "pointer" : "default",
           transform: dragOver ? "scale(1.01)" : "scale(1)",
         }}
@@ -52,17 +52,17 @@ export function DoctorInputPanel(props: {
         />
         {phase === "done" ? (
           <div className="flex flex-col items-center gap-2 animate-fade-in">
-            <CheckCircle size={22} style={{ color: "var(--noctra-emerald)" }} />
-            <p className="text-sm font-medium" style={{ color: "var(--noctra-emerald)" }}>{zipFile?.name}</p>
-            <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>
+            <CheckCircle size={22} style={{ color: "var(--color-success)" }} />
+            <p className="text-sm font-medium" style={{ color: "var(--color-success)" }}>{zipFile?.name}</p>
+            <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
               {scanResult?.scan?.fileCount ?? "?"} files · {fileSize} · Report saved
             </p>
           </div>
         ) : phase !== "idle" ? (
           <div className="flex flex-col items-center gap-2 animate-fade-in">
             <Loader2 size={22} className="animate-spin" style={{ color: accent }} />
-            <p className="text-sm font-medium" style={{ color: "var(--noctra-text)" }}>{zipFile?.name}</p>
-            <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>
+            <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{zipFile?.name}</p>
+            <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
               {fileSize && <span className="mr-2">{fileSize}</span>}
               {phase === "scanning" ? "Scanning codebase & evaluating launch gates..." 
                 : phase === "diagnosing" ? "AI diagnosing blockers & risks..."
@@ -74,8 +74,8 @@ export function DoctorInputPanel(props: {
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: `${accent}14` }}>
               <Upload size={26} style={{ color: accent }} />
             </div>
-            <p className="text-sm font-semibold" style={{ color: "var(--noctra-text)" }}>Upload your project ZIP</p>
-            <p className="text-xs max-w-sm" style={{ color: "var(--noctra-text-muted)" }}>
+            <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Upload your project ZIP</p>
+            <p className="text-xs max-w-sm" style={{ color: "var(--text-tertiary)" }}>
               Drop your repository .zip here or click to browse. Max 50MB.
             </p>
             <div className="flex items-center gap-1.5 mt-1 px-3 py-1 rounded-full text-xs font-medium" style={{ background: `${accent}14`, color: accent }}>
@@ -87,12 +87,12 @@ export function DoctorInputPanel(props: {
 
       {phase === "idle" && EXAMPLE_REPOS.length > 0 && (
         <div className="animate-fade-in">
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>Try an example repo</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-tertiary)" }}>Try an example repo</p>
           <div className="flex flex-wrap gap-1.5">
             {EXAMPLE_REPOS.map((repo) => (
               <button key={repo.name} onClick={() => repo.url && fetch(repo.url).then(r => r.blob()).then(b => handleFileSelect(new File([b], `${repo.name}.zip`, { type: "application/zip" }))).catch(() => {})}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all hover:opacity-80"
-                style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-soft)" }}
+                style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
                 title={repo.desc}
               >
                 <Github size={10} /> {repo.name}
@@ -104,12 +104,12 @@ export function DoctorInputPanel(props: {
 
       {scanResult?.launchGates && scanResult.launchGates.length > 0 && (
         <div className="animate-fade-in">
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>Launch Gates</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--text-tertiary)" }}>Launch Gates</p>
           <div className="space-y-1.5">
             {scanResult.launchGates.slice(0, 6).map((gate, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "var(--noctra-surface2)", border: `1px solid ${GATE_COLOR[gate.status]}22` }}>
+              <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "var(--surface-2)", border: `1px solid ${GATE_COLOR[gate.status]}22` }}>
                 {GATE_ICON[gate.status]}
-                <span className="text-xs flex-1" style={{ color: "var(--noctra-text)" }}>{gate.name}</span>
+                <span className="text-xs flex-1" style={{ color: "var(--text-primary)" }}>{gate.name}</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: `${GATE_COLOR[gate.status]}18`, color: GATE_COLOR[gate.status] }}>{gate.status}</span>
               </div>
             ))}
@@ -119,11 +119,11 @@ export function DoctorInputPanel(props: {
 
       {phase === "error" && error && (
         <div className="space-y-2 animate-fade-in">
-          <div className="flex items-start gap-2 px-3 py-2 rounded-lg" style={{ background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.2)" }}>
-            <AlertTriangle size={13} style={{ color: "var(--noctra-rose)", marginTop: 1 }} />
+          <div className="flex items-start gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--color-danger-soft)", border: "1px solid var(--color-danger-soft)" }}>
+            <AlertTriangle size={13} style={{ color: "var(--color-danger)", marginTop: 1 }} />
             <div>
-              <p className="text-xs font-medium" style={{ color: "var(--noctra-rose)" }}>Scan failed</p>
-              <p className="text-xs mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{error}</p>
+              <p className="text-xs font-medium" style={{ color: "var(--color-danger)" }}>Scan failed</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>{error}</p>
             </div>
           </div>
           <NoctraButton variant="ghost" onClick={reset} className="w-full"><RotateCcw size={13} /> Try Again</NoctraButton>
@@ -135,16 +135,16 @@ export function DoctorInputPanel(props: {
       )}
 
       {phase === "idle" && (
-        <div className="px-3 py-2.5 rounded-lg text-xs space-y-1.5" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+        <div className="px-3 py-2.5 rounded-lg text-xs space-y-1.5" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
           <div className="flex items-start gap-2">
-            <Shield size={11} style={{ color: "var(--noctra-cyan)", marginTop: 1 }} />
-            <p style={{ color: "var(--noctra-text-muted)" }}>
-              <strong style={{ color: "var(--noctra-text-soft)" }}>Privacy first.</strong> Code signals and redacted snippets are sent to AI. Raw source is never stored. Secrets are detected and redacted automatically.
+            <Shield size={11} style={{ color: "var(--signal)", marginTop: 1 }} />
+            <p style={{ color: "var(--text-tertiary)" }}>
+              <strong style={{ color: "var(--text-secondary)" }}>Privacy first.</strong> Code signals and redacted snippets are sent to AI. Raw source is never stored. Secrets are detected and redacted automatically.
             </p>
           </div>
           <div className="flex items-start gap-2">
-            <AlertCircle size={11} style={{ color: "var(--noctra-amber)", marginTop: 1 }} />
-            <p className="text-[11px]" style={{ color: "var(--noctra-amber)" }}>
+            <AlertCircle size={11} style={{ color: "var(--color-warning)", marginTop: 1 }} />
+            <p className="text-[11px]" style={{ color: "var(--color-warning)" }}>
               Review your ZIP before uploading — remove any secrets, API keys, or sensitive credentials.
             </p>
           </div>

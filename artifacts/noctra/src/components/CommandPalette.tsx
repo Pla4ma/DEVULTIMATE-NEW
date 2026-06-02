@@ -106,11 +106,11 @@ export function CommandPalette({ open: controlledOpen, onClose: controlledOnClos
     >
       <div
         className="w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl"
-        style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)" }}
+        style={{ background: "var(--surface-1)", border: "1px solid var(--border-default)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "var(--noctra-border)" }}>
-          <Search size={15} style={{ color: "var(--noctra-text-muted)", flexShrink: 0 }} />
+        <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "var(--border-default)" }}>
+          <Search size={15} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />
           <input
             ref={inputRef}
             value={query}
@@ -118,16 +118,16 @@ export function CommandPalette({ open: controlledOpen, onClose: controlledOnClos
             onKeyDown={onKeyDown}
             placeholder="Search tools, pages, actions…"
             className="flex-1 bg-transparent text-sm outline-none"
-            style={{ color: "var(--noctra-text)" }}
+            style={{ color: "var(--text-primary)" }}
           />
-          <button onClick={() => setOpen(false)} style={{ color: "var(--noctra-text-muted)" }} className="shrink-0 hover:opacity-80 transition-opacity">
+          <button onClick={() => setOpen(false)} style={{ color: "var(--text-tertiary)" }} className="shrink-0 hover:opacity-80 transition-opacity">
             <X size={14} />
           </button>
         </div>
 
         <div className="max-h-96 overflow-y-auto">
           {filtered.length === 0 ? (
-            <p className="text-center py-8 text-sm" style={{ color: "var(--noctra-text-muted)" }}>
+            <p className="text-center py-8 text-sm" style={{ color: "var(--text-tertiary)" }}>
               No results for "{query}"
             </p>
           ) : (
@@ -135,7 +135,7 @@ export function CommandPalette({ open: controlledOpen, onClose: controlledOnClos
               {groups.map((group) => (
                 <div key={group}>
                   {!query.trim() && (
-                    <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--noctra-text-muted)" }}>
+                    <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--text-tertiary)" }}>
                       {group}
                     </p>
                   )}
@@ -151,19 +151,19 @@ export function CommandPalette({ open: controlledOpen, onClose: controlledOnClos
                           onMouseEnter={() => setHighlighted(idx)}
                           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors"
                           style={{
-                            background: highlighted === idx ? "var(--noctra-surface2)" : "transparent",
-                            border: highlighted === idx ? "1px solid var(--noctra-border)" : "1px solid transparent",
+                            background: highlighted === idx ? "var(--surface-2)" : "transparent",
+                            border: highlighted === idx ? "1px solid var(--border-default)" : "1px solid transparent",
                           }}
                         >
                           <div
                             className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                            style={{ background: "rgba(61,216,255,0.08)", border: "1px solid rgba(61,216,255,0.15)" }}
+                            style={{ background: "var(--signal-soft)", border: "1px solid var(--border-default)" }}
                           >
-                            <Icon size={13} style={{ color: "var(--noctra-cyan)" }} />
+                            <Icon size={13} style={{ color: "var(--signal)" }} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium" style={{ color: "var(--noctra-text)" }}>{action.title}</p>
-                            <p className="text-xs truncate" style={{ color: "var(--noctra-text-muted)" }}>{action.description}</p>
+                            <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{action.title}</p>
+                            <p className="text-xs truncate" style={{ color: "var(--text-tertiary)" }}>{action.description}</p>
                           </div>
                         </button>
                       );
@@ -174,23 +174,23 @@ export function CommandPalette({ open: controlledOpen, onClose: controlledOnClos
           )}
         </div>
 
-        <div className="px-4 py-2 border-t flex items-center gap-3" style={{ borderColor: "var(--noctra-border)" }}>
+        <div className="px-4 py-2 border-t flex items-center gap-3" style={{ borderColor: "var(--border-default)" }}>
           {[
             ["↑↓", "navigate"],
             ["↵", "open"],
             ["Esc", "close"],
           ].map(([key, label]) => (
-            <span key={key} className="flex items-center gap-1 text-[10px]" style={{ color: "var(--noctra-text-muted)" }}>
+            <span key={key} className="flex items-center gap-1 text-[10px]" style={{ color: "var(--text-tertiary)" }}>
               <kbd
                 className="px-1.5 py-0.5 rounded text-[10px] font-mono"
-                style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}
+                style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}
               >
                 {key}
               </kbd>
               {label}
             </span>
           ))}
-          <span className="ml-auto flex items-center gap-1 text-[10px] font-mono" style={{ color: "var(--noctra-text-muted)" }}>
+          <span className="ml-auto flex items-center gap-1 text-[10px] font-mono" style={{ color: "var(--text-tertiary)" }}>
             <Command size={10} /> K
           </span>
         </div>

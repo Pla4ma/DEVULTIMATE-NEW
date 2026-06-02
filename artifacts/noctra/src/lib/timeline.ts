@@ -89,18 +89,18 @@ export const TIMELINE_TYPE_LABELS: Record<TimelineEventType, string> = {
 };
 
 export const TIMELINE_TYPE_COLOR: Record<TimelineEventType, string> = {
-  idea_checked: "var(--noctra-violet)",
-  reality_compiled: "var(--noctra-amber)",
-  proof_generated: "var(--noctra-emerald)",
-  proof_signal_added: "var(--noctra-emerald)",
-  swarm_run: "var(--noctra-cyan)",
-  mvp_planned: "var(--noctra-gold)",
-  tasks_generated: "var(--noctra-cyan)",
-  project_scanned: "var(--noctra-rose)",
-  launch_planned: "var(--noctra-magenta)",
-  passport_stamp: "var(--noctra-gold)",
-  report_saved: "var(--noctra-text-muted)",
-  project_created: "var(--noctra-violet)",
+  idea_checked: "var(--accent-violet)",
+  reality_compiled: "var(--color-warning)",
+  proof_generated: "var(--color-success)",
+  proof_signal_added: "var(--color-success)",
+  swarm_run: "var(--signal)",
+  mvp_planned: "var(--accent-gold)",
+  tasks_generated: "var(--signal)",
+  project_scanned: "var(--color-danger)",
+  launch_planned: "var(--accent-magenta)",
+  passport_stamp: "var(--accent-gold)",
+  report_saved: "var(--text-tertiary)",
+  project_created: "var(--accent-violet)",
 };
 
 export function buildTimeline(params: {

@@ -7,7 +7,8 @@
     "dev": "cross-env NODE_ENV=development node --import tsx --watch ./src/index.ts",
     "build": "npm run typecheck && node ./build.mjs",
     "start": "NODE_ENV=production node ./dist/index.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",

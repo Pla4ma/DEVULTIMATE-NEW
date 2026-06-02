@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
 import { motion, AnimatePresence } from "framer-motion";
+import { isDemoMode } from "@/lib/demo-mode";
 import { callStructuredAI } from "@/lib/ai";
 import { saveReport, getTasks, getReports } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
@@ -17,6 +18,16 @@ type ToolMode = "mvp" | "tasks";
 type Phase = "idle" | "running" | "done" | "error";
 type TaskStatus = "todo" | "in_progress" | "completed";
 type TaskPriority = "critical" | "high" | "medium" | "low";
+
+interface Task {
+  id: string;
+  title: string;
+  detail?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  category?: string;
+  created_at: string;
+}
 
 const MODES: Array<{ key: ToolMode; label: string; icon: typeof Map; color: string; description: string }> = [
   { key: "mvp", label: "MVP Planner", icon: Map, color: "var(--accent-cyan)", description: "Lock scope, define success metrics, and generate a build plan." },
@@ -34,13 +45,13 @@ export default function BuildPlannerPage() {
   const { toast } = useToast();
   const { refreshProgression } = useProgression();
 
-  const [mode, setMode] = useState<ToolMode>("mvp");
+  const [mode, setMode] = useState<ToolMode>("tasks");
   const [phase, setPhase] = useState<Phase>("idle");
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [savedReportId, setSavedReportId] = useState<string | null>(null);
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [filterStatus, setFilterStatus] = useState<TaskStatus | "all">("all");
   const [filterPriority, setFilterPriority] = useState<TaskPriority | "all">("all");
@@ -52,11 +63,26 @@ export default function BuildPlannerPage() {
     if (mode === "tasks") loadTasks();
   }, [mode]);
 
+  useEffect(() => {
+    if (!isDemoMode()) return;
+    import("@/lib/repository").then(({ getReports }) => {
+      getReports("mvp").then((reps) => {
+        const latest = (reps as Array<{ id: string; tool: string; title: string; score?: number | null; summary?: string | null; payload?: unknown }>)?.[0];
+        if (!latest?.payload) return;
+        const p = latest.payload as Record<string, unknown>;
+        const data = (p.data ?? p) as Record<string, unknown>;
+        setResult(data as Record<string, unknown>);
+        setSavedReportId(latest.id);
+        setPhase("done");
+      }).catch(() => {});
+    });
+  }, []);
+
   async function loadTasks() {
     setLoadingTasks(true);
     try {
       const t = await getTasks();
-      setTasks((t as any[]) ?? []);
+      setTasks((t as Task[]) ?? []);
     } catch (e) {
       toast({ title: "Failed to load tasks", variant: "destructive" });
     } finally {
@@ -153,7 +179,7 @@ export default function BuildPlannerPage() {
     <AppShell>
       <div className="p-4 sm:p-6 max-w-6xl mx-auto">
         <motion.div {...fadeInUp} className="mb-6">
-          <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>Build Planner</h1>
+          <h1 className="text-2xl font-bold text-display tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Build Planner</h1>
           <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Plan MVP scope and track execution</p>
         </motion.div>
 
@@ -190,7 +216,7 @@ export default function BuildPlannerPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <motion.div {...fadeInUp} className="rounded-xl border overflow-hidden" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}>
               <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Input</span>
+                <span className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Input</span>
               </div>
               <div className="p-5 space-y-4">
                 <textarea
@@ -210,7 +236,7 @@ export default function BuildPlannerPage() {
                     onClick={run}
                     disabled={phase === "running" || !input.trim()}
                     className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold"
-                    style={{ background: "var(--accent-cyan)", color: "#000", opacity: phase === "running" || !input.trim() ? 0.5 : 1 }}
+                    style={{ background: "var(--accent-cyan)", color: "var(--surface-0)", opacity: phase === "running" || !input.trim() ? 0.5 : 1 }}
                   >
                     {phase === "running" ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
                     {phase === "running" ? "Generating plan..." : "Generate MVP Plan"}
@@ -226,7 +252,7 @@ export default function BuildPlannerPage() {
 
             <motion.div {...fadeInUp} className="rounded-xl border overflow-hidden" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}>
               <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Output</span>
+                <span className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Output</span>
               </div>
               <div className="p-5">
                 <AnimatePresence mode="wait">
@@ -250,20 +276,20 @@ export default function BuildPlannerPage() {
                   {phase === "done" && result && (
                     <motion.div key="done" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
                       {northStar && (
-                        <div className="p-4 rounded-xl" style={{ background: "var(--accent-cyan-soft)", border: "1px solid var(--accent-cyan)" }}>
-                          <p className="text-xs font-medium mb-1" style={{ color: "var(--accent-cyan)" }}>North Star Metric</p>
-                          <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>{northStar}</p>
+                        <div className="p-5 rounded-xl" style={{ background: "var(--signal-soft)", border: "1px solid var(--signal)" }}>
+                          <p className="eyebrow mb-2" style={{ color: "var(--signal)" }}>North Star Metric</p>
+                          <p className="text-base font-semibold text-display" style={{ color: "var(--text-primary)" }}>{northStar}</p>
                         </div>
                       )}
 
                       {buildNow.length > 0 && (
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-success)" }}>Build Now</p>
+                          <p className="eyebrow mb-2" style={{ color: "var(--color-success)" }}>Build Now</p>
                           <div className="space-y-1.5">
                             {buildNow.map((item, i) => (
-                              <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
-                                <CheckCircle size={12} className="mt-0.5 shrink-0" style={{ color: "var(--color-success)" }} />
-                                {item}
+                              <div key={i} className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
+                                <CheckCircle size={14} className="mt-0.5 shrink-0" style={{ color: "var(--color-success)" }} />
+                                <span className="text-sm" style={{ color: "var(--text-primary)" }}>{item}</span>
                               </div>
                             ))}
                           </div>
@@ -272,12 +298,12 @@ export default function BuildPlannerPage() {
 
                       {buildLater.length > 0 && (
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-tertiary)" }}>Build Later</p>
+                          <p className="eyebrow mb-2" style={{ color: "var(--text-tertiary)" }}>Build Later</p>
                           <div className="space-y-1.5">
                             {buildLater.map((item, i) => (
-                              <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-quaternary)" }}>
-                                <Clock size={12} className="mt-0.5 shrink-0" />
-                                {item}
+                              <div key={i} className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg opacity-60" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
+                                <Clock size={14} className="mt-0.5 shrink-0" style={{ color: "var(--text-quaternary)" }} />
+                                <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>{item}</span>
                               </div>
                             ))}
                           </div>
@@ -331,7 +357,7 @@ export default function BuildPlannerPage() {
             <div className="flex gap-2 flex-wrap">
               <select
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as any)}
+                onChange={(e) => setFilterStatus(e.target.value as TaskStatus | "all")}
                 className="px-3 py-2 rounded-lg text-xs"
                 style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
               >
@@ -342,7 +368,7 @@ export default function BuildPlannerPage() {
               </select>
               <select
                 value={filterPriority}
-                onChange={(e) => setFilterPriority(e.target.value as any)}
+                onChange={(e) => setFilterPriority(e.target.value as TaskPriority | "all")}
                 className="px-3 py-2 rounded-lg text-xs"
                 style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
               >

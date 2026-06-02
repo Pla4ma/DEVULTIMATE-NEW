@@ -30,6 +30,8 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(event.request.url);
 
+  if (url.origin !== self.location.origin) return;
+
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(
       fetch(event.request).catch(() =>
@@ -39,17 +41,20 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (url.pathname.startsWith("/src/") || url.pathname.endsWith(".tsx") || url.pathname.endsWith(".ts")) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request).then((response) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
         if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
-      }).catch(() => cached);
-
-      return cached || fetchPromise;
+      }).catch(() => new Response("", { status: 503 }));
     })
   );
 });

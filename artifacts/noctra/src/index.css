@@ -64,66 +64,94 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* ─── Signal Void Design System (2026) ─────────────────────────────── */
+  --color-void-0: #000000;
+  --color-void-1: #0A0A0A;
+  --color-void-2: #111111;
+  --color-void-3: #1A1A1A;
+
+  --color-signal-amber: #FF9F1C;
+  --color-signal-amber-dim: rgba(255, 159, 28, 0.14);
+  --color-signal-amber-glow: rgba(255, 159, 28, 0.30);
+
+  --color-text-primary: #F5F5F5;
+  --color-text-secondary: #888888;
+  --color-text-tertiary: #555555;
+  --color-text-quaternary: #333333;
+
+  --spacing-section: clamp(120px, 15vh, 240px);
+  --spacing-gap: 24px;
+  --spacing-gap-lg: 48px;
 }
 
-/* ─── Noctra 2026 Design System — OKLCH Color Tokens ───────────────────── */
-/* Semantic tokens that adapt to light/dark mode automatically */
+/* ─── NOCTRA Design System — "The Observatory" ─────────────────────────── */
+/* Astronomical mission-control identity. Signal amber on warm deep ink.    */
+/* Semantic OKLCH tokens that adapt to light/dark mode automatically.        */
 
 :root {
-  /* Surface hierarchy — deeper = more negative space */
-  --surface-0: oklch(0.13 0.01 260);    /* Page background */
-  --surface-1: oklch(0.16 0.01 260);    /* Card/panel surface */
-  --surface-2: oklch(0.20 0.01 260);    /* Elevated surface */
-  --surface-3: oklch(0.24 0.01 260);    /* Floating elements */
-  --surface-4: oklch(0.28 0.01 260);    /* Highest elevation */
+  /* Surface hierarchy — warm deep ink (the night sky), not slate-blue slop */
+  --surface-0: oklch(0.145 0.012 75);   /* Page background — deep warm ink */
+  --surface-1: oklch(0.178 0.014 75);   /* Card/panel surface */
+  --surface-2: oklch(0.218 0.016 72);   /* Elevated surface */
+  --surface-3: oklch(0.262 0.018 70);   /* Floating elements */
+  --surface-4: oklch(0.305 0.020 68);   /* Highest elevation */
 
-  /* Border hierarchy */
-  --border-subtle: oklch(0.20 0.01 260);   /* Subtle dividers */
-  --border-default: oklch(0.25 0.01 260);  /* Default borders */
-  --border-strong: oklch(0.30 0.01 260);   /* Emphasized borders */
-  --border-focus: oklch(0.65 0.15 195);    /* Focus rings */
+  /* Border hierarchy — warm hairlines */
+  --border-subtle: oklch(0.235 0.014 72);   /* Subtle dividers */
+  --border-default: oklch(0.290 0.016 72);  /* Default borders */
+  --border-strong: oklch(0.360 0.020 72);   /* Emphasized borders */
+  --border-focus: oklch(0.82 0.145 78);     /* Focus rings — signal amber */
 
-  /* Text hierarchy */
-  --text-primary: oklch(0.93 0.01 260);    /* Headings, emphasis */
-  --text-secondary: oklch(0.70 0.02 260);  /* Body text */
-  --text-tertiary: oklch(0.50 0.02 260);   /* Labels, captions */
-  --text-quaternary: oklch(0.35 0.02 260); /* Disabled, placeholder */
+  /* Text hierarchy — warm whites */
+  --text-primary: oklch(0.96 0.008 80);    /* Headings, emphasis */
+  --text-secondary: oklch(0.755 0.013 78); /* Body text */
+  --text-tertiary: oklch(0.575 0.016 75);  /* Labels, captions */
+  --text-quaternary: oklch(0.42 0.016 74); /* Disabled, placeholder */
 
-  /* Accent colors — primary actions */
-  --accent-cyan: oklch(0.75 0.15 195);     /* Primary brand */
-  --accent-cyan-soft: oklch(0.75 0.15 195 / 0.15);  /* Soft backgrounds */
-  --accent-cyan-glow: oklch(0.75 0.15 195 / 0.25);  /* Glow effects */
+  /* Accent — SIGNAL AMBER (primary brand). Legacy name kept for safe repoint */
+  --accent-cyan: oklch(0.82 0.145 78);     /* Primary brand — signal amber */
+  --accent-cyan-soft: oklch(0.82 0.145 78 / 0.14);  /* Soft backgrounds */
+  --accent-cyan-glow: oklch(0.82 0.16 78 / 0.30);   /* Glow effects */
 
-  /* Accent colors — secondary */
-  --accent-violet: oklch(0.70 0.18 280);
-  --accent-violet-soft: oklch(0.70 0.18 280 / 0.15);
+  /* Accent — DEEP-SPACE INDIGO (cool counterpoint, used sparingly) */
+  --accent-violet: oklch(0.70 0.135 268);
+  --accent-violet-soft: oklch(0.70 0.135 268 / 0.14);
 
-  /* Semantic colors */
-  --color-success: oklch(0.75 0.18 155);   /* Emerald — go, success */
-  --color-success-soft: oklch(0.75 0.18 155 / 0.15);
-  --color-warning: oklch(0.80 0.15 75);    /* Amber — caution */
-  --color-warning-soft: oklch(0.80 0.15 75 / 0.15);
-  --color-danger: oklch(0.65 0.20 15);     /* Rose — blocker, error */
-  --color-danger-soft: oklch(0.65 0.20 15 / 0.15);
-  --color-info: oklch(0.75 0.15 250);      /* Blue — info */
-  --color-info-soft: oklch(0.75 0.15 250 / 0.15);
+  /* New semantic signal aliases (preferred for new components) */
+  --signal: var(--accent-cyan);
+  --signal-soft: var(--accent-cyan-soft);
+  --signal-glow: var(--accent-cyan-glow);
+  --signal-deep: oklch(0.66 0.15 62);      /* Deeper amber for gradients */
+  --cosmos: var(--accent-violet);
+  --cosmos-soft: var(--accent-violet-soft);
+
+  /* Semantic colors — observatory instrument readouts */
+  --color-success: oklch(0.78 0.17 158);   /* Emerald — go, success */
+  --color-success-soft: oklch(0.78 0.17 158 / 0.14);
+  --color-warning: oklch(0.83 0.15 85);    /* Gold — caution */
+  --color-warning-soft: oklch(0.83 0.15 85 / 0.14);
+  --color-danger: oklch(0.66 0.205 18);    /* Rose — blocker, error */
+  --color-danger-soft: oklch(0.66 0.205 18 / 0.14);
+  --color-info: oklch(0.72 0.14 250);      /* Azure — info */
+  --color-info-soft: oklch(0.72 0.14 250 / 0.14);
 
   /* Special accents */
-  --accent-magenta: oklch(0.70 0.20 330);
-  --accent-gold: oklch(0.80 0.15 85);
+  --accent-magenta: oklch(0.68 0.19 14);   /* Warm coral — dawn */
+  --accent-gold: oklch(0.85 0.145 88);
 
-  /* Shadows — layered depth */
-  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.3);
-  --shadow-sm: 0 2px 4px oklch(0 0 0 / 0.3), 0 1px 2px oklch(0 0 0 / 0.2);
-  --shadow-md: 0 4px 8px oklch(0 0 0 / 0.3), 0 2px 4px oklch(0 0 0 / 0.2);
-  --shadow-lg: 0 8px 16px oklch(0 0 0 / 0.3), 0 4px 8px oklch(0 0 0 / 0.2);
-  --shadow-xl: 0 16px 32px oklch(0 0 0 / 0.3), 0 8px 16px oklch(0 0 0 / 0.2);
-  --shadow-glow: 0 0 20px var(--accent-cyan-glow);
+  /* Shadows — layered depth with warm tint */
+  --shadow-xs: 0 1px 2px oklch(0.10 0.02 70 / 0.40);
+  --shadow-sm: 0 2px 6px oklch(0.10 0.02 70 / 0.42), 0 1px 2px oklch(0.08 0.02 70 / 0.30);
+  --shadow-md: 0 6px 16px oklch(0.08 0.02 70 / 0.44), 0 2px 6px oklch(0.08 0.02 70 / 0.30);
+  --shadow-lg: 0 12px 32px oklch(0.06 0.02 70 / 0.48), 0 4px 12px oklch(0.06 0.02 70 / 0.32);
+  --shadow-xl: 0 24px 56px oklch(0.04 0.02 70 / 0.52), 0 8px 20px oklch(0.04 0.02 70 / 0.34);
+  --shadow-glow: 0 0 28px var(--accent-cyan-glow);
 
-  /* Typography */
-  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'Fira Code', monospace;
-  --font-display: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  /* Typography — escape Inter slop. Engineered display + clean body + mono. */
+  --font-sans: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  --font-display: 'Bricolage Grotesque', 'Hanken Grotesk', system-ui, sans-serif;
 
   /* Spacing scale */
   --space-1: 0.25rem;
@@ -176,47 +204,49 @@
   --noctra-gold: var(--accent-gold);
 }
 
-/* ─── Light Mode ───────────────────────────────────────────────────────── */
+/* ─── Light Mode — "Daybreak Observatory" ──────────────────────────────── */
 :root.light,
 [data-theme="light"] {
-  --surface-0: oklch(0.98 0.005 260);
+  --surface-0: oklch(0.985 0.006 80);
   --surface-1: oklch(1.0 0 0);
-  --surface-2: oklch(0.96 0.005 260);
-  --surface-3: oklch(0.94 0.005 260);
-  --surface-4: oklch(0.92 0.005 260);
+  --surface-2: oklch(0.965 0.008 80);
+  --surface-3: oklch(0.945 0.010 78);
+  --surface-4: oklch(0.925 0.012 76);
 
-  --border-subtle: oklch(0.92 0.005 260);
-  --border-default: oklch(0.88 0.005 260);
-  --border-strong: oklch(0.82 0.005 260);
-  --border-focus: oklch(0.55 0.15 195);
+  --border-subtle: oklch(0.925 0.008 78);
+  --border-default: oklch(0.885 0.010 78);
+  --border-strong: oklch(0.825 0.012 76);
+  --border-focus: oklch(0.62 0.155 72);
 
-  --text-primary: oklch(0.13 0.01 260);
-  --text-secondary: oklch(0.35 0.02 260);
-  --text-tertiary: oklch(0.50 0.02 260);
-  --text-quaternary: oklch(0.65 0.02 260);
+  --text-primary: oklch(0.20 0.018 74);
+  --text-secondary: oklch(0.40 0.020 74);
+  --text-tertiary: oklch(0.55 0.020 74);
+  --text-quaternary: oklch(0.68 0.018 74);
 
-  --accent-cyan: oklch(0.55 0.18 195);
-  --accent-cyan-soft: oklch(0.55 0.18 195 / 0.1);
-  --accent-cyan-glow: oklch(0.55 0.18 195 / 0.2);
+  --accent-cyan: oklch(0.64 0.155 66);
+  --accent-cyan-soft: oklch(0.64 0.155 66 / 0.12);
+  --accent-cyan-glow: oklch(0.64 0.155 66 / 0.22);
 
-  --accent-violet: oklch(0.50 0.20 280);
-  --accent-violet-soft: oklch(0.50 0.20 280 / 0.1);
+  --accent-violet: oklch(0.52 0.165 268);
+  --accent-violet-soft: oklch(0.52 0.165 268 / 0.10);
 
-  --color-success: oklch(0.55 0.20 155);
-  --color-success-soft: oklch(0.55 0.20 155 / 0.1);
-  --color-warning: oklch(0.60 0.18 75);
-  --color-warning-soft: oklch(0.60 0.18 75 / 0.1);
-  --color-danger: oklch(0.50 0.22 15);
-  --color-danger-soft: oklch(0.50 0.22 15 / 0.1);
+  --signal-deep: oklch(0.56 0.16 56);
 
-  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.05);
-  --shadow-sm: 0 2px 4px oklch(0 0 0 / 0.05), 0 1px 2px oklch(0 0 0 / 0.03);
-  --shadow-md: 0 4px 8px oklch(0 0 0 / 0.08), 0 2px 4px oklch(0 0 0 / 0.05);
-  --shadow-lg: 0 8px 16px oklch(0 0 0 / 0.1), 0 4px 8px oklch(0 0 0 / 0.06);
-  --shadow-xl: 0 16px 32px oklch(0 0 0 / 0.12), 0 8px 16px oklch(0 0 0 / 0.08);
+  --color-success: oklch(0.56 0.19 158);
+  --color-success-soft: oklch(0.56 0.19 158 / 0.10);
+  --color-warning: oklch(0.62 0.16 80);
+  --color-warning-soft: oklch(0.62 0.16 80 / 0.10);
+  --color-danger: oklch(0.52 0.22 18);
+  --color-danger-soft: oklch(0.52 0.22 18 / 0.10);
 
-  --glass-bg: oklch(1.0 0 0 / 0.8);
-  --glass-border: oklch(0.88 0.005 260 / 0.5);
+  --shadow-xs: 0 1px 2px oklch(0.5 0.02 70 / 0.06);
+  --shadow-sm: 0 2px 6px oklch(0.5 0.02 70 / 0.07), 0 1px 2px oklch(0.5 0.02 70 / 0.04);
+  --shadow-md: 0 6px 16px oklch(0.5 0.02 70 / 0.09), 0 2px 6px oklch(0.5 0.02 70 / 0.05);
+  --shadow-lg: 0 12px 32px oklch(0.5 0.02 70 / 0.12), 0 4px 12px oklch(0.5 0.02 70 / 0.07);
+  --shadow-xl: 0 24px 56px oklch(0.5 0.02 70 / 0.14), 0 8px 20px oklch(0.5 0.02 70 / 0.09);
+
+  --glass-bg: oklch(1.0 0 0 / 0.82);
+  --glass-border: oklch(0.885 0.010 78 / 0.55);
 
   /* Legacy compatibility */
   --noctra-bg: var(--surface-0);
@@ -363,45 +393,45 @@
   --elevate-1: oklch(1 0 0 / 0.04);
   --elevate-2: oklch(1 0 0 / 0.09);
 
-  --background: 222 15% 5%;
-  --foreground: 220 20% 92%;
-  --border: 222 13% 13%;
-  --input: 222 13% 18%;
-  --ring: 195 100% 62%;
-  --card: 222 14% 7%;
-  --card-foreground: 220 20% 92%;
-  --card-border: 222 13% 13%;
-  --popover: 222 14% 7%;
-  --popover-foreground: 220 20% 92%;
-  --popover-border: 222 13% 13%;
-  --primary: 195 100% 62%;
-  --primary-foreground: 222 15% 5%;
-  --secondary: 222 13% 13%;
-  --secondary-foreground: 220 20% 92%;
-  --muted: 222 13% 10%;
-  --muted-foreground: 220 15% 50%;
-  --accent: 264 100% 73%;
-  --accent-foreground: 222 15% 5%;
-  --destructive: 350 89% 60%;
-  --destructive-foreground: 220 20% 92%;
-  --sidebar: 222 14% 6%;
-  --sidebar-foreground: 220 20% 92%;
-  --sidebar-border: 222 13% 13%;
-  --sidebar-primary: 195 100% 62%;
-  --sidebar-primary-foreground: 222 15% 5%;
-  --sidebar-accent: 222 13% 10%;
-  --sidebar-accent-foreground: 220 20% 92%;
-  --sidebar-ring: 195 100% 62%;
-  --chart-1: 195 100% 62%;
-  --chart-2: 264 100% 73%;
-  --chart-3: 291 90% 61%;
-  --chart-4: 158 64% 52%;
-  --chart-5: 38 92% 50%;
+  --background: 40 14% 7%;
+  --foreground: 45 22% 94%;
+  --border: 40 10% 18%;
+  --input: 40 10% 22%;
+  --ring: 42 92% 62%;
+  --card: 40 13% 9%;
+  --card-foreground: 45 22% 94%;
+  --card-border: 40 10% 18%;
+  --popover: 40 13% 9%;
+  --popover-foreground: 45 22% 94%;
+  --popover-border: 40 10% 18%;
+  --primary: 42 92% 62%;
+  --primary-foreground: 40 14% 7%;
+  --secondary: 40 10% 18%;
+  --secondary-foreground: 45 22% 94%;
+  --muted: 40 10% 13%;
+  --muted-foreground: 42 12% 56%;
+  --accent: 262 55% 70%;
+  --accent-foreground: 40 14% 7%;
+  --destructive: 8 78% 58%;
+  --destructive-foreground: 45 22% 94%;
+  --sidebar: 40 13% 8%;
+  --sidebar-foreground: 45 22% 94%;
+  --sidebar-border: 40 10% 18%;
+  --sidebar-primary: 42 92% 62%;
+  --sidebar-primary-foreground: 40 14% 7%;
+  --sidebar-accent: 40 10% 13%;
+  --sidebar-accent-foreground: 45 22% 94%;
+  --sidebar-ring: 42 92% 62%;
+  --chart-1: 42 92% 62%;
+  --chart-2: 262 55% 70%;
+  --chart-3: 8 78% 62%;
+  --chart-4: 158 60% 52%;
+  --chart-5: 85 75% 58%;
 
-  --app-font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
-  --app-font-serif: Georgia, serif;
-  --app-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'Fira Code', monospace;
-  --radius: 0.5rem;
+  --app-font-sans: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --app-font-serif: 'Bricolage Grotesque', Georgia, serif;
+  --app-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  --radius: 0.625rem;
   --spacing: 0.25rem;
 
   --sidebar-primary-border: hsl(var(--sidebar-primary));
@@ -428,11 +458,15 @@
     background: var(--surface-0);
     color: var(--text-primary);
     font-family: var(--font-sans);
-    font-feature-settings: 'cv11', 'ss01';
-    font-variation-settings: 'opsz' auto;
+    font-feature-settings: 'ss01', 'cv01', 'cv11';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    font-feature-settings: 'ss01', 'ss02';
+    letter-spacing: -0.02em;
   }
   html {
     color-scheme: dark;
@@ -508,4 +542,114 @@
   .border.active-elevate-2:not(.no-default-active-elevate)::after {
     inset: -1px;
   }
+}
+
+/* ─── NOCTRA Atmosphere — depth, texture, signature ────────────────────── */
+@layer utilities {
+  .text-display { font-family: var(--font-display); letter-spacing: -0.025em; }
+  .text-mono { font-family: var(--font-mono); }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .signal-text {
+    background: linear-gradient(105deg, var(--signal-deep), var(--signal) 55%, var(--accent-gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .constellation-grid {
+    background-image:
+      linear-gradient(var(--border-subtle) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 78%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 78%);
+  }
+
+  .aurora {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    pointer-events: none;
+    opacity: 0.42;
+    background: radial-gradient(circle at 30% 30%, var(--signal), transparent 70%);
+  }
+  .aurora-cosmos { background: radial-gradient(circle at 30% 30%, var(--cosmos), transparent 70%); opacity: 0.34; }
+
+  .hairline { border: 1px solid var(--border-default); }
+  .hairline-t { border-top: 1px solid var(--border-subtle); }
+
+  .surface-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .glow-ring {
+    box-shadow: 0 0 0 1px var(--signal-soft), 0 0 28px var(--signal-glow);
+  }
+
+  @keyframes aurora-drift {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(4%, -3%, 0) scale(1.08); }
+  }
+  .animate-aurora { animation: aurora-drift 14s ease-in-out infinite; }
+
+  @keyframes scan-sweep {
+    0% { transform: translateY(-100%); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(100%); opacity: 0; }
+  }
+  .animate-scan { animation: scan-sweep 3.5s ease-in-out infinite; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-aurora, .animate-scan, .animate-float, .animate-glow, .animate-shimmer { animation: none !important; }
+  * { scroll-behavior: auto !important; }
+}
+
+/* ─── Signal Void Global Custom Properties ──────────────────────────────── */
+:root {
+  --void-0: #000000;
+  --void-1: #0A0A0A;
+  --void-2: #111111;
+  --void-3: #1A1A1A;
+  --signal-amber: #FF9F1C;
+  --signal-amber-dim: rgba(255, 159, 28, 0.14);
+  --signal-amber-glow: rgba(255, 159, 28, 0.30);
+}
+
+/* ─── Signal Void Animation Keyframes ──────────────────────────────────── */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes loading-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
 }

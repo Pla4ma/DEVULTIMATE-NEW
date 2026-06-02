@@ -47,7 +47,7 @@ router.post("/:projectId", requireProjectOwnership, async (req, res) => {
 
     const testResult = await sendWebhookNotification(url, provider, {
       event: "scan.completed",
-      projectName: "DEVULTIMATE",
+      projectName: "NOCTRA",
       projectId,
       score: null,
       prevScore: null,

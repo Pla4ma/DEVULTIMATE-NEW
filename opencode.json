@@ -1,0 +1,25 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openrouter/moonshotai/kimi-k2.6:free",
+  "small_model": "openrouter/moonshotai/kimi-k2.6:free",
+  "provider": {
+    "openrouter": {
+      "options": {
+        "baseURL": "http://localhost:8787/api/v1"
+      },
+      "models": {
+        "moonshotai/kimi-k2.6:free": {
+          "name": "Kimi K2.6 Free - Crucible Proxy",
+          "options": {
+            "provider": {
+              "only": ["crucible"],
+              "allow_fallbacks": false
+            },
+            "max_tokens": 2048,
+            "temperature": 0.2
+          }
+        }
+      }
+    }
+  }
+}

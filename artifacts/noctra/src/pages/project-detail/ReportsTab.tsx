@@ -23,7 +23,7 @@ export function ReportsTab({ reports, selectedReport, onSelectReport, generating
       {selectedReport ? (
         <>
           <div className="flex items-center justify-between">
-            <button onClick={() => onSelectReport(null)} className="flex items-center gap-1.5 text-sm" style={{ color: "var(--noctra-text-muted)" }}><ArrowLeft size={13} /> All Reports</button>
+            <button onClick={() => onSelectReport(null)} className="flex items-center gap-1.5 text-sm" style={{ color: "var(--text-tertiary)" }}><ArrowLeft size={13} /> All Reports</button>
             <div className="flex gap-2">
               <NoctraButton variant="ghost" onClick={() => onGenerateTasks(selectedReport)} disabled={generatingTasks === selectedReport.id}>
                 {generatingTasks === selectedReport.id ? <Loader2 size={12} className="animate-spin" /> : <CheckSquare size={12} />} Generate Tasks
@@ -43,7 +43,7 @@ export function ReportsTab({ reports, selectedReport, onSelectReport, generating
               const toolReports = reports.filter((r) => r.tool === key).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
               return (
                 <div key={key} className="space-y-1.5">
-                  <p className="text-xs font-semibold uppercase tracking-wider px-1" style={{ color: toolDef?.accent ?? "var(--noctra-text-muted)" }}>{toolDef?.label ?? key}</p>
+                  <p className="eyebrow px-1" style={{ color: toolDef?.accent ?? "var(--text-tertiary)" }}>{toolDef?.label ?? key}</p>
                   {toolReports.map((r, idx) => (
                     <Panel key={r.id} style={{ opacity: idx === 0 ? 1 : 0.7 }}>
                       <div className="flex items-center justify-between gap-3">
@@ -51,19 +51,19 @@ export function ReportsTab({ reports, selectedReport, onSelectReport, generating
                           {toolDef ? <toolDef.icon size={13} style={{ color: toolDef.accent }} /> : null}
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium truncate" style={{ color: "var(--noctra-text)" }}>{r.title}</p>
+                              <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>{r.title}</p>
                               {idx === 0 ? <Badge style={{ fontSize: "10px", background: `${toolDef?.accent}18`, color: toolDef?.accent }}>Latest</Badge> : null}
                             </div>
-                            {r.summary ? <p className="text-xs truncate mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{r.summary}</p> : null}
+                            {r.summary ? <p className="text-xs truncate mt-0.5" style={{ color: "var(--text-tertiary)" }}>{r.summary}</p> : null}
                           </div>
                         </button>
                         <div className="flex items-center gap-2 shrink-0">
                           {r.score != null ? <span className="text-xs font-bold" style={{ color: SCORE_COLOR(r.score) }}>{r.score}</span> : null}
                           <button onClick={() => onGenerateTasks(r)} disabled={generatingTasks === r.id} title="Generate tasks" className="p-1 rounded hover:opacity-70">
-                            {generatingTasks === r.id ? <Loader2 size={12} className="animate-spin" style={{ color: "var(--noctra-cyan)" }} /> : <CheckSquare size={12} style={{ color: "var(--noctra-text-muted)" }} />}
+                            {generatingTasks === r.id ? <Loader2 size={12} className="animate-spin" style={{ color: "var(--signal)" }} /> : <CheckSquare size={12} style={{ color: "var(--text-tertiary)" }} />}
                           </button>
                           <button onClick={() => navigate(`/app/reports/${r.id}`)} title="Open full report" className="p-1 rounded hover:opacity-70">
-                            <ArrowRight size={12} style={{ color: "var(--noctra-text-muted)" }} />
+                            <ArrowRight size={12} style={{ color: "var(--text-tertiary)" }} />
                           </button>
                         </div>
                       </div>
@@ -76,21 +76,21 @@ export function ReportsTab({ reports, selectedReport, onSelectReport, generating
 
           {INTELLIGENCE_TOOLS.filter((key) => !reports.some((r) => r.tool === key)).length > 0 ? (
             <Panel style={{ opacity: 0.7 }}>
-              <p className="text-xs font-medium mb-2" style={{ color: "var(--noctra-text-muted)" }}>Not yet run</p>
+              <p className="text-xs font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>Not yet run</p>
               <div className="flex flex-wrap gap-1.5">
                 {INTELLIGENCE_TOOLS.filter((key) => !reports.some((r) => r.tool === key)).map((key) => {
                   const t = TOOL_BY_KEY[key as keyof typeof TOOL_BY_KEY];
                   if (!t) return null;
-                  return <button key={key} onClick={() => navigate(t.route)} className="text-xs px-2.5 py-1 rounded-full hover:opacity-80" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-muted)" }}>+ {t.label}</button>;
+                  return <button key={key} onClick={() => navigate(t.route)} className="text-xs px-2.5 py-1 rounded-full hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}>+ {t.label}</button>;
                 })}
               </div>
             </Panel>
           ) : null}
 
           <Panel>
-            <p className="text-xs font-medium mb-2" style={{ color: "var(--noctra-text-muted)" }}>Link existing report by ID</p>
+            <p className="text-xs font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>Link existing report by ID</p>
             <div className="flex gap-2">
-              <input value={linkReportId} onChange={(e) => onLinkReportIdChange(e.target.value)} placeholder="Paste report ID…" className="flex-1 px-3 py-2 rounded-lg text-xs outline-none" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }} />
+              <input value={linkReportId} onChange={(e) => onLinkReportIdChange(e.target.value)} placeholder="Paste report ID…" className="flex-1 px-3 py-2 rounded-lg text-xs outline-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
               <NoctraButton onClick={onLinkReport} disabled={linkingReport || !linkReportId.trim()}>
                 {linkingReport ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Link
               </NoctraButton>

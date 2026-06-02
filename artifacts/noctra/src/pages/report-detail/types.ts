@@ -16,17 +16,17 @@ export type Project = { id: string; name: string; idea?: string | null };
 export type ToolAction = { id: string; label: string; description: string; icon: ElementType; color?: string; busy?: boolean };
 
 export const SCORE_COLOR = (s: number) =>
-  s >= 75 ? "var(--noctra-emerald)" : s >= 50 ? "var(--noctra-amber)" : "var(--noctra-rose)";
+  s >= 75 ? "var(--color-success)" : s >= 50 ? "var(--color-warning)" : "var(--color-danger)";
 
 export const TOOL_ACCENT: Record<string, string> = {
-  idea: "var(--noctra-violet)",
-  reality: "var(--noctra-amber)",
-  proof: "var(--noctra-emerald)",
-  swarm: "var(--noctra-cyan)",
-  mvp: "var(--noctra-cyan)",
-  doctor: "var(--noctra-rose)",
-  launch: "var(--noctra-amber)",
-  twin: "var(--noctra-magenta)",
-  sprint: "var(--noctra-cyan)",
-  "prompt-pack": "var(--noctra-violet)",
+  idea: "var(--accent-violet)",
+  reality: "var(--color-warning)",
+  proof: "var(--color-success)",
+  swarm: "var(--signal)",
+  mvp: "var(--signal)",
+  doctor: "var(--color-danger)",
+  launch: "var(--color-warning)",
+  twin: "var(--accent-magenta)",
+  sprint: "var(--signal)",
+  "prompt-pack": "var(--accent-violet)",
 };

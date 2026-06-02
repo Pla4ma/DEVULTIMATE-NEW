@@ -1,31 +1,32 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
-import { getDashboardData, getReports, getProofSignals, getTasks, getProjects, createTask, saveTasks } from "@/lib/repository";
-import { TOOL_BY_KEY } from "@/lib/noctra-tools";
+import { ROUTES } from "@/lib/routes";
+import { useDataStore, type Task, type Project, type ProofSignal } from "@/stores/data-store";
+import { getUsage } from "@/lib/repository";
 import { useProgression } from "@/lib/progression-context";
 import { computeNextAction } from "@/lib/next-action";
-import { extractRisks, RISK_SEV_COLOR } from "@/lib/risk-radar";
-import { computeScoreHistory, getDeltaLabel, getDeltaColor, type ScoreHistoryEntry } from "@/lib/score-history";
-import { getUsage, getUsagePercent, getUsageColor } from "@/lib/usage";
-import { extractScoreTrends, computeToolCoverage, generateInsightBrief, type ScoreTrend, type ToolCoverage, type InsightBrief, type ReportSummary } from "@/lib/intelligence";
+import { computeScoreHistory, type ScoreHistoryEntry } from "@/lib/score-history";
+import { extractScoreTrends, computeToolCoverage, generateInsightBrief, type ScoreTrend, type ToolCoverage, type InsightBrief } from "@/lib/intelligence";
+import type { ReportSummary } from "@/lib/report-utils";
 import { generateDailyBriefing, type DailyBriefing } from "@/lib/daily-briefing";
 import { runContradictionEngine, type EnhancedContradiction } from "@/lib/contradiction-engine";
 import { generateRoadmap, type Roadmap } from "@/lib/roadmap";
 import { buildProductBrain, type ProductBrain } from "@/lib/product-brain";
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { useToast } from "@/hooks/use-toast";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { VoidButton } from "@/components/VoidButton";
+import { VoidCard } from "@/components/VoidCard";
+import { StarfieldCanvas } from "@/components/StarfieldCanvas";
 import {
-  ArrowRight, FileText, CheckSquare, FolderOpen, Zap, AlertTriangle,
-  TrendingUp, TrendingDown, Minus, Brain, Target, Clock, Stethoscope,
-  Lightbulb, Rocket, XCircle, CheckCircle, Shield, BarChart3, ExternalLink,
-  RotateCcw, ListChecks, RefreshCw, Sparkles, Activity, ArrowUpRight,
+  ArrowRight, FileText, CheckSquare, Zap, AlertTriangle,
+  TrendingUp, TrendingDown, Minus, Brain, Target, Stethoscope,
+  XCircle, CheckCircle, Shield,
+  RotateCcw, ListChecks, RefreshCw, Sparkles, Upload,
 } from "lucide-react";
 
-type DashData = {
-  reports: Array<{ id: string; tool?: string; score?: number | null; created_at?: string }>;
-  tasks: Array<{ id: string }>;
-};
+const SignalTower = lazy(() => import("@/components/SignalTower"));
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -38,14 +39,15 @@ const staggerContainer = {
 };
 
 export default function CommandCenterPage() {
-  const [data, setData] = useState<DashData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   useProgression();
+
+  const { reports, tasks: allTasks, projects: allProjects, signals: proofSignals, loading: storeLoading, fetchAll } = useDataStore();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [usage, setUsage] = useState<{ plan: string; scans: { used: number; limit: number | string }; reports: { used: number; limit: number | string } } | null>(null);
-  const [reports, setReports] = useState<ReportSummary[]>([]);
   const [insightBrief, setInsightBrief] = useState<InsightBrief | null>(null);
   const [trends, setTrends] = useState<ScoreTrend[]>([]);
   const [coverage, setCoverage] = useState<ToolCoverage | null>(null);
@@ -54,11 +56,8 @@ export default function CommandCenterPage() {
   const [alignmentScore, setAlignmentScore] = useState<number | null>(null);
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
   const [brain, setBrain] = useState<ProductBrain | null>(null);
-  const [proofSignals, setProofSignals] = useState<{ id: string; kind?: string; label?: string; created_at?: string }[]>([]);
-  const [allProjects, setAllProjects] = useState<{ id: string; name: string; stage?: string | null; updated_at?: string }[]>([]);
-  const [allTasks, setAllTasks] = useState<{ id: string; status: string; priority: string; title?: string; category?: string | null; created_at?: string; updated_at?: string }[]>([]);
 
-  const runIntelligence = useCallback((reps: ReportSummary[], taskList: typeof allTasks, signals: typeof proofSignals) => {
+  const runIntelligence = useCallback((reps: ReportSummary[], taskList: Task[], signals: ProofSignal[]) => {
     if (reps.length === 0 && taskList.length === 0) return;
     setInsightBrief(generateInsightBrief(reps));
     const engineResult = runContradictionEngine(reps);
@@ -71,32 +70,33 @@ export default function CommandCenterPage() {
     setBrain(buildProductBrain({ reports: reps, tasks: taskList, proofSignals: signals }));
   }, []);
 
-  const loadData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    let loadedReports: ReportSummary[] = [];
-    let loadedTasks: typeof allTasks = [];
-    let loadedSignals: typeof proofSignals = [];
-    const dashPromise = getDashboardData().then((d) => setData(d as unknown as DashData | null)).catch(() => { toast({ title: "Failed to load dashboard data", description: "Some widgets may be unavailable.", variant: "destructive" }); return null; });
-    const reportsPromise = getReports().then((r) => { loadedReports = (r as ReportSummary[]) ?? []; setReports(loadedReports); }).catch(() => { toast({ title: "Failed to load reports", variant: "destructive" }); return null; });
-    const signalsPromise = getProofSignals().then((s) => { loadedSignals = (s as { id: string }[]) ?? []; setProofSignals(loadedSignals); }).catch(() => { toast({ title: "Failed to load proof signals", variant: "destructive" }); return null; });
-    const projectsPromise = getProjects().then((p) => setAllProjects((p as { id: string; name: string; stage?: string | null }[]) ?? [])).catch(() => { toast({ title: "Failed to load projects", variant: "destructive" }); return null; });
-    const tasksPromise = getTasks().then((t) => { loadedTasks = (t as typeof allTasks) ?? []; setAllTasks(loadedTasks); }).catch(() => { toast({ title: "Failed to load tasks", variant: "destructive" }); return null; });
-    const usagePromise = getUsage().then((u) => {
+  useEffect(() => {
+    fetchAll().finally(() => setInitialLoad(false));
+    getUsage().then((u) => {
       if (u) {
         const s = u.usage["scansPerDay"] ?? u.usage["scan-upload"];
         const r = u.usage["structuredReportsPerDay"] ?? u.usage["structured"];
         setUsage({ plan: u.plan, scans: s ?? { used: 0, limit: "unlimited" }, reports: r ?? { used: 0, limit: "unlimited" } });
       }
-    }).catch(() => { toast({ title: "Failed to load usage stats", variant: "destructive" }); return null; });
-    return Promise.all([dashPromise, reportsPromise, signalsPromise, projectsPromise, tasksPromise, usagePromise])
-      .then(() => runIntelligence(loadedReports, loadedTasks, loadedSignals))
-      .finally(() => { setLoading(false); setRefreshing(false); });
-  }, [runIntelligence, toast]);
+    }).catch(() => {});
+  }, [fetchAll]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    if (!initialLoad && reports.length > 0) {
+      runIntelligence(reports, allTasks, proofSignals);
+    }
+  }, [reports, allTasks, proofSignals, initialLoad, runIntelligence]);
+
+  const loading = initialLoad && storeLoading;
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchAll();
+    setRefreshing(false);
+  }, [fetchAll]);
 
   const smartNextAction = useMemo(() => computeNextAction({
-    reports: reports as { id: string; tool: string; score?: number | null; created_at: string }[],
+    reports,
     tasks: allTasks, projects: allProjects, proofSignals,
   }), [reports, allTasks, allProjects, proofSignals]);
 
@@ -106,7 +106,7 @@ export default function CommandCenterPage() {
   const lastData = lastPayload?.data ? (lastPayload.data as Record<string, unknown>) : null;
   const launchScore = typeof lastDoctor?.score === "number" ? lastDoctor.score : (lastData?.health_score as number) ?? null;
   const scoreHistoryEntries = reports.length > 0
-    ? computeScoreHistory(reports as Array<{ id: string; tool: string; score?: number | null; created_at: string }>)
+    ? computeScoreHistory(reports)
     : [];
   const doctorScoreHist = scoreHistoryEntries.filter((e: ScoreHistoryEntry) => e.tool === "doctor");
   const prevScore = doctorScoreHist.length > 0 ? doctorScoreHist[0]?.previousScore ?? null : null;
@@ -118,6 +118,17 @@ export default function CommandCenterPage() {
     if (!last) return null;
     return { direction: last.direction, delta: last.delta, previousScore: last.previousScore, latestScore: last.latestScore };
   }, [scoreHistoryEntries]);
+
+  const scoreSeries = useMemo(() => {
+    const docs = reports
+      .filter((r: ReportSummary) => r.tool === "doctor" && typeof r.score === "number")
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    return docs.map((r, i) => ({
+      name: `Scan ${i + 1}`,
+      date: new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      score: r.score as number,
+    }));
+  }, [reports]);
 
   const redGates: string[] = [];
   if (lastDoctor?.payload) {
@@ -134,6 +145,14 @@ export default function CommandCenterPage() {
   const openCount = openCritical + openHigh;
   const completedTasks = allTasks.filter(t => t.status === "completed").length;
   const hasIssues = redGates.length > 0;
+
+  const towerStatus = loading
+    ? "idle"
+    : redGates.length > 0
+    ? "risk"
+    : reports.length > 0
+    ? "success"
+    : "idle";
   const scanCount = doctorReports.length;
   const launchColor = launchScore != null
     ? (launchScore >= 70 ? "var(--color-success)" : launchScore >= 40 ? "var(--color-warning)" : "var(--color-danger)")
@@ -144,15 +163,19 @@ export default function CommandCenterPage() {
 
   return (
     <AppShell>
+      <StarfieldCanvas opacity={0.5} />
+      <Suspense fallback={null}>
+        <SignalTower status={towerStatus} activeRisks={redGates} />
+      </Suspense>
       <motion.div
-        className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6"
+        className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6 relative z-10"
         variants={staggerContainer}
         initial="initial"
         animate="animate"
       >
         <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Command Center</h1>
+            <h1 className="text-2xl font-bold text-display tracking-tight" style={{ color: "var(--text-primary)" }}>Command Center</h1>
             <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
               {launchScore != null
                 ? `What to fix next to get closer to launch`
@@ -160,26 +183,22 @@ export default function CommandCenterPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate("/app/code-health")}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: "var(--accent-cyan)", color: "#000", boxShadow: "var(--shadow-glow)" }}
+            <VoidButton
+              variant="primary"
+              onClick={() => navigate(ROUTES.codeHealth)}
             >
               <Stethoscope size={16} />
               {lastDoctor ? "Rescan Project" : "Run Product Doctor"}
-            </motion.button>
+            </VoidButton>
             {!loading && (
-              <button
-                onClick={() => loadData(true)}
+              <VoidButton
+                variant="secondary"
+                onClick={handleRefresh}
                 disabled={refreshing}
-                className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm transition-all hover:opacity-80"
-                style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}
               >
                 <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
                 <span className="hidden sm:inline">Refresh</span>
-              </button>
+              </VoidButton>
             )}
           </div>
         </motion.div>
@@ -197,60 +216,41 @@ export default function CommandCenterPage() {
               ))}
             </div>
           </div>
-        ) : (data?.reports.length ?? 0) === 0 && allTasks.length === 0 ? (
-          <motion.div variants={fadeInUp} className="space-y-8">
-            <div className="text-center py-12">
+        ) : reports.length === 0 && allTasks.length === 0 ? (
+          <motion.div variants={fadeInUp} className="space-y-6">
+            <div className="text-center py-8">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
-                className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6"
+                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5"
                 style={{ background: "var(--accent-cyan)", boxShadow: "var(--shadow-glow)" }}
               >
-                <Zap size={28} className="text-black" />
+                <Zap size={24} className="text-black" />
               </motion.div>
-              <h2 className="text-2xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
-                Launch readiness starts with a scan.
+              <h2 className="text-xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
+                Upload your project. We'll tell you what blocks launch.
               </h2>
-              <p className="text-base max-w-lg mx-auto" style={{ color: "var(--text-secondary)" }}>
-                Upload your codebase. Get a launch score, blockers, and a prioritized fix queue. Rescan to track improvement.
+              <p className="text-sm max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
+                Get a launch score, prioritized blockers, and fix prompts you can paste into your AI IDE.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              <motion.button
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate("/app/code-health")}
-                className="rounded-xl border p-6 text-left transition-all group"
+            <div className="max-w-lg mx-auto">
+              <div
+                className="w-full rounded-xl border p-6 text-center transition-all group cursor-pointer"
                 style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}
+                onClick={() => navigate(ROUTES.codeHealth)}
               >
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: "var(--color-danger-soft)" }}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto" style={{ background: "var(--color-danger-soft)" }}>
                   <Stethoscope size={22} style={{ color: "var(--color-danger)" }} />
                 </div>
-                <p className="text-base font-semibold mb-2" style={{ color: "var(--text-primary)" }}>Scan a codebase</p>
-                <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>Upload your repo ZIP. Get launch readiness, gates, fix tasks, and build prompt.</p>
-                <span className="inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg" style={{ background: "var(--color-danger)", color: "#fff" }}>
-                  Upload Project ZIP <ArrowRight size={14} />
-                </span>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate("/app/idea-lab")}
-                className="rounded-xl border p-6 text-left transition-all group"
-                style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}
-              >
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: "var(--accent-violet-soft)" }}>
-                  <Lightbulb size={22} style={{ color: "var(--accent-violet)" }} />
-                </div>
-                <p className="text-base font-semibold mb-2" style={{ color: "var(--text-primary)" }}>Describe an idea</p>
-                <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>Get a signal score, top risks, and a verdict. Know what to validate next.</p>
-                <span className="inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg" style={{ background: "var(--accent-cyan)", color: "#000" }}>
-                  Check My Idea <ArrowRight size={14} />
-                </span>
-              </motion.button>
+                <p className="text-base font-semibold mb-2" style={{ color: "var(--text-primary)" }}>Run Launch Scan</p>
+                <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>Upload your repo ZIP. Get launch readiness, blockers, and fix tasks in under 2 minutes.</p>
+                <VoidButton variant="danger">
+                  <Upload size={16} /> Upload Project ZIP
+                </VoidButton>
+              </div>
             </div>
           </motion.div>
         ) : (
@@ -263,7 +263,7 @@ export default function CommandCenterPage() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Shield size={14} style={{ color: "var(--text-tertiary)" }} />
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Launch Readiness</p>
+                  <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Launch Readiness</p>
                 </div>
                 {launchScore != null ? (
                   <div>
@@ -307,7 +307,7 @@ export default function CommandCenterPage() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <XCircle size={14} style={{ color: hasIssues ? "var(--color-danger)" : "var(--text-tertiary)" }} />
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Top Blocker{redGates.length !== 1 ? "s" : ""}</p>
+                  <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Top Blocker{redGates.length !== 1 ? "s" : ""}</p>
                 </div>
                 {redGates.length > 0 ? (
                   <div>
@@ -331,7 +331,7 @@ export default function CommandCenterPage() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Target size={14} style={{ color: "var(--accent-cyan)" }} />
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Next Fix</p>
+                  <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Next Fix</p>
                 </div>
                 <p className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
                   {smartNextAction.title || "Run Product Doctor"}
@@ -339,15 +339,14 @@ export default function CommandCenterPage() {
                 <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
                   {smartNextAction.reason || "Start the scan → fix → rescan loop"}
                 </p>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <VoidButton
+                  variant="primary"
+                  size="sm"
                   onClick={() => navigate(smartNextAction.href || "/app/code-health")}
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg"
-                  style={{ background: "var(--accent-cyan)", color: "#000" }}
+                  className="mt-3"
                 >
                   Go <ArrowRight size={12} />
-                </motion.button>
+                </VoidButton>
               </motion.div>
 
               <motion.div
@@ -357,7 +356,7 @@ export default function CommandCenterPage() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <CheckSquare size={14} style={{ color: "var(--text-tertiary)" }} />
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Fix Task Queue</p>
+                  <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Fix Task Queue</p>
                 </div>
                 <p className="text-3xl font-bold" style={{ color: openCount > 0 ? "var(--color-danger)" : "var(--color-success)" }}>
                   {allTasks.filter(t => t.status !== "completed").length}
@@ -371,36 +370,27 @@ export default function CommandCenterPage() {
             </motion.div>
 
             <motion.div variants={fadeInUp} className="flex flex-wrap gap-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <VoidButton
+                variant="danger"
                 onClick={() => navigate("/app/code-health")}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                style={{ background: "var(--color-danger)", color: "#fff" }}
               >
                 <RotateCcw size={16} />
                 {lastDoctor ? "Rescan & Recheck Score" : "Run Product Doctor"}
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              </VoidButton>
+              <VoidButton
+                variant="secondary"
                 onClick={() => navigate("/app/build")}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
-                style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
               >
                 <ListChecks size={16} />
                 View All Tasks ({allTasks.length})
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              </VoidButton>
+              <VoidButton
+                variant="secondary"
                 onClick={() => navigate("/app/brain")}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
-                style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
               >
                 <FileText size={16} />
-                Reports ({data?.reports.length ?? 0})
-              </motion.button>
+                Reports ({reports.length})
+              </VoidButton>
             </motion.div>
 
             {redGates.length > 0 && (
@@ -413,15 +403,13 @@ export default function CommandCenterPage() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold" style={{ color: "var(--color-danger)" }}>{redGates.length} blocker{redGates.length !== 1 ? "s" : ""} blocking launch</p>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <VoidButton
+                      variant="danger"
+                      size="sm"
                       onClick={() => navigate("/app/code-health")}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg"
-                      style={{ background: "var(--color-danger)", color: "#fff" }}
                     >
                       Fix Now <ArrowRight size={12} />
-                    </motion.button>
+                    </VoidButton>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-3">
                     {redGates.slice(0, 4).map((g, i) => (
@@ -442,7 +430,7 @@ export default function CommandCenterPage() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Brain size={16} style={{ color: "var(--accent-magenta)" }} />
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Product Brain</p>
+                  <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Product Brain</p>
                 </div>
                 <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{brain.insights[0]?.title ?? "Synthesis available"}</p>
                 <p className="text-xs mt-2" style={{ color: "var(--text-tertiary)" }}>{brain.insights.length} insight{brain.insights.length !== 1 ? "s" : ""} · Alignment: {alignmentScore ?? "—"}</p>
@@ -457,10 +445,47 @@ export default function CommandCenterPage() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles size={16} style={{ color: "var(--accent-gold)" }} />
-                  <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Daily Briefing</p>
+                  <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Daily Briefing</p>
                 </div>
                 <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>{briefing.greeting}</p>
                 <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>{briefing.currentFocus}</p>
+              </motion.div>
+            )}
+
+            {scoreSeries.length > 1 && (
+              <motion.div
+                variants={fadeInUp}
+                className="rounded-xl border p-5"
+                style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)" }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp size={16} style={{ color: "var(--signal)" }} />
+                    <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Launch Readiness Trend</p>
+                  </div>
+                  <span className="text-mono text-xs" style={{ color: "var(--color-success)" }}>
+                    +{(scoreSeries[scoreSeries.length - 1]!.score - scoreSeries[0]!.score)} pts over {scoreSeries.length} scans
+                  </span>
+                </div>
+                <div style={{ height: 160 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={scoreSeries} margin={{ top: 8, right: 8, left: -24, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="var(--signal)" stopOpacity={0.35} />
+                          <stop offset="100%" stopColor="var(--signal)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="date" tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis domain={[0, 100]} tick={{ fill: "var(--text-tertiary)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <RechartsTooltip
+                        contentStyle={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", borderRadius: 8, fontSize: 12, color: "var(--text-primary)" }}
+                        labelStyle={{ color: "var(--text-tertiary)" }}
+                      />
+                      <Area type="monotone" dataKey="score" stroke="var(--signal)" strokeWidth={2.5} fill="url(#scoreGrad)" dot={{ fill: "var(--signal)", r: 4 }} activeDot={{ r: 6 }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </motion.div>
             )}
           </div>

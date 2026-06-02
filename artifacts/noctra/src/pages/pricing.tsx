@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Check, X, ArrowRight, HelpCircle, Sparkles, Shield, Globe, Cpu } from "lucide-react";
+import { Check, X, ChevronDown } from "lucide-react";
+import { Logo, LogoMark } from "@/components/Logo";
+import { StarfieldCanvas } from "@/components/StarfieldCanvas";
+import { VoidButton } from "@/components/VoidButton";
+import { VoidCard } from "@/components/VoidCard";
+import { Appear } from "@/components/Appear";
 
 const plans = [
   {
@@ -93,18 +98,12 @@ const plans = [
 ];
 
 const faqs = [
-  { question: "What's included in the free tier?", answer: "The free tier gives you 5 AI analyses and 3 codebase scans per month. Perfect for trying out the platform before committing." },
+  { question: "What's included in the free tier?", answer: "The Starter tier gives you 3 AI analyses and 1 codebase scan per month — enough to run the full readiness loop once and see exactly how NOCTRA works before committing." },
   { question: "Can I upgrade or downgrade anytime?", answer: "Yes! You can upgrade or downgrade your plan at any time. When upgrading, you'll get immediate access to new features. When downgrading, changes take effect at the end of your billing cycle." },
   { question: "What counts as an analysis?", answer: "Each time you run an intelligence tool (Idea Checker, Project Doctor, Reality Compiler, etc.) it counts as one analysis. Pro and Team plans include hundreds per month." },
   { question: "Is there a trial period?", answer: "Yes! Pro and Team plans come with a 14-day free trial. No credit card required to start. You can explore all features before committing." },
   { question: "Do you offer refunds?", answer: "We offer a 30-day money-back guarantee for all paid plans. If you're not satisfied, contact us for a full refund." },
 ];
-
-const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
-};
 
 export default function PricingPage() {
   const [, navigate] = useLocation();
@@ -120,107 +119,131 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--surface-0)" }}>
-      <div className="py-16 px-4 sm:px-6 text-center border-b" style={{ borderColor: "var(--border-subtle)", background: "var(--surface-1)" }}>
-        <motion.div {...fadeInUp}>
-          <p className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--accent-cyan)" }}>Pricing</p>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>Simple, transparent pricing</h1>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--text-secondary)" }}>Choose the plan that fits your needs. All plans include core features.</p>
+    <div className="min-h-screen bg-void-0 relative">
+      <StarfieldCanvas opacity={0.3} />
 
-          <div className="mt-8 flex items-center justify-center gap-4">
-            <span className={`text-sm ${billingCycle === "monthly" ? "font-medium" : ""}`} style={{ color: billingCycle === "monthly" ? "var(--text-primary)" : "var(--text-tertiary)" }}>Monthly</span>
+      <header className="sticky top-0 z-50 border-b border-void-3 bg-void-0/80 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <button onClick={() => navigate("/")}><Logo size={28} /></button>
+          <button onClick={() => navigate("/")} className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Back to home</button>
+        </div>
+      </header>
+
+      <div className="py-20 px-4 sm:px-6 text-center relative overflow-hidden border-b border-void-3">
+        <Appear>
+          <p className="text-xs font-medium tracking-[0.12em] uppercase mb-4" style={{ color: "var(--signal-amber)" }}>Pricing</p>
+        </Appear>
+        <Appear delay={0.1}>
+          <h1 className="font-bold tracking-tight mb-4" style={{ color: "var(--text-primary)", fontSize: "clamp(2.2rem, 4.5vw, 3.4rem)" }}>Pick your altitude.</h1>
+        </Appear>
+        <Appear delay={0.2}>
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--text-secondary)" }}>Every plan includes the full readiness loop. Scale scans and seats as you ship more.</p>
+        </Appear>
+
+        <Appear delay={0.3}>
+          <div className="mt-9 inline-flex items-center gap-3 p-1.5 rounded-full bg-void-2 border border-void-3">
             <button
-              onClick={() => setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")}
-              className="relative w-14 h-7 rounded-full transition-colors"
-              style={{ background: billingCycle === "yearly" ? "var(--accent-cyan)" : "var(--surface-2)" }}
+              onClick={() => setBillingCycle("monthly")}
+              className="text-sm px-4 py-1.5 rounded-full transition-all"
+              style={{ background: billingCycle === "monthly" ? "var(--signal-amber)" : "transparent", color: billingCycle === "monthly" ? "var(--void-0)" : "var(--text-tertiary)", fontWeight: billingCycle === "monthly" ? 600 : 400 }}
             >
-              <div className="absolute top-1 w-5 h-5 rounded-full transition-transform" style={{ background: "#fff", left: billingCycle === "yearly" ? "calc(100% - 22px)" : "2px" }} />
+              Monthly
             </button>
-            <span className={`text-sm ${billingCycle === "yearly" ? "font-medium" : ""}`} style={{ color: billingCycle === "yearly" ? "var(--text-primary)" : "var(--text-tertiary)" }}>Yearly</span>
-            {billingCycle === "yearly" && (
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "var(--color-success-soft)", color: "var(--color-success)" }}>Save 20%</span>
-            )}
+            <button
+              onClick={() => setBillingCycle("yearly")}
+              className="text-sm px-4 py-1.5 rounded-full transition-all inline-flex items-center gap-2"
+              style={{ background: billingCycle === "yearly" ? "var(--signal-amber)" : "transparent", color: billingCycle === "yearly" ? "var(--void-0)" : "var(--text-tertiary)", fontWeight: billingCycle === "yearly" ? 600 : 400 }}
+            >
+              Yearly
+              <span className="text-mono text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: billingCycle === "yearly" ? "var(--void-0)" : "var(--color-success-soft)", color: billingCycle === "yearly" ? "var(--signal-amber)" : "var(--color-success)" }}>-20%</span>
+            </button>
           </div>
-        </motion.div>
+        </Appear>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 relative z-10">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {plans.map((plan, i) => (
+          {plans.map((plan, i) => {
+            const monthly = Number(String(plan.price).replace("$", ""));
+            const hasNumericPrice = !Number.isNaN(monthly) && monthly > 0;
+            const displayPrice = hasNumericPrice
+              ? (billingCycle === "yearly" ? `$${Math.round(monthly * 0.8)}` : plan.price)
+              : plan.price;
+            const displayPeriod = hasNumericPrice ? "/mo" : plan.period;
+            return (
             <motion.div
               key={plan.name}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -4 }}
-              className="relative rounded-2xl p-6 transition-all"
-              style={{
-                background: "var(--surface-1)",
-                border: plan.popular ? "2px solid var(--accent-cyan)" : "1px solid var(--border-default)",
-                boxShadow: plan.popular ? "0 0 30px var(--accent-cyan-glow)" : "var(--shadow-md)",
-              }}
+              transition={{ delay: i * 0.08 }}
+              whileHover={{ y: -6 }}
+              className="relative"
             >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="text-xs px-3 py-1 rounded-full font-semibold" style={{ background: "var(--accent-cyan)", color: "#000" }}>Most Popular</span>
-                </div>
-              )}
-
-              <div className="mb-4">
-                <h3 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>{plan.name}</h3>
-                <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>{plan.description}</p>
-              </div>
-
-              <div className="mb-6">
-                <span className="text-4xl font-bold" style={{ color: "var(--text-primary)" }}>{plan.price}</span>
-                {plan.period && <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>{plan.period}</span>}
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleCTA(plan.planId)}
-                className="w-full py-3 rounded-xl text-sm font-semibold transition-all mb-6"
-                style={{
-                  background: plan.popular ? "var(--accent-cyan)" : "var(--surface-2)",
-                  color: plan.popular ? "#000" : "var(--text-primary)",
-                  border: plan.popular ? "none" : "1px solid var(--border-default)",
-                }}
+              <VoidCard
+                featured={plan.popular}
+                className="h-full"
+                hover={true}
               >
-                {plan.cta}
-              </motion.button>
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="text-xs font-medium tracking-[0.12em] uppercase px-3 py-1 rounded-full bg-signal-amber text-black">Most Popular</span>
+                  </div>
+                )}
 
-              <div className="space-y-3">
-                {plan.features.map((feature) => (
-                  <div key={feature} className="flex items-start gap-2">
-                    <Check size={14} style={{ color: "var(--color-success)", flexShrink: 0, marginTop: 2 }} />
-                    <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{feature}</span>
-                  </div>
-                ))}
-                {plan.notIncluded.map((feature) => (
-                  <div key={feature} className="flex items-start gap-2 opacity-50">
-                    <X size={14} style={{ color: "var(--text-quaternary)", flexShrink: 0, marginTop: 2 }} />
-                    <span className="text-sm" style={{ color: "var(--text-quaternary)" }}>{feature}</span>
-                  </div>
-                ))}
-              </div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>{plan.name}</h3>
+                  <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>{plan.description}</p>
+                </div>
+
+                <div className="mb-6 flex items-baseline gap-1">
+                  <span className="text-4xl font-bold font-mono" style={{ color: "var(--text-primary)" }}>{displayPrice}</span>
+                  {displayPeriod && <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>{displayPeriod}</span>}
+                  {hasNumericPrice && billingCycle === "yearly" && (
+                    <span className="font-mono text-[10px] ml-1.5 px-1.5 py-0.5 rounded" style={{ background: "var(--color-success-soft)", color: "var(--color-success)" }}>billed yearly</span>
+                  )}
+                </div>
+
+                <VoidButton
+                  variant={plan.popular ? "primary" : "secondary"}
+                  className="w-full mb-6"
+                  onClick={() => handleCTA(plan.planId)}
+                >
+                  {plan.cta}
+                </VoidButton>
+
+                <div className="space-y-3">
+                  {plan.features.map((feature) => (
+                    <div key={feature} className="flex items-start gap-2.5">
+                      <Check size={15} style={{ color: "var(--signal-amber)", flexShrink: 0, marginTop: 2 }} />
+                      <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{feature}</span>
+                    </div>
+                  ))}
+                  {plan.notIncluded.map((feature) => (
+                    <div key={feature} className="flex items-start gap-2.5 opacity-45">
+                      <X size={15} style={{ color: "var(--text-quaternary)", flexShrink: 0, marginTop: 2 }} />
+                      <span className="text-sm line-through" style={{ color: "var(--text-quaternary)" }}>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </VoidCard>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      <div className="py-16 px-4 sm:px-6 border-t" style={{ borderColor: "var(--border-subtle)", background: "var(--surface-1)" }}>
+      <div className="py-16 px-4 sm:px-6 border-t border-void-3 bg-void-1 relative z-10">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-10" style={{ color: "var(--text-primary)" }}>Feature Comparison</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b" style={{ borderColor: "var(--border-default)" }}>
-                  <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: "var(--text-tertiary)" }}>Feature</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium" style={{ color: "var(--text-tertiary)" }}>Starter</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium" style={{ color: "var(--accent-cyan)" }}>Pro</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium" style={{ color: "var(--text-tertiary)" }}>Team</th>
-                  <th className="text-center py-3 px-4 text-sm font-medium" style={{ color: "var(--text-tertiary)" }}>Enterprise</th>
+                <tr className="border-b border-void-3">
+                  <th className="text-left py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Feature</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Starter</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--signal-amber)" }}>Pro</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Team</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Enterprise</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,14 +259,14 @@ export default function PricingPage() {
                   { feature: "Shared workspaces", starter: false, pro: false, team: true, enterprise: true },
                   { feature: "API access", starter: false, pro: false, team: true, enterprise: true },
                 ].map((row) => (
-                  <tr key={row.feature} className="border-b" style={{ borderColor: "var(--border-subtle)" }}>
+                  <tr key={row.feature} className="border-b border-void-3">
                     <td className="py-3 px-4 text-sm" style={{ color: "var(--text-secondary)" }}>{row.feature}</td>
                     {(["starter", "pro", "team", "enterprise"] as const).map((tier) => (
                       <td key={tier} className="py-3 px-4 text-center">
                         {typeof row[tier] === "boolean" ? (
-                          row[tier] ? <Check size={16} style={{ color: tier === "pro" ? "var(--accent-cyan)" : "var(--color-success)", margin: "0 auto" }} /> : <X size={16} style={{ color: "var(--text-quaternary)", margin: "0 auto" }} />
+                          row[tier] ? <Check size={16} style={{ color: tier === "pro" ? "var(--signal-amber)" : "var(--color-success)", margin: "0 auto" }} /> : <X size={16} style={{ color: "var(--text-quaternary)", margin: "0 auto" }} />
                         ) : (
-                          <span className="text-sm font-medium" style={{ color: tier === "pro" ? "var(--accent-cyan)" : "var(--text-secondary)" }}>{row[tier]}</span>
+                          <span className="text-sm font-medium font-mono" style={{ color: tier === "pro" ? "var(--signal-amber)" : "var(--text-secondary)" }}>{row[tier]}</span>
                         )}
                       </td>
                     ))}
@@ -255,7 +278,7 @@ export default function PricingPage() {
         </div>
       </div>
 
-      <div className="py-16 px-4 sm:px-6">
+      <div className="py-16 px-4 sm:px-6 relative z-10">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-10" style={{ color: "var(--text-primary)" }}>Frequently Asked Questions</h2>
           <div className="space-y-3">
@@ -263,17 +286,20 @@ export default function PricingPage() {
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="rounded-xl border overflow-hidden"
-                style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}
+                className="rounded-xl border overflow-hidden bg-void-1"
+                style={{ borderColor: openFaq === i ? "var(--signal-amber)" : "var(--void-3)" }}
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between p-4 text-left"
+                  className="w-full flex items-center justify-between gap-4 p-4 text-left"
                 >
                   <span className="font-medium" style={{ color: "var(--text-primary)" }}>{faq.question}</span>
-                  <HelpCircle size={16} style={{ color: openFaq === i ? "var(--accent-cyan)" : "var(--text-tertiary)" }} />
+                  <motion.span animate={{ rotate: openFaq === i ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex-shrink-0">
+                    <ChevronDown size={17} style={{ color: openFaq === i ? "var(--signal-amber)" : "var(--text-tertiary)" }} />
+                  </motion.span>
                 </button>
                 <AnimatePresence>
                   {openFaq === i && (
@@ -284,7 +310,7 @@ export default function PricingPage() {
                       className="overflow-hidden"
                     >
                       <div className="px-4 pb-4">
-                        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{faq.answer}</p>
+                        <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{faq.answer}</p>
                       </div>
                     </motion.div>
                   )}
@@ -295,17 +321,19 @@ export default function PricingPage() {
         </div>
       </div>
 
-      <div className="py-20 px-4 sm:px-6 text-center border-t" style={{ borderColor: "var(--border-subtle)", background: "var(--surface-1)" }}>
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>Still have questions?</h2>
-        <p className="text-lg mb-8" style={{ color: "var(--text-secondary)" }}>Can't find the answer you're looking for? Our team is here to help.</p>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="px-8 py-4 rounded-xl text-base font-semibold"
-          style={{ background: "var(--accent-cyan)", color: "#000" }}
-        >
-          Contact Sales
-        </motion.button>
+      <div className="py-20 px-4 sm:px-6 text-center border-t border-void-3 relative overflow-hidden bg-void-1">
+        <div className="relative z-10">
+          <div className="flex justify-center mb-5"><LogoMark size={40} animated /></div>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>Still charting your launch?</h2>
+          <p className="text-lg mb-8 max-w-xl mx-auto" style={{ color: "var(--text-secondary)" }}>Tell us what you're building and we'll help you find the right altitude.</p>
+          <VoidButton
+            variant="primary"
+            size="lg"
+            onClick={() => { window.location.href = "mailto:sales@noctra.app"; }}
+          >
+            Contact Sales
+          </VoidButton>
+        </div>
       </div>
     </div>
   );

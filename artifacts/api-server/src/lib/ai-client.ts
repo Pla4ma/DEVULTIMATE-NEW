@@ -56,7 +56,9 @@ function getGroqConfig() {
 function getLovableConfig() {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) return null;
-  return { key, model: "gpt-4o-mini", baseUrl: "https://api.lovable.app/v1" };
+  const baseUrl = process.env.LOVABLE_BASE_URL || "https://api.lovable.app/v1";
+  const model = process.env.LOVABLE_MODEL || "gpt-4o-mini";
+  return { key, model, baseUrl };
 }
 
 export function getConfiguredProviders(): AIProvider[] {

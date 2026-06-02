@@ -5,34 +5,34 @@ import { Zap, ArrowRight, Stethoscope, Lightbulb, CheckCircle, Rocket, X } from 
 
 const STEPS = [
   {
-    title: "Welcome to DEVULTIMATE",
+    title: "Welcome to NOCTRA",
     body: "Your launch readiness platform. Scan your codebase, diagnose blockers, and track improvement — all in one place.",
     icon: "🚀",
-    color: "var(--noctra-cyan)",
+    color: "var(--signal)",
   },
   {
     title: "Scan any repo",
     body: "Upload a ZIP of your project. We scan for security issues, deployment gaps, missing tests, and code quality problems.",
     icon: "🔍",
-    color: "var(--noctra-rose)",
+    color: "var(--color-danger)",
   },
   {
     title: "Get a launch score",
     body: "Every scan produces a launch readiness score (0-100). Red/yellow/green gates show exactly what's blocking launch.",
     icon: "📊",
-    color: "var(--noctra-amber)",
+    color: "var(--color-warning)",
   },
   {
     title: "Fix and rescan",
     body: "Each scan generates a prioritized fix queue. Fix the issues, rescan, and watch your score improve.",
     icon: "🔄",
-    color: "var(--noctra-emerald)",
+    color: "var(--color-success)",
   },
   {
     title: "Ready to launch",
     body: "When all gates are green and your score is 70+, you're launch ready. Ship with confidence.",
     icon: "✅",
-    color: "var(--noctra-emerald)",
+    color: "var(--color-success)",
   },
 ];
 
@@ -87,7 +87,7 @@ export function OnboardingWizard() {
 
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 animate-fade-in" style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }}>
-      <div className="w-full max-w-md rounded-2xl overflow-hidden shadow-2xl animate-scale-in" style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)" }}>
+      <div className="w-full max-w-md rounded-2xl overflow-hidden shadow-2xl animate-scale-in" style={{ background: "var(--surface-1)", border: "1px solid var(--border-default)" }}>
         <div className="px-6 pt-6 pb-4 text-center space-y-4">
           <div
             className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl"
@@ -96,8 +96,8 @@ export function OnboardingWizard() {
             {current.icon}
           </div>
           <div>
-            <h2 className="text-lg font-bold" style={{ color: "var(--noctra-text)" }}>{current.title}</h2>
-            <p className="text-sm mt-1" style={{ color: "var(--noctra-text-muted)" }}>{current.body}</p>
+            <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>{current.title}</h2>
+            <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>{current.body}</p>
           </div>
         </div>
 
@@ -105,7 +105,7 @@ export function OnboardingWizard() {
           <div className="flex items-center justify-center gap-1.5">
             {STEPS.map((_, i) => (
               <div key={i} className="w-2 h-2 rounded-full transition-all duration-300" style={{
-                background: i === step ? current.color : i < step ? "var(--noctra-emerald)" : "var(--noctra-border2)",
+                background: i === step ? current.color : i < step ? "var(--color-success)" : "var(--border-strong)",
                 width: i === step ? 24 : 8,
               }} />
             ))}
@@ -114,7 +114,7 @@ export function OnboardingWizard() {
           <button
             onClick={handleNext}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
-            style={{ background: current.color, color: "#000" }}
+            style={{ background: current.color, color: "var(--surface-0)" }}
           >
             {isLast ? (
               <><CheckCircle size={16} /> Start my first scan</>
@@ -124,7 +124,7 @@ export function OnboardingWizard() {
           </button>
 
           {!isLast && (
-            <button onClick={handleSkip} className="w-full text-xs py-1 transition-opacity hover:opacity-80" style={{ color: "var(--noctra-text-muted)" }}>
+            <button onClick={handleSkip} className="w-full text-xs py-1 transition-opacity hover:opacity-80" style={{ color: "var(--text-tertiary)" }}>
               Skip tutorial
             </button>
           )}

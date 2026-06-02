@@ -437,7 +437,7 @@ language sql
 security definer set search_path = ''
 as $$
   select route, count(*)::bigint as call_count
-  from usage_logs
+  from public.usage_logs
   where user_id = p_user_id
     and created_at::date = p_date
   group by route;

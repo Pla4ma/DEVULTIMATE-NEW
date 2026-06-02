@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { supabase, supabaseConfigError, isSupabaseConfigured } from "@/integrations/supabase/client";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
 import { isDemoMode, enableDemoMode, disableDemoMode, getDemoUser } from "@/lib/demo-mode";
+import { demoStore } from "@/lib/demo-store";
 
 const ANON_KEY = "noctra_anon_creds";
 
@@ -26,6 +27,7 @@ function getOrCreateAnonCreds(): { email: string; password: string } {
 
 function buildDemoUser(): User {
   const u = getDemoUser() ?? enableDemoMode();
+  demoStore.seed(u.id);
   return {
     id: u.id,
     aud: "authenticated",

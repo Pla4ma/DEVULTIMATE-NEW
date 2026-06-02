@@ -36,7 +36,7 @@ export function RealityReportView({ report, compact, prevScore, scoreDelta }: {
     <div className="space-y-4">
       {/* Score + Compile Status */}
       <div className="flex gap-4 items-start flex-wrap">
-        <ScoreRing value={score} label="Reality" color="var(--noctra-amber)" />
+        <ScoreRing value={score} label="Reality" color="var(--color-warning)" />
         <div className="flex-1 min-w-0">
           {isCompilerSchema ? (
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg mb-2" style={{ background: statusCfg.bg, border: `1px solid ${statusCfg.border}` }}>
@@ -44,8 +44,8 @@ export function RealityReportView({ report, compact, prevScore, scoreDelta }: {
               <span className="text-xs font-mono font-bold" style={{ color: statusCfg.color }}>{statusCfg.label}</span>
             </div>
           ) : null}
-          {data.verdict && <p className="text-sm font-semibold mb-1" style={{ color: "var(--noctra-text)" }}>{data.verdict}</p>}
-          {data.summary && <p className="text-sm" style={{ color: "var(--noctra-text-soft)" }}>{data.summary}</p>}
+          {data.verdict && <p className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>{data.verdict}</p>}
+          {data.summary && <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{data.summary}</p>}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             {!isCompilerSchema && data.go_signal ? (
               <Badge variant={data.go_signal === "GO" ? "emerald" : data.go_signal === "NO-GO" ? "rose" : "amber"}>
@@ -54,8 +54,8 @@ export function RealityReportView({ report, compact, prevScore, scoreDelta }: {
             ) : null}
             {prevScore != null && scoreDelta != null ? (
               <Badge style={{
-                background: scoreDelta > 0 ? "rgba(52,211,153,0.1)" : scoreDelta < 0 ? "rgba(244,63,94,0.1)" : "var(--noctra-surface2)",
-                color: scoreDelta > 0 ? "var(--noctra-emerald)" : scoreDelta < 0 ? "var(--noctra-rose)" : "var(--noctra-text-muted)",
+                background: scoreDelta > 0 ? "var(--color-success-soft)" : scoreDelta < 0 ? "var(--color-danger-soft)" : "var(--surface-2)",
+                color: scoreDelta > 0 ? "var(--color-success)" : scoreDelta < 0 ? "var(--color-danger)" : "var(--text-tertiary)",
               }}>
                 {scoreDelta > 0 ? `↑ +${scoreDelta}` : scoreDelta < 0 ? `↓ ${scoreDelta}` : "→ flat"} vs prev ({prevScore})
               </Badge>
@@ -70,15 +70,15 @@ export function RealityReportView({ report, compact, prevScore, scoreDelta }: {
       {/* Compiler Warnings */}
       {isCompilerSchema && warnings.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5" style={{ color: "var(--noctra-amber)" }}>
+          <p className="eyebrow mb-2 flex items-center gap-1.5" style={{ color: "var(--color-warning)" }}>
             <AlertCircle size={11} />
             {warnings.length} Warning{warnings.length !== 1 ? "s" : ""}
           </p>
           <div className="space-y-1.5">
             {warnings.map((w, i) => (
-              <div key={i} className="flex items-start gap-2 text-xs px-2 py-1.5 rounded-lg" style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)" }}>
-                <span className="font-mono shrink-0" style={{ color: "var(--noctra-amber)" }}>warn</span>
-                <span style={{ color: "var(--noctra-text-soft)" }}>{w}</span>
+              <div key={i} className="flex items-start gap-2 text-xs px-2 py-1.5 rounded-lg" style={{ background: "var(--color-warning-soft)", border: "1px solid var(--color-warning-soft)" }}>
+                <span className="font-mono shrink-0" style={{ color: "var(--color-warning)" }}>warn</span>
+                <span style={{ color: "var(--text-secondary)" }}>{w}</span>
               </div>
             ))}
           </div>
@@ -87,38 +87,38 @@ export function RealityReportView({ report, compact, prevScore, scoreDelta }: {
 
       {/* Product Patch / Patched Idea / Decisive Move */}
       {data.product_patch && (
-        <Panel style={{ border: "1px solid rgba(61,216,255,0.2)", background: "rgba(61,216,255,0.04)" }}>
+        <Panel style={{ border: "1px solid var(--signal-soft)", background: "var(--signal-soft)" }}>
           <div className="flex items-center gap-2 mb-2">
-            <Wrench size={12} style={{ color: "var(--noctra-cyan)" }} />
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-cyan)" }}>Product Patch</p>
+            <Wrench size={12} style={{ color: "var(--signal)" }} />
+            <p className="eyebrow" style={{ color: "var(--signal)" }}>Product Patch</p>
           </div>
-          <p className="text-sm" style={{ color: "var(--noctra-text-soft)" }}>{data.product_patch}</p>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{data.product_patch}</p>
         </Panel>
       )}
       {data.patched_idea && (
-        <Panel style={{ border: "1px solid rgba(52,211,153,0.2)", background: "rgba(52,211,153,0.04)" }}>
+        <Panel style={{ border: "1px solid var(--color-success-soft)", background: "var(--color-success-soft)" }}>
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle size={12} style={{ color: "var(--noctra-emerald)" }} />
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-emerald)" }}>Patched Idea</p>
+            <CheckCircle size={12} style={{ color: "var(--color-success)" }} />
+            <p className="eyebrow" style={{ color: "var(--color-success)" }}>Patched Idea</p>
           </div>
-          <p className="text-sm" style={{ color: "var(--noctra-text-soft)" }}>{data.patched_idea}</p>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{data.patched_idea}</p>
         </Panel>
       )}
       {data.decisive_move && (
-        <Panel style={{ border: "1px solid rgba(61,216,255,0.2)", background: "rgba(61,216,255,0.04)" }}>
-          <p className="text-xs font-semibold mb-1" style={{ color: "var(--noctra-cyan)" }}>Decisive Move (next 7 days)</p>
-          <p className="text-sm" style={{ color: "var(--noctra-text)" }}>{data.decisive_move}</p>
+        <Panel style={{ border: "1px solid var(--signal-soft)", background: "var(--signal-soft)" }}>
+          <p className="text-xs font-semibold mb-1" style={{ color: "var(--signal)" }}>Decisive Move (next 7 days)</p>
+          <p className="text-sm" style={{ color: "var(--text-primary)" }}>{data.decisive_move}</p>
         </Panel>
       )}
 
       {/* Legacy: Red Flags */}
       {!isCompilerSchema && data.red_flags && data.red_flags.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-rose)" }}>Red Flags</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--color-danger)" }}>Red Flags</p>
           <ul className="space-y-1">
             {data.red_flags.map((f, i) => (
-              <li key={i} className="text-sm flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
-                <span style={{ color: "var(--noctra-rose)" }}>!</span>{f}
+              <li key={i} className="text-sm flex gap-2" style={{ color: "var(--text-secondary)" }}>
+                <span style={{ color: "var(--color-danger)" }}>!</span>{f}
               </li>
             ))}
           </ul>
@@ -128,12 +128,12 @@ export function RealityReportView({ report, compact, prevScore, scoreDelta }: {
       {/* Blind Spots */}
       {data.blind_spots && data.blind_spots.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-amber)" }}>Blind Spots</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--color-warning)" }}>Blind Spots</p>
           <div className="space-y-1.5">
             {data.blind_spots.map((s, i) => (
               <div key={i} className="flex items-start gap-2 text-sm">
-                <ChevronRight size={12} style={{ color: "var(--noctra-amber)", flexShrink: 0, marginTop: 2 }} />
-                <span style={{ color: "var(--noctra-text-soft)" }}>{s}</span>
+                <ChevronRight size={12} style={{ color: "var(--color-warning)", flexShrink: 0, marginTop: 2 }} />
+                <span style={{ color: "var(--text-secondary)" }}>{s}</span>
               </div>
             ))}
           </div>
@@ -143,15 +143,15 @@ export function RealityReportView({ report, compact, prevScore, scoreDelta }: {
       {/* Risk Matrix */}
       {risks.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-amber)" }}>Risk Matrix</p>
+          <p className="eyebrow mb-3" style={{ color: "var(--color-warning)" }}>Risk Matrix</p>
           <div className="space-y-2">
             {risks.map((r, i) => (
-              <div key={i} className="rounded-lg p-3" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+              <div key={i} className="rounded-lg p-3" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <p className="text-sm" style={{ color: "var(--noctra-text)" }}>{r.assumption}</p>
+                  <p className="text-sm" style={{ color: "var(--text-primary)" }}>{r.assumption}</p>
                   <Badge variant={r.severity === "high" || r.severity === "critical" ? "rose" : r.severity === "low" ? "emerald" : "amber"}>{r.severity}</Badge>
                 </div>
-                {r.mitigation && <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>Fix: {r.mitigation}</p>}
+                {r.mitigation && <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Fix: {r.mitigation}</p>}
               </div>
             ))}
           </div>
@@ -161,11 +161,11 @@ export function RealityReportView({ report, compact, prevScore, scoreDelta }: {
       {/* Market Risks (legacy) */}
       {!compact && !isCompilerSchema && data.market_risks && data.market_risks.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-amber)" }}>Market Risks</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--color-warning)" }}>Market Risks</p>
           <ul className="space-y-1">
             {data.market_risks.map((r, i) => (
-              <li key={i} className="text-sm flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
-                <span style={{ color: "var(--noctra-amber)" }}>—</span>{r}
+              <li key={i} className="text-sm flex gap-2" style={{ color: "var(--text-secondary)" }}>
+                <span style={{ color: "var(--color-warning)" }}>—</span>{r}
               </li>
             ))}
           </ul>
@@ -175,11 +175,11 @@ export function RealityReportView({ report, compact, prevScore, scoreDelta }: {
       {/* Next Actions */}
       {data.next_actions && data.next_actions.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-cyan)" }}>Next Actions</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--signal)" }}>Next Actions</p>
           <ol className="space-y-1">
             {data.next_actions.map((a, i) => (
-              <li key={i} className="text-sm flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
-                <span className="text-xs font-mono shrink-0" style={{ color: "var(--noctra-text-muted)" }}>{i + 1}.</span>
+              <li key={i} className="text-sm flex gap-2" style={{ color: "var(--text-secondary)" }}>
+                <span className="text-xs font-mono shrink-0" style={{ color: "var(--text-tertiary)" }}>{i + 1}.</span>
                 {a}
               </li>
             ))}
@@ -190,7 +190,7 @@ export function RealityReportView({ report, compact, prevScore, scoreDelta }: {
       {/* AI Wrapper Defense */}
       <RealityAIDefense defense={defense} />
 
-      <ProgressBar value={score} color="var(--noctra-amber)" />
+      <ProgressBar value={score} color="var(--color-warning)" />
     </div>
   );
 }

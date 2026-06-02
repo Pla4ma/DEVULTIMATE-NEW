@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProgressionProvider } from "@/lib/progression-context";
+import { VoidCursor } from "@/components/VoidCursor";
 
 const LandingPage = lazy(() => import("@/pages/landing"));
 const PricingPage = lazy(() => import("@/pages/pricing"));
@@ -30,14 +31,14 @@ const queryClient = new QueryClient({
 });
 
 const ROUTE_TITLES: Record<string, string> = {
-  "/": "DEVULTIMATE — Ship with evidence, not hope",
-  "/app": "Command Center — DEVULTIMATE",
-  "/app/idea-lab": "Idea Lab — DEVULTIMATE",
-  "/app/code-health": "Code Health — DEVULTIMATE",
-  "/app/build": "Build Planner — DEVULTIMATE",
-  "/app/brain": "Project Brain — DEVULTIMATE",
-  "/pricing": "Pricing — DEVULTIMATE",
-  "/privacy": "Privacy — DEVULTIMATE",
+  "/": "NOCTRA — Ship with evidence, not hope",
+  "/app": "Command Center — NOCTRA",
+  "/app/idea-lab": "Idea Lab — NOCTRA",
+  "/app/code-health": "Code Health — NOCTRA",
+  "/app/build": "Build Planner — NOCTRA",
+  "/app/brain": "Project Brain — NOCTRA",
+  "/pricing": "Pricing — NOCTRA",
+  "/privacy": "Privacy — NOCTRA",
 };
 
 function TitleSetter() {
@@ -49,11 +50,11 @@ function TitleSetter() {
       return;
     }
     if (location.startsWith("/app/reports/")) {
-      document.title = "Report — DEVULTIMATE";
+      document.title = "Report — NOCTRA";
     } else if (location.startsWith("/app/projects/")) {
-      document.title = "Project — DEVULTIMATE";
+      document.title = "Project — NOCTRA";
     } else {
-      document.title = "DEVULTIMATE — Ship with evidence, not hope";
+      document.title = "NOCTRA — Ship with evidence, not hope";
     }
   }, [location]);
   return null;
@@ -72,7 +73,7 @@ function LoadingScreen() {
     <div className="flex items-center justify-center h-screen" style={{ background: "var(--surface-0)" }}>
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 border-2 border-[var(--accent-cyan)] border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Loading DEVULTIMATE...</p>
+        <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Loading NOCTRA...</p>
       </div>
     </div>
   );
@@ -137,6 +138,7 @@ function AppRoutes() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <VoidCursor />
       <AuthProvider>
         <ProgressionProvider>
           <TooltipProvider>

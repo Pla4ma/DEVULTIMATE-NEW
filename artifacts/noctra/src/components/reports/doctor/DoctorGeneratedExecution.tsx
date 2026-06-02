@@ -106,13 +106,13 @@ export function DoctorGeneratedExecution({ report, pd, score, readinessScore, ga
   return (
     <Panel>
       <div className="flex items-center gap-2 mb-3">
-        <ClipboardList size={13} style={{ color: "var(--noctra-emerald)" }} />
-        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Generated Execution</p>
+        <ClipboardList size={13} style={{ color: "var(--color-success)" }} />
+        <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Generated Execution</p>
       </div>
 
       {report.id && (
-        <div className="mb-3 pb-3 border-b" style={{ borderColor: "var(--noctra-border)" }}>
-          <p className="text-xs font-medium mb-2" style={{ color: "var(--noctra-text)" }}>Fix Tasks</p>
+        <div className="mb-3 pb-3 border-b" style={{ borderColor: "var(--border-default)" }}>
+          <p className="text-xs font-medium mb-2" style={{ color: "var(--text-primary)" }}>Fix Tasks</p>
           <div className="flex flex-wrap gap-2">
             <NoctraButton variant="ghost" onClick={() => navigate(`/app/tasks?report=${report.id}`)}>
               <ExternalLink size={11} /> View Fix Tasks
@@ -126,32 +126,32 @@ export function DoctorGeneratedExecution({ report, pd, score, readinessScore, ga
         </div>
       )}
 
-      <div className="mb-3 pb-3 border-b" style={{ borderColor: "var(--noctra-border)" }}>
+      <div className="mb-3 pb-3 border-b" style={{ borderColor: "var(--border-default)" }}>
         <div className="flex items-center gap-2 mb-2">
-          <Terminal size={13} style={{ color: "var(--noctra-cyan)" }} />
-          <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>Next Build Prompt</p>
+          <Terminal size={13} style={{ color: "var(--signal)" }} />
+          <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>Next Build Prompt</p>
         </div>
-        <p className="text-xs mb-2" style={{ color: "var(--noctra-text-muted)" }}>
+        <p className="text-xs mb-2" style={{ color: "var(--text-tertiary)" }}>
           Copy this prompt into Codex, Replit Agent, Cursor, or Windsurf to fix all identified issues.
         </p>
         <div className="flex items-center gap-2 mb-2">
-          <Badge style={{ fontSize: "9px", background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Codex</Badge>
-          <Badge style={{ fontSize: "9px", background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Replit</Badge>
-          <Badge style={{ fontSize: "9px", background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Cursor</Badge>
-          <Badge style={{ fontSize: "9px", background: "rgba(61,216,255,0.1)", color: "var(--noctra-cyan)" }}>Windsurf</Badge>
+          <Badge style={{ fontSize: "9px", background: "var(--signal-soft)", color: "var(--signal)" }}>Codex</Badge>
+          <Badge style={{ fontSize: "9px", background: "var(--signal-soft)", color: "var(--signal)" }}>Replit</Badge>
+          <Badge style={{ fontSize: "9px", background: "var(--signal-soft)", color: "var(--signal)" }}>Cursor</Badge>
+          <Badge style={{ fontSize: "9px", background: "var(--signal-soft)", color: "var(--signal)" }}>Windsurf</Badge>
         </div>
         <div className="flex gap-2">
           <button
             onClick={copyPrompt}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium"
-            style={{ background: promptCopied ? "rgba(52,211,153,0.15)" : "var(--noctra-cyan)", color: promptCopied ? "var(--noctra-emerald)" : "#000" }}
+            style={{ background: promptCopied ? "var(--color-success-soft)" : "var(--signal)", color: promptCopied ? "var(--color-success)" : "#000" }}
           >
             {promptCopied ? <><Check size={11} /> Copied</> : <><Copy size={11} /> Copy Prompt</>}
           </button>
           <button
             onClick={downloadPrompt}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium"
-            style={{ background: "var(--noctra-surface2)", color: "var(--noctra-text)", border: "1px solid var(--noctra-border)" }}
+            style={{ background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border-default)" }}
           >
             <Download size={11} /> Download
           </button>
@@ -160,10 +160,10 @@ export function DoctorGeneratedExecution({ report, pd, score, readinessScore, ga
 
       <div>
         <div className="flex items-center gap-2 mb-2">
-          <Package size={13} style={{ color: "var(--noctra-violet)" }} />
-          <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>Prompt Pack</p>
+          <Package size={13} style={{ color: "var(--accent-violet)" }} />
+          <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>Prompt Pack</p>
         </div>
-        <p className="text-xs mb-2" style={{ color: "var(--noctra-text-muted)" }}>
+        <p className="text-xs mb-2" style={{ color: "var(--text-tertiary)" }}>
           Generate a multi-step prompt pack with phase-by-phase repair instructions for your AI coding tool.
         </p>
         <div className="flex gap-2">
@@ -171,7 +171,7 @@ export function DoctorGeneratedExecution({ report, pd, score, readinessScore, ga
             onClick={handleGeneratePromptPack}
             disabled={generatingPack}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium"
-            style={{ background: generatingPack ? "rgba(149,117,255,0.1)" : "var(--noctra-surface2)", color: "var(--noctra-violet)", border: "1px solid rgba(149,117,255,0.25)" }}
+            style={{ background: generatingPack ? "var(--cosmos-soft)" : "var(--surface-2)", color: "var(--accent-violet)", border: "1px solid var(--cosmos-soft)" }}
           >
             {generatingPack ? <Loader2 size={11} className="animate-spin" /> : <Package size={11} />}
             Generate Prompt Pack
@@ -179,7 +179,7 @@ export function DoctorGeneratedExecution({ report, pd, score, readinessScore, ga
           <button
             onClick={handleExportFixPlan}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium"
-            style={{ background: "var(--noctra-surface2)", color: "var(--noctra-text)", border: "1px solid var(--noctra-border)" }}
+            style={{ background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border-default)" }}
           >
             <FileText size={11} /> Export Fix Plan
           </button>

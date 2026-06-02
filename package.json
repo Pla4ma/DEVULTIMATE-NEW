@@ -8,7 +8,9 @@
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "lint": "pnpm -r --if-present run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,yaml,yml,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,yaml,yml,md}\""
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,yaml,yml,md}\"",
+    "kimi-proxy": "node openrouter-kimi-crucible-proxy.js",
+    "test:kimi": "node test-kimi-direct.js"
   },
   "private": true,
   "devDependencies": {

@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
-import { Panel, Badge, EmptyState, NoctraButton } from "@/components/Primitives";
+import { Panel, Badge, EmptyState, NoctraButton, ScoreRing } from "@/components/Primitives";
+import { ROUTES } from "@/lib/routes";
 import {
   getProject, getReports, getTasks, getProofSignals,
   updateProject, deleteProject, updateTaskStatus, createProofSignal,
@@ -17,7 +18,7 @@ import { generateTasksFromReport } from "@/lib/task-generator";
 import { generateSprintFromTasks } from "@/lib/sprint";
 import { downloadMarkdown, copyText } from "@/lib/export";
 import { analyzeCodebaseAlignment } from "@/lib/codebase-alignment";
-import type { ReportSummary } from "@/lib/intelligence";
+import type { ReportSummary } from "@/lib/report-utils";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Trash2, Edit2, Loader2, Calendar,
@@ -111,7 +112,7 @@ export default function ProjectDetailPage() {
     setDeleting(true);
     try {
       await deleteProject(project.id);
-      navigate("/app/projects");
+      navigate(ROUTES.projects);
     } catch (err) {
       setDeleting(false);
       toast({ title: "Failed to delete project", description: err instanceof Error ? err.message : "Unexpected error.", variant: "destructive" });
@@ -215,12 +216,12 @@ export default function ProjectDetailPage() {
   const latestLaunchReport = launchReports[0] ?? null;
   const doctorReports = reports.filter((r) => r.tool === "doctor").sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   const latestDoctorReport = doctorReports[0] ?? null;
-  const stageColor = STAGE_COLORS[project?.stage ?? "idea"] ?? "var(--noctra-text-muted)";
+  const stageColor = STAGE_COLORS[project?.stage ?? "idea"] ?? "var(--text-tertiary)";
 
   const timeline = useMemo(() => buildTimeline({ reports, proofSignals, project: project ?? undefined, limit: 20 }), [reports, proofSignals, project]);
   const risks = useMemo(() => extractRisks({ reports, tasks, projectId: project?.id }), [reports, tasks, project]);
   const scoreHistory = useMemo(() => computeScoreHistory(reports), [reports]);
-  const alignment = useMemo(() => analyzeCodebaseAlignment({ reports: reports as unknown as ReportSummary[], tasks }), [reports, tasks]);
+  const alignment = useMemo(() => analyzeCodebaseAlignment({ reports: reports as ReportSummary[], tasks }), [reports, tasks]);
   const mvpReport = reports.find((r) => r.tool === "mvp");
 
   function copyBrief() {
@@ -263,7 +264,7 @@ export default function ProjectDetailPage() {
   if (loading) return (
     <AppShell>
       <div className="flex items-center justify-center h-64">
-        <Loader2 size={24} className="animate-spin" style={{ color: "var(--noctra-cyan)" }} />
+        <Loader2 size={24} className="animate-spin" style={{ color: "var(--signal)" }} />
       </div>
     </AppShell>
   );
@@ -273,7 +274,7 @@ export default function ProjectDetailPage() {
       <div className="p-6 max-w-4xl mx-auto">
         <EmptyState icon={<AlertTriangle size={24} />} title="Project not found" body={error || "This project does not exist."} />
         <div className="flex justify-center mt-4">
-          <NoctraButton variant="ghost" onClick={() => navigate("/app/projects")}><ArrowLeft size={14} /> Back to Projects</NoctraButton>
+          <NoctraButton variant="ghost" onClick={() => navigate(ROUTES.projects)}><ArrowLeft size={14} /> Back to Projects</NoctraButton>
         </div>
       </div>
     </AppShell>
@@ -308,21 +309,21 @@ export default function ProjectDetailPage() {
       <div className="p-6 max-w-5xl mx-auto space-y-5">
         {/* Top bar */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <button onClick={() => navigate("/app/projects")} className="flex items-center gap-1.5 text-sm hover:opacity-80" style={{ color: "var(--noctra-text-muted)" }}>
+          <button onClick={() => navigate(ROUTES.projects)} className="flex items-center gap-1.5 text-sm hover:opacity-80" style={{ color: "var(--text-tertiary)" }}>
             <ArrowLeft size={14} /> All Projects
           </button>
           <div className="flex items-center gap-2">
             {editing ? null : <NoctraButton variant="ghost" onClick={() => setEditing(true)}><Edit2 size={13} /> Edit</NoctraButton>}
             {confirmDelete ? (
               <div className="flex items-center gap-2">
-                <span className="text-xs" style={{ color: "var(--noctra-rose)" }}>Delete project?</span>
+                <span className="text-xs" style={{ color: "var(--color-danger)" }}>Delete project?</span>
                 <NoctraButton variant="ghost" onClick={handleDelete} disabled={deleting}>{deleting ? <Loader2 size={12} className="animate-spin" /> : "Yes, delete"}</NoctraButton>
                 <NoctraButton variant="ghost" onClick={() => setConfirmDelete(false)}>Cancel</NoctraButton>
               </div>
             ) : (
               <NoctraButton variant="ghost" onClick={() => setConfirmDelete(true)}>
-                <Trash2 size={13} style={{ color: "var(--noctra-rose)" }} />
-                <span style={{ color: "var(--noctra-rose)" }}>Delete</span>
+                <Trash2 size={13} style={{ color: "var(--color-danger)" }} />
+                <span style={{ color: "var(--color-danger)" }}>Delete</span>
               </NoctraButton>
             )}
           </div>
@@ -333,18 +334,18 @@ export default function ProjectDetailPage() {
           <Panel>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: "var(--noctra-text-muted)" }}>Project Name</label>
-                <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }} />
+                <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-tertiary)" }}>Project Name</label>
+                <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: "var(--noctra-text-muted)" }}>Core Idea</label>
-                <textarea value={editIdea} onChange={(e) => setEditIdea(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg text-sm resize-none outline-none" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text)" }} />
+                <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-tertiary)" }}>Core Idea</label>
+                <textarea value={editIdea} onChange={(e) => setEditIdea(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg text-sm resize-none outline-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: "var(--noctra-text-muted)" }}>Stage</label>
+                <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-tertiary)" }}>Stage</label>
                 <div className="flex gap-2 flex-wrap">
                   {STAGES.map((s) => (
-                    <button key={s} onClick={() => setEditStage(s)} className="px-3 py-1 rounded-full text-xs font-medium capitalize" style={{ background: editStage === s ? `${STAGE_COLORS[s]}20` : "var(--noctra-surface2)", border: `1px solid ${editStage === s ? STAGE_COLORS[s] : "var(--noctra-border)"}`, color: editStage === s ? STAGE_COLORS[s] : "var(--noctra-text-muted)" }}>
+                    <button key={s} onClick={() => setEditStage(s)} className="px-3 py-1 rounded-full text-xs font-medium capitalize" style={{ background: editStage === s ? `${STAGE_COLORS[s]}20` : "var(--surface-2)", border: `1px solid ${editStage === s ? STAGE_COLORS[s] : "var(--border-default)"}`, color: editStage === s ? STAGE_COLORS[s] : "var(--text-tertiary)" }}>
                       {s}
                     </button>
                   ))}
@@ -358,35 +359,36 @@ export default function ProjectDetailPage() {
           </Panel>
         ) : (
           <Panel>
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${stageColor}18`, border: `1px solid ${stageColor}30` }}>
-                <FolderOpen size={18} style={{ color: stageColor }} />
-              </div>
-              <div className="flex-1">
+            <div className="flex items-start gap-5">
+              {projectState ? (
+                <div className="shrink-0">
+                  <ScoreRing value={projectState.readiness} size={72} stroke={6} label="Ready" color={projectState.readiness >= 70 ? "var(--color-success)" : projectState.readiness >= 40 ? "var(--color-warning)" : "var(--color-danger)"} />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${stageColor}18`, border: `1px solid ${stageColor}30` }}>
+                  <FolderOpen size={18} style={{ color: stageColor }} />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <Badge style={{ background: `${stageColor}18`, color: stageColor }}>{project.stage ?? "idea"}</Badge>
                   {project.status ? <Badge>{project.status}</Badge> : null}
-                  {projectState ? (
-                    <Badge style={{ background: projectState.readiness >= 70 ? "rgba(52,211,153,0.1)" : projectState.readiness >= 40 ? "rgba(245,158,11,0.1)" : "rgba(244,63,94,0.1)", color: projectState.readiness >= 70 ? "var(--noctra-emerald)" : projectState.readiness >= 40 ? "var(--noctra-amber)" : "var(--noctra-rose)" }}>
-                      {projectState.readiness}% ready
-                    </Badge>
-                  ) : null}
                 </div>
-                <h1 className="text-xl font-bold" style={{ color: "var(--noctra-text)" }}>{project.name}</h1>
-                {project.idea ? <p className="text-sm mt-1" style={{ color: "var(--noctra-text-muted)" }}>{project.idea}</p> : null}
-                <p className="text-xs mt-2 flex items-center gap-1" style={{ color: "var(--noctra-text-muted)" }}>
-                  <Calendar size={11} /> Created {new Date(project.created_at).toLocaleDateString()}
+                <h1 className="text-xl font-bold text-display tracking-tight" style={{ color: "var(--text-primary)" }}>{project.name}</h1>
+                {project.idea ? <p className="text-sm mt-1 line-clamp-2" style={{ color: "var(--text-tertiary)" }}>{project.idea}</p> : null}
+                <p className="text-xs mt-2 flex items-center gap-1" style={{ color: "var(--text-quaternary)" }}>
+                  <Calendar size={11} /> Created {new Date(project.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                 </p>
               </div>
-              <div className="flex gap-4 text-center shrink-0">
+              <div className="flex gap-5 text-center shrink-0">
                 {[
-                  { label: "Reports", value: reports.length, color: "var(--noctra-violet)" },
-                  { label: "Tasks", value: tasks.length, color: "var(--noctra-emerald)" },
-                  { label: "Done", value: completedTasks, color: "var(--noctra-cyan)" },
+                  { label: "Reports", value: reports.length, color: "var(--accent-violet)" },
+                  { label: "Tasks", value: tasks.length, color: "var(--color-success)" },
+                  { label: "Done", value: completedTasks, color: "var(--signal)" },
                 ].map(({ label, value, color }) => (
                   <div key={label}>
-                    <p className="text-lg font-bold" style={{ color }}>{value}</p>
-                    <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{label}</p>
+                    <p className="text-xl font-bold text-mono" style={{ color }}>{value}</p>
+                    <p className="eyebrow mt-0.5" style={{ color: "var(--text-tertiary)" }}>{label}</p>
                   </div>
                 ))}
               </div>
@@ -395,11 +397,11 @@ export default function ProjectDetailPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-1 p-1 rounded-xl overflow-x-auto" style={{ background: "var(--noctra-surface)" }}>
+        <div className="flex gap-1 p-1 rounded-xl overflow-x-auto" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
           {TABS.map((t) => (
-            <button key={t.key} onClick={() => { setTab(t.key); setSelectedReport(null); }} className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium capitalize transition-all" style={{ background: tab === t.key ? "var(--noctra-surface2)" : "transparent", color: tab === t.key ? "var(--noctra-text)" : "var(--noctra-text-muted)", border: tab === t.key ? "1px solid var(--noctra-border)" : "1px solid transparent", whiteSpace: "nowrap" }}>
+            <button key={t.key} onClick={() => { setTab(t.key); setSelectedReport(null); }} className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium capitalize transition-all" style={{ background: tab === t.key ? "var(--surface-1)" : "transparent", color: tab === t.key ? "var(--text-primary)" : "var(--text-tertiary)", border: tab === t.key ? "1px solid var(--border-default)" : "1px solid transparent", boxShadow: tab === t.key ? "var(--shadow-xs)" : "none", whiteSpace: "nowrap" }}>
               {t.label}
-              {t.count != null && t.count > 0 ? <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "var(--noctra-surface)", color: "var(--noctra-text-muted)" }}>{t.count}</span> : null}
+              {t.count != null && t.count > 0 ? <span className="text-mono text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "var(--surface-3)", color: "var(--text-tertiary)" }}>{t.count}</span> : null}
             </button>
           ))}
         </div>

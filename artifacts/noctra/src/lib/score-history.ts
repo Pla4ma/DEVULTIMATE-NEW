@@ -106,7 +106,7 @@ export function getDeltaLabel(entry: ScoreHistoryEntry): string {
 }
 
 export function getDeltaColor(direction: ScoreDirection): string {
-  if (direction === "improved") return "var(--noctra-emerald)";
-  if (direction === "declined") return "var(--noctra-rose)";
-  return "var(--noctra-text-muted)";
+  if (direction === "improved") return "var(--color-success)";
+  if (direction === "declined") return "var(--color-danger)";
+  return "var(--text-tertiary)";
 }

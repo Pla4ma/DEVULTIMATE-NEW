@@ -166,21 +166,21 @@ export function generateDailyBriefing(params: {
   }
 
   const quickStats = [
-    { label: "Reports", value: reports.length, color: "var(--noctra-violet)" },
+    { label: "Reports", value: reports.length, color: "var(--accent-violet)" },
     {
       label: "Coverage",
       value: `${coverage.percentage}%`,
-      color: coverage.percentage >= 70 ? "var(--noctra-emerald)" : coverage.percentage >= 40 ? "var(--noctra-amber)" : "var(--noctra-rose)",
+      color: coverage.percentage >= 70 ? "var(--color-success)" : coverage.percentage >= 40 ? "var(--color-warning)" : "var(--color-danger)",
     },
     {
       label: "Open Tasks",
       value: openTotal,
-      color: openCritical.length > 0 ? "var(--noctra-rose)" : "var(--noctra-cyan)",
+      color: openCritical.length > 0 ? "var(--color-danger)" : "var(--signal)",
     },
     {
       label: "Signals",
       value: proofSignals.length,
-      color: proofSignals.length >= 5 ? "var(--noctra-emerald)" : proofSignals.length >= 2 ? "var(--noctra-amber)" : "var(--noctra-rose)",
+      color: proofSignals.length >= 5 ? "var(--color-success)" : proofSignals.length >= 2 ? "var(--color-warning)" : "var(--color-danger)",
     },
   ];
 
@@ -188,7 +188,7 @@ export function generateDailyBriefing(params: {
     quickStats.push({
       label: "Completed",
       value: completedToday,
-      color: "var(--noctra-emerald)",
+      color: "var(--color-success)",
     });
   }
 

@@ -29,11 +29,11 @@ type ProofData = {
 };
 
 const DIFFICULTY_COLOR: Record<string, string> = {
-  easy: "var(--noctra-emerald)",
-  medium: "var(--noctra-amber)",
-  hard: "var(--noctra-rose)",
-  low: "var(--noctra-emerald)",
-  high: "var(--noctra-rose)",
+  easy: "var(--color-success)",
+  medium: "var(--color-warning)",
+  hard: "var(--color-danger)",
+  low: "var(--color-success)",
+  high: "var(--color-danger)",
 };
 
 type Props = { report: { payload: unknown; score?: number | null; [key: string]: unknown } };
@@ -49,23 +49,23 @@ export function ProofReportView({ report }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex gap-4 items-start flex-wrap">
-        <ScoreRing value={score} label="Proof" color="var(--noctra-emerald)" />
+        <ScoreRing value={score} label="Proof" color="var(--color-success)" />
         <div className="flex-1 min-w-0">
-          {data.verdict && <p className="text-sm font-semibold mb-2" style={{ color: "var(--noctra-text)" }}>{data.verdict}</p>}
-          {data.summary && <p className="text-sm" style={{ color: "var(--noctra-text-soft)" }}>{data.summary}</p>}
+          {data.verdict && <p className="text-sm font-semibold mb-2" style={{ color: "var(--text-primary)" }}>{data.verdict}</p>}
+          {data.summary && <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{data.summary}</p>}
         </div>
       </div>
 
       <Panel>
-        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-emerald)" }}>Signal Density</p>
-        <ProgressBar value={density} color="var(--noctra-emerald)" />
-        <p className="text-xs mt-1" style={{ color: "var(--noctra-text-muted)" }}>{density}/100 — {density >= 70 ? "Strong" : density >= 40 ? "Building" : "Weak"} evidence base</p>
+        <p className="eyebrow mb-2" style={{ color: "var(--color-success)" }}>Signal Density</p>
+        <ProgressBar value={density} color="var(--color-success)" />
+        <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>{density}/100 — {density >= 70 ? "Strong" : density >= 40 ? "Building" : "Weak"} evidence base</p>
       </Panel>
 
       {/* Experiment Cards — Feature 8 */}
       {data.experiments && data.experiments.length > 0 && (
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-3 px-1" style={{ color: "var(--noctra-emerald)" }}>
+          <p className="eyebrow mb-3 px-1" style={{ color: "var(--color-success)" }}>
             Validation Experiments
           </p>
           <div className="space-y-3">
@@ -77,25 +77,25 @@ export function ProofReportView({ report }: Props) {
                   key={i}
                   className="rounded-xl p-4"
                   style={{
-                    background: statusDone ? "rgba(52,211,153,0.05)" : "var(--noctra-surface2)",
-                    border: `1px solid ${statusDone ? "rgba(52,211,153,0.25)" : statusActive ? "rgba(61,216,255,0.2)" : "var(--noctra-border)"}`,
+                    background: statusDone ? "var(--color-success-soft)" : "var(--surface-2)",
+                    border: `1px solid ${statusDone ? "var(--color-success-soft)" : statusActive ? "var(--signal-soft)" : "var(--border-default)"}`,
                   }}
                 >
                   {/* Title row */}
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2 min-w-0">
                       {statusDone ? (
-                        <CheckCircle2 size={14} style={{ color: "var(--noctra-emerald)", flexShrink: 0 }} />
+                        <CheckCircle2 size={14} style={{ color: "var(--color-success)", flexShrink: 0 }} />
                       ) : statusActive ? (
-                        <Target size={14} style={{ color: "var(--noctra-cyan)", flexShrink: 0 }} />
+                        <Target size={14} style={{ color: "var(--signal)", flexShrink: 0 }} />
                       ) : (
-                        <Circle size={14} style={{ color: "var(--noctra-text-muted)", flexShrink: 0 }} />
+                        <Circle size={14} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />
                       )}
-                      <p className="text-sm font-semibold truncate" style={{ color: "var(--noctra-text)" }}>{e.title}</p>
+                      <p className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>{e.title}</p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {e.difficulty && (
-                        <Badge style={{ fontSize: "9px", color: DIFFICULTY_COLOR[e.difficulty.toLowerCase()] ?? "var(--noctra-text-muted)", background: "transparent", border: `1px solid ${DIFFICULTY_COLOR[e.difficulty.toLowerCase()] ?? "var(--noctra-border)"}20` }}>
+                        <Badge style={{ fontSize: "9px", color: DIFFICULTY_COLOR[e.difficulty.toLowerCase()] ?? "var(--text-tertiary)", background: "transparent", border: `1px solid ${DIFFICULTY_COLOR[e.difficulty.toLowerCase()] ?? "var(--border-default)"}20` }}>
                           {e.difficulty}
                         </Badge>
                       )}
@@ -110,22 +110,22 @@ export function ProofReportView({ report }: Props) {
                   {/* Hypothesis */}
                   {e.hypothesis && (
                     <div className="mb-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: "var(--noctra-text-muted)" }}>Hypothesis</p>
-                      <p className="text-xs" style={{ color: "var(--noctra-text-soft)" }}>{e.hypothesis}</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: "var(--text-tertiary)" }}>Hypothesis</p>
+                      <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{e.hypothesis}</p>
                     </div>
                   )}
 
                   {/* Method */}
                   <div className="mb-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: "var(--noctra-text-muted)" }}>Method</p>
-                    <p className="text-xs" style={{ color: "var(--noctra-text-soft)" }}>{e.method}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: "var(--text-tertiary)" }}>Method</p>
+                    <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{e.method}</p>
                   </div>
 
                   {/* Script */}
                   {e.script && (
-                    <div className="mb-2 p-2 rounded-lg" style={{ background: "var(--noctra-bg)", border: "1px solid var(--noctra-border)" }}>
-                      <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: "var(--noctra-text-muted)" }}>Script</p>
-                      <p className="text-xs italic" style={{ color: "var(--noctra-text-soft)" }}>"{e.script}"</p>
+                    <div className="mb-2 p-2 rounded-lg" style={{ background: "var(--surface-0)", border: "1px solid var(--border-default)" }}>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: "var(--text-tertiary)" }}>Script</p>
+                      <p className="text-xs italic" style={{ color: "var(--text-secondary)" }}>"{e.script}"</p>
                     </div>
                   )}
 
@@ -133,14 +133,14 @@ export function ProofReportView({ report }: Props) {
                   <div className="flex gap-3 mt-2 flex-wrap">
                     {(e.success_signal ?? e.success_metric) && (
                       <div className="flex items-start gap-1 flex-1 min-w-0">
-                        <CheckCircle2 size={11} style={{ color: "var(--noctra-emerald)", flexShrink: 0, marginTop: 1 }} />
-                        <p className="text-xs" style={{ color: "var(--noctra-emerald)" }}>{e.success_signal ?? e.success_metric}</p>
+                        <CheckCircle2 size={11} style={{ color: "var(--color-success)", flexShrink: 0, marginTop: 1 }} />
+                        <p className="text-xs" style={{ color: "var(--color-success)" }}>{e.success_signal ?? e.success_metric}</p>
                       </div>
                     )}
                     {e.failure_signal && (
                       <div className="flex items-start gap-1 flex-1 min-w-0">
-                        <AlertTriangle size={11} style={{ color: "var(--noctra-rose)", flexShrink: 0, marginTop: 1 }} />
-                        <p className="text-xs" style={{ color: "var(--noctra-rose)" }}>{e.failure_signal}</p>
+                        <AlertTriangle size={11} style={{ color: "var(--color-danger)", flexShrink: 0, marginTop: 1 }} />
+                        <p className="text-xs" style={{ color: "var(--color-danger)" }}>{e.failure_signal}</p>
                       </div>
                     )}
                   </div>
@@ -148,8 +148,8 @@ export function ProofReportView({ report }: Props) {
                   {/* Time estimate */}
                   {e.estimated_time && (
                     <div className="flex items-center gap-1 mt-2">
-                      <Clock size={11} style={{ color: "var(--noctra-text-muted)" }} />
-                      <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>{e.estimated_time}</p>
+                      <Clock size={11} style={{ color: "var(--text-tertiary)" }} />
+                      <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{e.estimated_time}</p>
                     </div>
                   )}
                 </div>
@@ -162,18 +162,18 @@ export function ProofReportView({ report }: Props) {
       {/* Proof Signals */}
       {data.proof_signals && data.proof_signals.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-emerald)" }}>
+          <p className="eyebrow mb-3" style={{ color: "var(--color-success)" }}>
             <Lightbulb size={11} className="inline mr-1" />Proof Signals
           </p>
           <div className="space-y-2">
             {data.proof_signals.map((s, i) => (
-              <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
-                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "var(--noctra-emerald)" }} />
+              <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "var(--color-success)" }} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>{s.label}</p>
-                  {s.source && <p className="text-[10px] mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>Source: {s.source}</p>}
+                  <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>{s.label}</p>
+                  {s.source && <p className="text-[10px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>Source: {s.source}</p>}
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "rgba(52,211,153,0.1)", color: "var(--noctra-emerald)" }}>{s.kind}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "var(--color-success-soft)", color: "var(--color-success)" }}>{s.kind}</span>
               </div>
             ))}
           </div>
@@ -182,18 +182,18 @@ export function ProofReportView({ report }: Props) {
 
       {data.evidence_gaps && data.evidence_gaps.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-amber)" }}>Evidence Gaps</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--color-warning)" }}>Evidence Gaps</p>
           <ul className="space-y-1">
-            {data.evidence_gaps.map((g, i) => <li key={i} className="text-sm flex gap-2" style={{ color: "var(--noctra-text-soft)" }}><span style={{ color: "var(--noctra-amber)" }}>—</span>{g}</li>)}
+            {data.evidence_gaps.map((g, i) => <li key={i} className="text-sm flex gap-2" style={{ color: "var(--text-secondary)" }}><span style={{ color: "var(--color-warning)" }}>—</span>{g}</li>)}
           </ul>
         </Panel>
       )}
 
       {data.next_actions && data.next_actions.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-cyan)" }}>Next Actions</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--signal)" }}>Next Actions</p>
           <ol className="space-y-1">
-            {data.next_actions.map((a, i) => <li key={i} className="text-sm flex gap-2" style={{ color: "var(--noctra-text-soft)" }}><span className="text-xs font-mono shrink-0" style={{ color: "var(--noctra-text-muted)" }}>{i + 1}.</span>{a}</li>)}
+            {data.next_actions.map((a, i) => <li key={i} className="text-sm flex gap-2" style={{ color: "var(--text-secondary)" }}><span className="text-xs font-mono shrink-0" style={{ color: "var(--text-tertiary)" }}>{i + 1}.</span>{a}</li>)}
           </ol>
         </Panel>
       )}

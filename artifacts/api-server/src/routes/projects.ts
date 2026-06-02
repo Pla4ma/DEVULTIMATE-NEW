@@ -3,6 +3,7 @@ import multer from "multer";
 import { scanZip } from "../lib/repo-scanner";
 import { evaluateLaunchGates } from "../lib/launch-gates";
 import { requireUploadQuota } from "../lib/usage-quota";
+import { scanLimiter } from "../lib/rate-limits";
 import { notifyWebhooks } from "../lib/notify-webhooks";
 import { db } from "@workspace/db";
 import { projectsTable } from "@workspace/db";
@@ -192,6 +193,7 @@ router.post("/:id/transition-safe", async (req, res) => {
 
 // ZIP upload — standalone (no project required)
 router.post("/scan",
+  scanLimiter,
   requireUploadQuota(),
   (req, res, next) => {
     upload.single("file")(req, res, (err) => {
@@ -249,6 +251,7 @@ router.post("/scan",
 
 // ZIP upload — associated with a project
 router.post("/:projectId/scan-upload",
+  scanLimiter,
   requireUploadQuota(),
   (req, res, next) => {
     upload.single("file")(req, res, (err) => {

@@ -11,10 +11,10 @@ export type AIDefenseScore = {
 };
 
 export const DEFENSE_RISK_COLOR: Record<DefenseRiskLevel, string> = {
-  low: "var(--noctra-emerald)",
-  moderate: "var(--noctra-amber)",
-  high: "var(--noctra-rose)",
-  critical: "var(--noctra-rose)",
+  low: "var(--color-success)",
+  moderate: "var(--color-warning)",
+  high: "var(--color-danger)",
+  critical: "var(--color-danger)",
 };
 
 export const DEFENSE_RISK_LABEL: Record<DefenseRiskLevel, string> = {

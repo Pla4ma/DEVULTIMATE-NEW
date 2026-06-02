@@ -14,7 +14,9 @@ const ALLOWED_EVENT_TYPES = new Set([
   "invoice.payment_failed",
 ]);
 
-function verifyStripeSignature(payload: string, sig: string, secret: string): boolean {
+const SIGNATURE_TOLERANCE_SECONDS = 300;
+
+export function verifyStripeSignature(payload: string, sig: string, secret: string): boolean {
   const parts = sig.split(",").reduce<Record<string, string>>((acc, p) => {
     const [k, v] = p.split("=");
     if (k && v) acc[k.trim()] = v.trim();
@@ -24,6 +26,11 @@ function verifyStripeSignature(payload: string, sig: string, secret: string): bo
   const timestamp = parts["t"];
   const expectedSig = parts["v1"];
   if (!timestamp || !expectedSig) return false;
+
+  const tsNum = Number(timestamp);
+  if (!Number.isFinite(tsNum)) return false;
+  const ageSeconds = Math.abs(Date.now() / 1000 - tsNum);
+  if (ageSeconds > SIGNATURE_TOLERANCE_SECONDS) return false;
 
   const signedPayload = `${timestamp}.${payload}`;
   const computed = createHmac("sha256", secret).update(signedPayload).digest("hex");
@@ -86,18 +93,32 @@ router.post("/stripe/webhook", async (req, res) => {
     return;
   }
 
-  const rawBody = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+  const rawBody = Buffer.isBuffer(req.body)
+    ? req.body.toString("utf8")
+    : typeof req.body === "string"
+      ? req.body
+      : null;
+
+  if (rawBody === null) {
+    logger.error("Stripe webhook raw body unavailable — check express.raw() mount order");
+    res.status(400).json({ error: "Invalid webhook body" });
+    return;
+  }
+
   if (!verifyStripeSignature(rawBody, sig, webhookSecret)) {
     res.status(401).json({ error: "Invalid signature" });
     return;
   }
 
+  let event: { type?: string; data?: { object?: Record<string, unknown> } };
   try {
-    const event = req.body as {
-      type?: string;
-      data?: { object?: Record<string, unknown> };
-    };
+    event = JSON.parse(rawBody) as typeof event;
+  } catch {
+    res.status(400).json({ error: "Invalid JSON payload" });
+    return;
+  }
 
+  try {
     const eventType = event?.type ?? "unknown";
     logger.info({ eventType }, "Processing Stripe webhook");
 

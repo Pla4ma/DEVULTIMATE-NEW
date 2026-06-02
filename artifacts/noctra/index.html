@@ -2,36 +2,52 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("theme") === "light") {
+            document.documentElement.classList.add("light");
+            document.documentElement.setAttribute("data-theme", "light");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
     <title>NOCTRA — Ship with evidence, not hope</title>
-    <meta name="description" content="AI-powered launch intelligence platform. Validate ideas, diagnose codebases, and launch with confidence." />
+    <meta name="description" content="The observatory for shipping. Validate ideas, diagnose codebases, and launch with evidence — not hope." />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#3dd8ff" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0f0d0a" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="NOCTRA" />
     <meta property="og:title" content="NOCTRA — Ship with evidence, not hope" />
-    <meta property="og:description" content="AI-powered launch intelligence platform. Validate ideas, diagnose codebases, and launch with confidence." />
+    <meta property="og:description" content="The observatory for shipping. Validate ideas, diagnose codebases, and launch with evidence — not hope." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://noctra.app" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="NOCTRA — Ship with evidence, not hope" />
-    <meta name="twitter:description" content="AI-powered launch intelligence platform. Validate ideas, diagnose codebases, and launch with confidence." />
+    <meta name="twitter:description" content="The observatory for shipping. Validate ideas, diagnose codebases, and launch with evidence — not hope." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js").catch(() => {});
-        });
+        if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            regs.forEach((r) => r.unregister());
+          });
+        } else {
+          window.addEventListener("load", () => {
+            navigator.serviceWorker.register("/sw.js").catch(() => {});
+          });
+        }
       }
     </script>
   </body>

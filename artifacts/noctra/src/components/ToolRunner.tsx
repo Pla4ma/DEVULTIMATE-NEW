@@ -19,7 +19,7 @@ type ToolRunnerProps = {
 export function ToolRunner({
   tool, runLabel = "Run Analysis", rerunLabel = "Re-run Analysis",
   onRun, hasRun, children, result, inputArea,
-  accent = "var(--noctra-cyan)",
+  accent = "var(--signal)",
 }: ToolRunnerProps) {
   const [running, setRunning] = useState(false);
   const [resultId, setResultId] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export function ToolRunner({
           onClick={handleRun}
           disabled={running}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ background: accent, color: "#000" }}
+          style={{ background: accent, color: "var(--surface-0)" }}
         >
           {running ? (
             <><Loader2 size={14} className="animate-spin" /> Analyzing...</>
@@ -59,7 +59,7 @@ export function ToolRunner({
           )}
         </button>
         {resultId && (
-          <button onClick={() => navigate(`/app/reports/${resultId}`)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all hover:opacity-80" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)", color: "var(--noctra-text-soft)" }}>
+          <button onClick={() => navigate(`/app/reports/${resultId}`)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}>
             <ExternalLink size={12} /> View Report
           </button>
         )}

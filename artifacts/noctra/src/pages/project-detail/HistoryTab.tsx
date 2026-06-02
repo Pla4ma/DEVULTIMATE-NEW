@@ -17,23 +17,23 @@ export function HistoryTab({ timeline, scoreHistory, risks }: HistoryTabProps) {
       {timeline.length > 0 ? (
         <Panel>
           <div className="flex items-center gap-2 mb-4">
-            <History size={13} style={{ color: "var(--noctra-violet)" }} />
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>Project Timeline</p>
+            <History size={13} style={{ color: "var(--accent-violet)" }} />
+            <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Project Timeline</p>
           </div>
           <div className="relative">
-            <div className="absolute left-[5px] top-0 bottom-0 w-px" style={{ background: "var(--noctra-border)" }} />
+            <div className="absolute left-[5px] top-0 bottom-0 w-px" style={{ background: "var(--border-default)" }} />
             <div className="space-y-4 pl-6">
               {timeline.map((event) => (
                 <div key={event.id} className="relative">
-                  <div className="absolute -left-6 w-2.5 h-2.5 rounded-full top-1" style={{ background: TIMELINE_TYPE_COLOR[event.type] ?? "var(--noctra-text-muted)", boxShadow: `0 0 6px ${TIMELINE_TYPE_COLOR[event.type] ?? "var(--noctra-text-muted)"}60` }} />
+                  <div className="absolute -left-6 w-2.5 h-2.5 rounded-full top-1" style={{ background: TIMELINE_TYPE_COLOR[event.type] ?? "var(--text-tertiary)", boxShadow: `0 0 6px ${TIMELINE_TYPE_COLOR[event.type] ?? "var(--text-tertiary)"}60` }} />
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium" style={{ color: "var(--noctra-text)" }}>{event.title}</p>
-                      <p className="text-xs mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{event.description}</p>
+                      <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{event.title}</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>{event.description}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {event.score != null ? <span className="text-xs font-bold font-mono" style={{ color: event.score >= 70 ? "var(--noctra-emerald)" : event.score >= 50 ? "var(--noctra-amber)" : "var(--noctra-rose)" }}>{event.score}</span> : null}
-                      <span className="flex items-center gap-1 text-xs" style={{ color: "var(--noctra-text-muted)" }}><Clock size={10} />{formatTimeAgo(event.date)}</span>
+                      {event.score != null ? <span className="text-xs font-bold font-mono" style={{ color: event.score >= 70 ? "var(--color-success)" : event.score >= 50 ? "var(--color-warning)" : "var(--color-danger)" }}>{event.score}</span> : null}
+                      <span className="flex items-center gap-1 text-xs" style={{ color: "var(--text-tertiary)" }}><Clock size={10} />{formatTimeAgo(event.date)}</span>
                     </div>
                   </div>
                 </div>
@@ -46,18 +46,18 @@ export function HistoryTab({ timeline, scoreHistory, risks }: HistoryTabProps) {
       )}
       {scoreHistory.length > 0 ? (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Score History</p>
+          <p className="eyebrow mb-3" style={{ color: "var(--text-tertiary)" }}>Score History</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {scoreHistory.map((entry) => {
               const t = TOOL_BY_KEY[entry.tool as keyof typeof TOOL_BY_KEY];
               return (
-                <div key={entry.tool} className="rounded-lg p-3" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+                <div key={entry.tool} className="rounded-lg p-3" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
                   <div className="flex items-center gap-1.5 mb-1.5">
                     {t ? <t.icon size={10} style={{ color: t.accent }} /> : null}
-                    <span className="text-[10px] uppercase tracking-wide font-medium" style={{ color: "var(--noctra-text-muted)" }}>{t?.short ?? entry.tool}</span>
+                    <span className="text-[10px] uppercase tracking-wide font-medium" style={{ color: "var(--text-tertiary)" }}>{t?.short ?? entry.tool}</span>
                   </div>
-                  <p className="text-xl font-bold font-mono leading-none" style={{ color: t?.accent ?? "var(--noctra-cyan)" }}>{entry.latestScore}</p>
-                  {entry.delta != null ? <p className="text-[10px] mt-1 font-medium" style={{ color: getDeltaColor(entry.direction) }}>{getDeltaLabel(entry)}</p> : <p className="text-[10px] mt-1" style={{ color: "var(--noctra-text-muted)" }}>first run</p>}
+                  <p className="text-xl font-bold font-mono leading-none" style={{ color: t?.accent ?? "var(--signal)" }}>{entry.latestScore}</p>
+                  {entry.delta != null ? <p className="text-[10px] mt-1 font-medium" style={{ color: getDeltaColor(entry.direction) }}>{getDeltaLabel(entry)}</p> : <p className="text-[10px] mt-1" style={{ color: "var(--text-tertiary)" }}>first run</p>}
                 </div>
               );
             })}
@@ -67,22 +67,22 @@ export function HistoryTab({ timeline, scoreHistory, risks }: HistoryTabProps) {
       {risks.length > 0 ? (
         <Panel>
           <div className="flex items-center gap-2 mb-3">
-            <ShieldAlert size={13} style={{ color: "var(--noctra-amber)" }} />
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--noctra-amber)" }}>Risks & Blockers</p>
-            <span className="ml-auto text-xs font-mono" style={{ color: "var(--noctra-text-muted)" }}>{risks.length} risks detected</span>
+            <ShieldAlert size={13} style={{ color: "var(--color-warning)" }} />
+            <p className="eyebrow" style={{ color: "var(--color-warning)" }}>Risks & Blockers</p>
+            <span className="ml-auto text-xs font-mono" style={{ color: "var(--text-tertiary)" }}>{risks.length} risks detected</span>
           </div>
           <div className="space-y-2">
             {risks.map((risk) => (
-              <div key={risk.id} className="flex items-start gap-3 px-3 py-2.5 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+              <div key={risk.id} className="flex items-start gap-3 px-3 py-2.5 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
                 <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: RISK_SEV_COLOR[risk.severity] }} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <p className="text-xs font-medium" style={{ color: "var(--noctra-text)" }}>{risk.title}</p>
+                    <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>{risk.title}</p>
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium uppercase shrink-0" style={{ background: `${RISK_SEV_COLOR[risk.severity]}15`, color: RISK_SEV_COLOR[risk.severity] }}>{risk.severity}</span>
-                    <span className="text-[10px]" style={{ color: "var(--noctra-text-muted)" }}>{risk.category}</span>
+                    <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>{risk.category}</span>
                   </div>
-                  <p className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>Fix: {risk.recommendedFix}</p>
-                  <p className="text-xs mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>Source: {risk.sourceTool}</p>
+                  <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Fix: {risk.recommendedFix}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>Source: {risk.sourceTool}</p>
                 </div>
               </div>
             ))}

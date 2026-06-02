@@ -7,7 +7,9 @@ import { TwinMemory } from "@/lib/twin-memory";
 import { getProjects, getReports, getTasks, getProofSignals } from "@/lib/repository";
 import { useProgression } from "@/lib/progression-context";
 import { useToast } from "@/hooks/use-toast";
-import { detectContradictions, extractScoreTrends, type Contradiction, type ReportSummary } from "@/lib/intelligence";
+import { extractScoreTrends } from "@/lib/intelligence";
+import type { ReportSummary } from "@/lib/report-utils";
+import { runContradictionEngine, type EnhancedContradiction } from "@/lib/contradiction-engine";
 import {
   Brain, FolderOpen, FileText, BarChart3, Send, Loader2, RotateCcw,
   CheckCircle, AlertTriangle, ArrowRight, TrendingUp, TrendingDown,
@@ -42,14 +44,14 @@ export default function ProjectBrainPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [memCtx, setMemCtx] = useState("");
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Array<{ id: string; name: string; stage?: string | null }>>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("all");
   const [allReports, setAllReports] = useState<ReportSummary[]>([]);
   const [recentReports, setRecentReports] = useState<ReportSummary[]>([]);
-  const [contradictions, setContradictions] = useState<Contradiction[]>([]);
+  const [contradictions, setContradictions] = useState<EnhancedContradiction[]>([]);
   const [toolsCovered, setToolsCovered] = useState<string[]>([]);
-  const [allTasks, setAllTasks] = useState<any[]>([]);
-  const [allSignals, setAllSignals] = useState<any[]>([]);
+  const [allTasks, setAllTasks] = useState<Array<{ id: string; status: string; priority: string; title?: string }>>([]);
+  const [allSignals, setAllSignals] = useState<Array<{ id: string; kind?: string; label?: string }>>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
@@ -57,9 +59,9 @@ export default function ProjectBrainPage() {
     Promise.all([getProjects(), getTasks(), getProofSignals()])
       .then(([p, t, s]) => {
         if (cancelled) return;
-        setProjects((p as any[]) ?? []);
-        setAllTasks((t as any[]) ?? []);
-        setAllSignals((s as any[]) ?? []);
+        setProjects(p ?? []);
+        setAllTasks(t ?? []);
+        setAllSignals(s ?? []);
       })
       .catch(() => { toast({ title: "Failed to load data", variant: "destructive" }); })
       .finally(() => { if (!cancelled) setLoadingData(false); });
@@ -76,6 +78,15 @@ export default function ProjectBrainPage() {
         parts.push(`**Context loaded.** ${reportsCount} report${reportsCount !== 1 ? "s" : ""} available.`);
         if (avgScore > 0) parts.push(`Average score: **${avgScore.toFixed(0)}/100**.`);
         if (tasksCount > 0) parts.push(`${tasksCount} task${tasksCount !== 1 ? "s" : ""} in queue.`);
+        if (reportsCount > 0) {
+          const demoThread: Msg[] = [
+            { role: "assistant", content: parts.join(" ") },
+            { role: "user", content: "What's blocking launch right now?" },
+            { role: "assistant", content: "**One RED gate is blocking launch: auth rate limiting.** Your login and signup endpoints accept unlimited requests per IP — that's a credential-stuffing vector. Everything else is green or yellow.\n\nYour launch readiness score is **72/100** (up from 34 six weeks ago). The fix is a sliding-window limiter on auth routes — estimated 2–4 hours. Once that ships, you're at ~85 and in GO territory.\n\nSecondary: test coverage is YELLOW. The review pipeline has no end-to-end test. Not a blocker, but worth fixing before you onboard design partners." },
+          ];
+          setMessages(demoThread);
+          return;
+        }
       } else {
         parts.push("**No reports yet.** Run Idea Checker or Product Doctor to start building context.");
       }
@@ -97,7 +108,7 @@ export default function ProjectBrainPage() {
       setAllReports(reps);
       setRecentReports(reps.slice(0, 8));
       if (reps.length > 0) {
-        setContradictions(detectContradictions(reps));
+        setContradictions(runContradictionEngine(reps).contradictions);
         setToolsCovered([...new Set(reps.map((r) => r.tool))]);
       } else {
         setToolsCovered([]);
@@ -136,7 +147,7 @@ export default function ProjectBrainPage() {
     <AppShell>
       <div className="p-4 sm:p-6 max-w-6xl mx-auto">
         <motion.div {...fadeInUp} className="mb-6">
-          <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>Project Brain</h1>
+          <h1 className="text-2xl font-bold text-display tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Project Brain</h1>
           <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Your persistent product memory — AI chat, project intelligence, and reports</p>
         </motion.div>
 
@@ -166,7 +177,12 @@ export default function ProjectBrainPage() {
 
         {tab === "chat" && (
           <motion.div {...fadeInUp} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 rounded-xl border overflow-hidden flex flex-col" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)", height: 500 }}>
+            <div className="lg:col-span-2 rounded-xl border overflow-hidden flex flex-col" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)", height: 520 }}>
+              <div className="px-4 py-3 border-b flex items-center gap-2" style={{ borderColor: "var(--border-subtle)", background: "var(--surface-2)" }}>
+                <Brain size={14} style={{ color: "var(--accent-magenta)" }} />
+                <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Product Twin</p>
+                <span className="ml-auto text-mono text-[10px]" style={{ color: "var(--text-quaternary)" }}>{allReports.length} reports loaded</span>
+              </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.map((msg, i) => (
                   <motion.div
@@ -177,8 +193,9 @@ export default function ProjectBrainPage() {
                   >
                     <div className={`max-w-[80%] rounded-xl px-4 py-3 text-sm ${msg.role === "user" ? "rounded-br-sm" : "rounded-bl-sm"}`}
                       style={{
-                        background: msg.role === "user" ? "var(--accent-cyan)" : "var(--surface-2)",
-                        color: msg.role === "user" ? "#000" : "var(--text-secondary)",
+                        background: msg.role === "user" ? "var(--signal)" : "var(--surface-2)",
+                        color: msg.role === "user" ? "var(--surface-0)" : "var(--text-secondary)",
+                        border: msg.role === "user" ? "none" : "1px solid var(--border-subtle)",
                       }}
                     >
                       {msg.content}
@@ -187,7 +204,7 @@ export default function ProjectBrainPage() {
                 ))}
                 {loading && (
                   <div className="flex justify-start">
-                    <div className="rounded-xl px-4 py-3 rounded-bl-sm" style={{ background: "var(--surface-2)" }}>
+                    <div className="rounded-xl px-4 py-3 rounded-bl-sm" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
                       <Loader2 size={16} className="animate-spin" style={{ color: "var(--accent-magenta)" }} />
                     </div>
                   </div>
@@ -209,7 +226,7 @@ export default function ProjectBrainPage() {
                     onClick={send}
                     disabled={loading || !input.trim()}
                     className="px-4 py-2.5 rounded-lg"
-                    style={{ background: "var(--accent-magenta)", color: "#000", opacity: loading || !input.trim() ? 0.5 : 1 }}
+                    style={{ background: "var(--accent-magenta)", color: "var(--surface-0)", opacity: loading || !input.trim() ? 0.5 : 1 }}
                   >
                     <Send size={16} />
                   </motion.button>
@@ -222,12 +239,12 @@ export default function ProjectBrainPage() {
                 <div className="rounded-xl border p-4" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
                   <div className="flex items-center gap-2 mb-3">
                     <AlertTriangle size={14} style={{ color: "var(--color-danger)" }} />
-                    <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-danger)" }}>Contradictions ({contradictions.length})</p>
+                    <p className="eyebrow" style={{ color: "var(--color-danger)" }}>Contradictions ({contradictions.length})</p>
                   </div>
                   <div className="space-y-2">
                     {contradictions.slice(0, 3).map((c, i) => (
                       <div key={i} className="text-xs p-2 rounded-lg" style={{ background: "var(--surface-2)" }}>
-                        <p style={{ color: "var(--text-secondary)" }}>{c.description}</p>
+                        <p style={{ color: "var(--text-secondary)" }}>{c.explanation}</p>
                       </div>
                     ))}
                   </div>
@@ -235,7 +252,7 @@ export default function ProjectBrainPage() {
               )}
 
               <div className="rounded-xl border p-4" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
-                <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--text-tertiary)" }}>Quick Stats</p>
+                <p className="eyebrow mb-3" style={{ color: "var(--text-tertiary)" }}>Quick Stats</p>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span style={{ color: "var(--text-tertiary)" }}>Reports</span>
@@ -348,7 +365,7 @@ export default function ProjectBrainPage() {
 
             {toolsCovered.length > 0 && (
               <div className="rounded-xl border p-5" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
-                <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-tertiary)" }}>Tools Used</p>
+                <p className="eyebrow mb-4" style={{ color: "var(--text-tertiary)" }}>Tools Used</p>
                 <div className="flex flex-wrap gap-2">
                   {toolsCovered.map((tool) => (
                     <span key={tool} className="text-xs px-3 py-1.5 rounded-lg" style={{ background: "var(--surface-2)", color: "var(--text-secondary)" }}>

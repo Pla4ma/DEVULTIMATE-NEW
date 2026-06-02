@@ -20,7 +20,7 @@ export function RealityAIDefense({ defense }: { defense: AIDefenseResult }) {
         ) : (
           <ShieldAlert size={14} style={{ color: defenseColor }} />
         )}
-        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: defenseColor }}>
+        <p className="eyebrow" style={{ color: defenseColor }}>
           AI Wrapper Defense — {DEFENSE_RISK_LABEL[defense.riskLevel]}
         </p>
         <span className="ml-auto text-xs font-bold font-mono" style={{ color: defenseColor }}>
@@ -30,21 +30,21 @@ export function RealityAIDefense({ defense }: { defense: AIDefenseResult }) {
       <ProgressBar value={defense.score} color={defenseColor} />
       <div className="mt-3 space-y-1">
         {defense.reasons.map((r, i) => (
-          <p key={i} className="text-xs flex gap-1.5" style={{ color: "var(--noctra-text-soft)" }}>
+          <p key={i} className="text-xs flex gap-1.5" style={{ color: "var(--text-secondary)" }}>
             <span style={{ color: defenseColor }}>·</span>
             {r}
           </p>
         ))}
       </div>
       {defense.moatSuggestions.length > 0 && (
-        <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--noctra-border)" }}>
-          <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>
+        <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--border-default)" }}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-tertiary)" }}>
             Moat Suggestions
           </p>
           <div className="space-y-1">
             {defense.moatSuggestions.map((s, i) => (
-              <p key={i} className="text-xs flex gap-1.5" style={{ color: "var(--noctra-text-muted)" }}>
-                <span style={{ color: "var(--noctra-amber)" }}>→</span>
+              <p key={i} className="text-xs flex gap-1.5" style={{ color: "var(--text-tertiary)" }}>
+                <span style={{ color: "var(--color-warning)" }}>→</span>
                 {s}
               </p>
             ))}

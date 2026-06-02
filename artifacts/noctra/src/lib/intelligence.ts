@@ -7,6 +7,7 @@ import {
   TOOL_LABELS,
   TOOL_JOURNEY_ORDER,
   extractData,
+  getScoreOrNull,
 } from "./report-utils";
 import { runContradictionEngine, type EnhancedContradiction } from "./contradiction-engine";
 

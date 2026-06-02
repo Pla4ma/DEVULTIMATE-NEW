@@ -70,8 +70,17 @@ export function ProgressionProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const DEFAULT_PROGRESSION: ProgressionState & { refreshProgression: () => Promise<void> } = {
+  reportCount: 0,
+  usedTools: new Set(),
+  capabilityStatus: [],
+  coverageScore: 0,
+  loaded: false,
+  refreshProgression: async () => {},
+};
+
 export function useProgression(): ProgressionState & { refreshProgression: () => Promise<void> } {
   const ctx = useContext(ProgressionContext);
-  if (!ctx) throw new Error("useProgression must be used within ProgressionProvider");
+  if (!ctx) return DEFAULT_PROGRESSION;
   return ctx;
 }

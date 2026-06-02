@@ -53,47 +53,47 @@ export default function PrivacyPage() {
   return (
     <AppShell>
       <div className="p-6 max-w-4xl mx-auto space-y-8">
-        <div className="flex items-center gap-4 pb-6 border-b" style={{ borderColor: "var(--noctra-border)" }}>
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "rgba(61,216,255,0.12)" }}>
-            <Shield size={22} style={{ color: "var(--noctra-cyan)" }} />
+        <div className="flex items-center gap-4 pb-6 border-b" style={{ borderColor: "var(--border-default)" }}>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "var(--signal-soft)" }}>
+            <Shield size={22} style={{ color: "var(--signal)" }} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: "var(--noctra-text)" }}>Repo Privacy</h1>
-            <p className="text-sm" style={{ color: "var(--noctra-text-muted)" }}>
+            <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Repo Privacy</h1>
+            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
               How we handle your code, data, and privacy
             </p>
           </div>
         </div>
 
-        <div className="px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(61,216,255,0.06)", border: "1px solid rgba(61,216,255,0.2)" }}>
-          <Shield size={14} style={{ color: "var(--noctra-cyan)", flexShrink: 0, marginTop: 1 }} />
+        <div className="px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "var(--signal-soft)", border: "1px solid var(--signal-soft)" }}>
+          <Shield size={14} style={{ color: "var(--signal)", flexShrink: 0, marginTop: 1 }} />
           <div>
-            <p className="text-sm font-medium" style={{ color: "var(--noctra-text)" }}>
+            <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
               We take code privacy seriously
             </p>
-            <p className="text-xs mt-1" style={{ color: "var(--noctra-text-muted)" }}>
+            <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
               We never store raw source code, never train on your data, and give you full control over your scans and reports.
             </p>
           </div>
         </div>
 
         {sections.map(({ icon: Icon, title, body }) => (
-          <div key={title} className="flex gap-4 p-4 rounded-xl" style={{ background: "var(--noctra-surface)", border: "1px solid var(--noctra-border)" }}>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(61,216,255,0.08)" }}>
-              <Icon size={18} style={{ color: "var(--noctra-cyan)" }} />
+          <div key={title} className="flex gap-4 p-4 rounded-xl" style={{ background: "var(--surface-1)", border: "1px solid var(--border-default)" }}>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--signal-soft)" }}>
+              <Icon size={18} style={{ color: "var(--signal)" }} />
             </div>
             <div>
-              <h3 className="text-sm font-semibold mb-1" style={{ color: "var(--noctra-text)" }}>{title}</h3>
-              <p className="text-xs leading-relaxed" style={{ color: "var(--noctra-text-soft)" }}>{body}</p>
+              <h3 className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>{title}</h3>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>{body}</p>
             </div>
           </div>
         ))}
 
-        <div className="px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
-          <AlertTriangle size={14} style={{ color: "var(--noctra-amber)", flexShrink: 0, marginTop: 1 }} />
+        <div className="px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "var(--color-warning-soft)", border: "1px solid var(--color-warning-soft)" }}>
+          <AlertTriangle size={14} style={{ color: "var(--color-warning)", flexShrink: 0, marginTop: 1 }} />
           <div>
-            <p className="text-sm font-medium" style={{ color: "var(--noctra-amber)" }}>Beta caution</p>
-            <p className="text-xs mt-1" style={{ color: "var(--noctra-text-muted)" }}>
+            <p className="text-sm font-medium" style={{ color: "var(--color-warning)" }}>Beta caution</p>
+            <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
               During beta, avoid uploading highly sensitive or proprietary repositories. While we take every precaution, no system is perfect. Review your scan results and delete any reports you are not comfortable keeping.
             </p>
           </div>

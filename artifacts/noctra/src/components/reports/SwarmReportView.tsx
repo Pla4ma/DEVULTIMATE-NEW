@@ -52,11 +52,11 @@ export function SwarmReportView({ report, compact }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex gap-4 items-start flex-wrap">
-        <ScoreRing value={score} label="Swarm" color="var(--noctra-cyan)" />
+        <ScoreRing value={score} label="Swarm" color="var(--signal)" />
         <div className="flex-1 min-w-0">
-          {data.verdict && <p className="text-sm font-semibold mb-2" style={{ color: "var(--noctra-text)" }}>{data.verdict}</p>}
-          {data.summary && <p className="text-sm" style={{ color: "var(--noctra-text-soft)" }}>{data.summary}</p>}
-          {data.consensus && <p className="text-sm mt-1 italic" style={{ color: "var(--noctra-text-muted)" }}>{data.consensus}</p>}
+          {data.verdict && <p className="text-sm font-semibold mb-2" style={{ color: "var(--text-primary)" }}>{data.verdict}</p>}
+          {data.summary && <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{data.summary}</p>}
+          {data.consensus && <p className="text-sm mt-1 italic" style={{ color: "var(--text-tertiary)" }}>{data.consensus}</p>}
           {data.pricing_signal && (
             <div className="mt-2">
               <Badge variant="gold">Pricing Signal: {data.pricing_signal}</Badge>
@@ -67,13 +67,13 @@ export function SwarmReportView({ report, compact }: Props) {
 
       {/* Simulated user count */}
       {data.simulated_user_count != null && (
-        <div className="rounded-xl px-4 py-3 border flex items-center gap-3" style={{ background: "rgba(61,216,255,0.04)", borderColor: "rgba(61,216,255,0.15)" }}>
-          <Users size={16} style={{ color: "var(--noctra-cyan)" }} />
-          <p className="text-sm" style={{ color: "var(--noctra-text)" }}>
-            <span className="font-bold" style={{ color: "var(--noctra-cyan)" }}>{data.simulated_user_count.toLocaleString()}</span> simulated users
+        <div className="rounded-xl px-4 py-3 border flex items-center gap-3" style={{ background: "var(--signal-soft)", borderColor: "var(--signal-soft)" }}>
+          <Users size={16} style={{ color: "var(--signal)" }} />
+          <p className="text-sm" style={{ color: "var(--text-primary)" }}>
+            <span className="font-bold" style={{ color: "var(--signal)" }}>{data.simulated_user_count.toLocaleString()}</span> simulated users
           </p>
           {data.best_segment && (
-            <span className="text-xs px-2 py-0.5 rounded ml-auto" style={{ background: "rgba(52,211,153,0.1)", color: "var(--noctra-emerald)" }}>
+            <span className="text-xs px-2 py-0.5 rounded ml-auto" style={{ background: "var(--color-success-soft)", color: "var(--color-success)" }}>
               Best: {data.best_segment}
             </span>
           )}
@@ -84,16 +84,16 @@ export function SwarmReportView({ report, compact }: Props) {
       {data.would_try_free_percent != null && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
-            { label: "Would Try Free", value: data.would_try_free_percent, icon: TrendingUp, color: "var(--noctra-cyan)" },
-            { label: "Would Pay", value: data.would_pay_percent, icon: DollarSign, color: "var(--noctra-emerald)" },
-            { label: "Understood Value", value: data.understood_value_percent, icon: Zap, color: "var(--noctra-violet)" },
-            { label: "ChatGPT Objection", value: data.chatgpt_objection_percent, icon: MessageCircle, color: "var(--noctra-rose)" },
-            { label: "Churn Risk", value: data.churn_risk_percent, icon: ShieldAlert, color: "var(--noctra-amber)" },
+            { label: "Would Try Free", value: data.would_try_free_percent, icon: TrendingUp, color: "var(--signal)" },
+            { label: "Would Pay", value: data.would_pay_percent, icon: DollarSign, color: "var(--color-success)" },
+            { label: "Understood Value", value: data.understood_value_percent, icon: Zap, color: "var(--accent-violet)" },
+            { label: "ChatGPT Objection", value: data.chatgpt_objection_percent, icon: MessageCircle, color: "var(--color-danger)" },
+            { label: "Churn Risk", value: data.churn_risk_percent, icon: ShieldAlert, color: "var(--color-warning)" },
           ].map(({ label, value, icon: Icon, color }) => value != null ? (
-            <div key={label} className="rounded-xl px-3 py-3 text-center" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+            <div key={label} className="rounded-xl px-3 py-3 text-center" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
               <Icon size={14} className="mx-auto mb-1" style={{ color }} />
               <p className="text-lg font-bold" style={{ color }}>{value}%</p>
-              <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--noctra-text-muted)" }}>{label}</p>
+              <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>{label}</p>
             </div>
           ) : null)}
         </div>
@@ -103,13 +103,13 @@ export function SwarmReportView({ report, compact }: Props) {
       {data.best_segment && (
         <div className="grid grid-cols-2 gap-3">
           <Panel>
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-text-muted)" }}>Best Segment</p>
-            <p className="text-sm font-semibold" style={{ color: "var(--noctra-emerald)" }}>{data.best_segment}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--text-tertiary)" }}>Best Segment</p>
+            <p className="text-sm font-semibold" style={{ color: "var(--color-success)" }}>{data.best_segment}</p>
           </Panel>
           {data.winning_positioning ? (
             <Panel>
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--noctra-text-muted)" }}>Winning Positioning</p>
-              <p className="text-sm" style={{ color: "var(--noctra-cyan)" }}>{data.winning_positioning}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--text-tertiary)" }}>Winning Positioning</p>
+              <p className="text-sm" style={{ color: "var(--signal)" }}>{data.winning_positioning}</p>
             </Panel>
           ) : null}
         </div>
@@ -118,17 +118,17 @@ export function SwarmReportView({ report, compact }: Props) {
       {/* Feature demand ranking */}
       {data.feature_demand && Object.keys(data.feature_demand).length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-cyan)" }}>Feature Demand</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--signal)" }}>Feature Demand</p>
           <div className="space-y-1.5">
             {Object.entries(data.feature_demand)
               .sort(([, a], [, b]) => b - a)
               .slice(0, 8)
               .map(([feature, pct]) => (
                 <div key={feature} className="flex items-center gap-2">
-                  <span className="text-xs flex-1" style={{ color: "var(--noctra-text-soft)" }}>{feature}</span>
-                  <span className="text-xs font-mono" style={{ color: "var(--noctra-cyan)" }}>{pct}%</span>
-                  <div className="w-20 h-1.5 rounded-full" style={{ background: "var(--noctra-surface2)" }}>
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--noctra-cyan)" }} />
+                  <span className="text-xs flex-1" style={{ color: "var(--text-secondary)" }}>{feature}</span>
+                  <span className="text-xs font-mono" style={{ color: "var(--signal)" }}>{pct}%</span>
+                  <div className="w-20 h-1.5 rounded-full" style={{ background: "var(--surface-2)" }}>
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--signal)" }} />
                   </div>
                 </div>
               ))}
@@ -139,17 +139,17 @@ export function SwarmReportView({ report, compact }: Props) {
       {/* Objection heatmap */}
       {data.objection_heatmap && Object.keys(data.objection_heatmap).length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-rose)" }}>Objection Heatmap</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--color-danger)" }}>Objection Heatmap</p>
           <div className="space-y-1.5">
             {Object.entries(data.objection_heatmap)
               .sort(([, a], [, b]) => b - a)
               .slice(0, 6)
               .map(([obj, pct]) => (
                 <div key={obj} className="flex items-center gap-2">
-                  <span className="text-xs flex-1" style={{ color: "var(--noctra-text-soft)" }}>{obj}</span>
-                  <span className="text-xs font-mono" style={{ color: pct > 40 ? "var(--noctra-rose)" : "var(--noctra-amber)" }}>{pct}%</span>
-                  <div className="w-20 h-1.5 rounded-full" style={{ background: "var(--noctra-surface2)" }}>
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: pct > 40 ? "var(--noctra-rose)" : "var(--noctra-amber)" }} />
+                  <span className="text-xs flex-1" style={{ color: "var(--text-secondary)" }}>{obj}</span>
+                  <span className="text-xs font-mono" style={{ color: pct > 40 ? "var(--color-danger)" : "var(--color-warning)" }}>{pct}%</span>
+                  <div className="w-20 h-1.5 rounded-full" style={{ background: "var(--surface-2)" }}>
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: pct > 40 ? "var(--color-danger)" : "var(--color-warning)" }} />
                   </div>
                 </div>
               ))}
@@ -160,11 +160,11 @@ export function SwarmReportView({ report, compact }: Props) {
       {/* Next experiments */}
       {data.next_experiments && data.next_experiments.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-emerald)" }}>Next Experiments</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--color-success)" }}>Next Experiments</p>
           <div className="space-y-1">
             {data.next_experiments.map((e, i) => (
-              <p key={i} className="text-xs flex gap-2" style={{ color: "var(--noctra-text-soft)" }}>
-                <span style={{ color: "var(--noctra-emerald)" }}>→</span>
+              <p key={i} className="text-xs flex gap-2" style={{ color: "var(--text-secondary)" }}>
+                <span style={{ color: "var(--color-success)" }}>→</span>
                 {typeof e === "string" ? e : e.title}
               </p>
             ))}
@@ -175,16 +175,16 @@ export function SwarmReportView({ report, compact }: Props) {
       {/* Segment breakdown */}
       {data.segment_breakdown && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-text-muted)" }}>Segment Breakdown</p>
+          <p className="eyebrow mb-3" style={{ color: "var(--text-tertiary)" }}>Segment Breakdown</p>
           <div className="flex gap-3">
             {[
-              { label: "Enthusiasts", value: data.segment_breakdown.enthusiasts, color: "var(--noctra-emerald)" },
-              { label: "Neutrals", value: data.segment_breakdown.neutrals, color: "var(--noctra-amber)" },
-              { label: "Skeptics", value: data.segment_breakdown.skeptics, color: "var(--noctra-rose)" },
+              { label: "Enthusiasts", value: data.segment_breakdown.enthusiasts, color: "var(--color-success)" },
+              { label: "Neutrals", value: data.segment_breakdown.neutrals, color: "var(--color-warning)" },
+              { label: "Skeptics", value: data.segment_breakdown.skeptics, color: "var(--color-danger)" },
             ].map(({ label, value, color }) => value != null ? (
-              <div key={label} className="flex-1 text-center px-2 py-3 rounded-lg" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+              <div key={label} className="flex-1 text-center px-2 py-3 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
                 <p className="text-xl font-bold" style={{ color }}>{value}%</p>
-                <p className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "var(--noctra-text-muted)" }}>{label}</p>
+                <p className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "var(--text-tertiary)" }}>{label}</p>
               </div>
             ) : null)}
           </div>
@@ -194,25 +194,25 @@ export function SwarmReportView({ report, compact }: Props) {
       {/* Persona reactions — shown only if metric data is not present (old format fallback) */}
       {!data.would_try_free_percent && data.personas && data.personas.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--noctra-cyan)" }}>Persona Reactions</p>
+          <p className="eyebrow mb-3" style={{ color: "var(--signal)" }}>Persona Reactions</p>
           <div className="space-y-3">
             {data.personas.map((persona, i) => (
-              <div key={i} className="rounded-lg p-3" style={{ background: "var(--noctra-surface2)", border: "1px solid var(--noctra-border)" }}>
+              <div key={i} className="rounded-lg p-3" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
                 <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-sm font-medium" style={{ color: "var(--noctra-text)" }}>{persona.name}</p>
+                  <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{persona.name}</p>
                   {persona.role && <Badge variant="muted">{persona.role}</Badge>}
                 </div>
-                <p className="text-xs mb-1.5" style={{ color: "var(--noctra-text-soft)" }}>{persona.reaction}</p>
+                <p className="text-xs mb-1.5" style={{ color: "var(--text-secondary)" }}>{persona.reaction}</p>
                 {persona.objections && persona.objections.length > 0 && (
                   <div className="mt-1">
-                    <p className="text-xs font-medium mb-1" style={{ color: "var(--noctra-rose)" }}>Objections:</p>
+                    <p className="text-xs font-medium mb-1" style={{ color: "var(--color-danger)" }}>Objections:</p>
                     <ul className="space-y-0.5">
-                      {persona.objections.map((o, j) => <li key={j} className="text-xs" style={{ color: "var(--noctra-text-muted)" }}>• {o}</li>)}
+                      {persona.objections.map((o, j) => <li key={j} className="text-xs" style={{ color: "var(--text-tertiary)" }}>• {o}</li>)}
                     </ul>
                   </div>
                 )}
                 {persona.willingness_to_pay && (
-                  <p className="text-xs mt-1" style={{ color: "var(--noctra-gold)" }}>WTP: {persona.willingness_to_pay}</p>
+                  <p className="text-xs mt-1" style={{ color: "var(--accent-gold)" }}>WTP: {persona.willingness_to_pay}</p>
                 )}
               </div>
             ))}
@@ -222,35 +222,35 @@ export function SwarmReportView({ report, compact }: Props) {
 
       {/* Single top objection */}
       {data.top_objection && (
-        <Panel style={{ border: "1px solid rgba(244,63,94,0.2)", background: "rgba(244,63,94,0.04)" }}>
+        <Panel style={{ border: "1px solid var(--color-danger-soft)", background: "var(--color-danger-soft)" }}>
           <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle size={12} style={{ color: "var(--noctra-rose)" }} />
-            <p className="text-xs font-semibold" style={{ color: "var(--noctra-rose)" }}>Top Objection</p>
+            <AlertTriangle size={12} style={{ color: "var(--color-danger)" }} />
+            <p className="text-xs font-semibold" style={{ color: "var(--color-danger)" }}>Top Objection</p>
           </div>
-          <p className="text-sm" style={{ color: "var(--noctra-text)" }}>{data.top_objection}</p>
+          <p className="text-sm" style={{ color: "var(--text-primary)" }}>{data.top_objection}</p>
         </Panel>
       )}
 
       {data.top_objections && data.top_objections.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-rose)" }}>Top Objections</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--color-danger)" }}>Top Objections</p>
           <div className="space-y-2">
             {data.top_objections.map((o, i) => {
               if (typeof o === "string") {
-                return <div key={i} className="text-sm flex gap-2" style={{ color: "var(--noctra-text-soft)" }}><span style={{ color: "var(--noctra-rose)" }}>!</span>{o}</div>;
+                return <div key={i} className="text-sm flex gap-2" style={{ color: "var(--text-secondary)" }}><span style={{ color: "var(--color-danger)" }}>!</span>{o}</div>;
               }
               return (
-                <div key={i} className="rounded-lg p-2.5" style={{ background: "var(--noctra-surface2)", border: "1px solid rgba(244,63,94,0.15)" }}>
+                <div key={i} className="rounded-lg p-2.5" style={{ background: "var(--surface-2)", border: "1px solid var(--color-danger-soft)" }}>
                   <div className="flex items-start gap-2 mb-1">
-                    <span style={{ color: "var(--noctra-rose)" }}>!</span>
-                    <p className="text-sm font-medium flex-1" style={{ color: "var(--noctra-text)" }}>{o.objection}</p>
+                    <span style={{ color: "var(--color-danger)" }}>!</span>
+                    <p className="text-sm font-medium flex-1" style={{ color: "var(--text-primary)" }}>{o.objection}</p>
                     {o.frequency && (
-                      <Badge style={{ fontSize: "10px", background: o.blocking ? "rgba(244,63,94,0.15)" : "var(--noctra-surface)", color: o.blocking ? "var(--noctra-rose)" : "var(--noctra-text-muted)" }}>
+                      <Badge style={{ fontSize: "10px", background: o.blocking ? "var(--color-danger-soft)" : "var(--surface-1)", color: o.blocking ? "var(--color-danger)" : "var(--text-tertiary)" }}>
                         {o.blocking ? "blocking · " : ""}{o.frequency}
                       </Badge>
                     )}
                   </div>
-                  {o.rebuttal && <p className="text-xs ml-4" style={{ color: "var(--noctra-text-muted)" }}>↳ {o.rebuttal}</p>}
+                  {o.rebuttal && <p className="text-xs ml-4" style={{ color: "var(--text-tertiary)" }}>↳ {o.rebuttal}</p>}
                 </div>
               );
             })}
@@ -260,9 +260,9 @@ export function SwarmReportView({ report, compact }: Props) {
 
       {data.recommendations && data.recommendations.length > 0 && (
         <Panel>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-emerald)" }}>Recommendations</p>
+          <p className="eyebrow mb-2" style={{ color: "var(--color-success)" }}>Recommendations</p>
           <ul className="space-y-1">
-            {data.recommendations.map((r, i) => <li key={i} className="text-sm flex gap-2" style={{ color: "var(--noctra-text-soft)" }}><span style={{ color: "var(--noctra-emerald)" }}>→</span>{r}</li>)}
+            {data.recommendations.map((r, i) => <li key={i} className="text-sm flex gap-2" style={{ color: "var(--text-secondary)" }}><span style={{ color: "var(--color-success)" }}>→</span>{r}</li>)}
           </ul>
         </Panel>
       )}
@@ -275,7 +275,7 @@ export function SwarmReportView({ report, compact }: Props) {
           ) : (
             <ShieldAlert size={14} style={{ color: defenseColor }} />
           )}
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: defenseColor }}>
+          <p className="eyebrow" style={{ color: defenseColor }}>
             AI Wrapper Defense — {DEFENSE_RISK_LABEL[defense.riskLevel]}
           </p>
           <span className="ml-auto text-xs font-bold font-mono" style={{ color: defenseColor }}>
@@ -285,18 +285,18 @@ export function SwarmReportView({ report, compact }: Props) {
         <ProgressBar value={defense.score} color={defenseColor} />
         <div className="mt-3 space-y-1">
           {defense.reasons.map((r, i) => (
-            <p key={i} className="text-xs flex gap-1.5" style={{ color: "var(--noctra-text-soft)" }}>
+            <p key={i} className="text-xs flex gap-1.5" style={{ color: "var(--text-secondary)" }}>
               <span style={{ color: defenseColor }}>·</span>{r}
             </p>
           ))}
         </div>
         {!compact && defense.moatSuggestions.length > 0 && (
-          <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--noctra-border)" }}>
-            <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--noctra-text-muted)" }}>Moat Suggestions</p>
+          <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--border-default)" }}>
+            <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-tertiary)" }}>Moat Suggestions</p>
             <div className="space-y-1">
               {defense.moatSuggestions.map((s, i) => (
-                <p key={i} className="text-xs flex gap-1.5" style={{ color: "var(--noctra-text-muted)" }}>
-                  <span style={{ color: "var(--noctra-amber)" }}>→</span>{s}
+                <p key={i} className="text-xs flex gap-1.5" style={{ color: "var(--text-tertiary)" }}>
+                  <span style={{ color: "var(--color-warning)" }}>→</span>{s}
                 </p>
               ))}
             </div>
@@ -304,7 +304,7 @@ export function SwarmReportView({ report, compact }: Props) {
         )}
       </Panel>
 
-      <ProgressBar value={score} color="var(--noctra-cyan)" />
+      <ProgressBar value={score} color="var(--signal)" />
     </div>
   );
 }

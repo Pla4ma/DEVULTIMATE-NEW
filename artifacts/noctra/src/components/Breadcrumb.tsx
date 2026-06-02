@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 export function Breadcrumb() {
   const [, navigate] = useLocation();
   return (
-    <button onClick={() => navigate("/app")} className="flex items-center gap-1 text-xs hover:opacity-80 shrink-0" style={{ color: "var(--noctra-text-muted)" }}>
+    <button onClick={() => navigate("/app")} className="flex items-center gap-1 text-xs hover:opacity-80 shrink-0" style={{ color: "var(--text-tertiary)" }}>
       <ArrowLeft size={11} /> Back to Launch Cockpit
     </button>
   );

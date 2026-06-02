@@ -1,8 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { AppShell } from "@/components/AppShell";
+import { ScanGuide } from "@/components/ScanGuide";
+import { DemoBanner } from "@/components/DemoBanner";
+import { ScoreRing } from "@/components/Primitives";
+import { isDemoMode } from "@/lib/demo-mode";
 import { motion, AnimatePresence } from "framer-motion";
 import { callStructuredAI } from "@/lib/ai";
+import { authenticatedFetch } from "@/lib/api-client";
 import { saveReport, getReports, getProjects } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { useProgression } from "@/lib/progression-context";
@@ -15,6 +20,43 @@ import {
 
 type ToolMode = "doctor" | "launch";
 type Phase = "idle" | "scanning" | "diagnosing" | "generating" | "done" | "error";
+
+interface ScanResult {
+  files_analyzed?: number;
+  frameworks?: string[];
+  issues?: Array<{ severity: string; message: string; file?: string }>;
+}
+
+interface AIResult {
+  score?: number;
+  go_signal?: string;
+  go_no_go?: string;
+  gates?: Array<{ name: string; status: string }>;
+  data?: Record<string, unknown>;
+  title?: string;
+  summary?: string;
+  markdown?: string;
+}
+
+interface ScanOutput {
+  scan?: ScanResult;
+  ai?: AIResult;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  stage?: string | null;
+}
+
+interface ContextReport {
+  id: string;
+  tool: string;
+  title: string;
+  score?: number | null;
+  summary?: string | null;
+  payload?: unknown;
+}
 
 const MODES: Array<{ key: ToolMode; label: string; icon: typeof Stethoscope; color: string; description: string }> = [
   { key: "doctor", label: "Product Doctor", icon: Stethoscope, color: "var(--color-danger)", description: "Upload your repo. Get launch readiness, blockers, and fix queue." },
@@ -36,22 +78,24 @@ export default function CodeHealthPage() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<ScanOutput | null>(null);
   const [savedReportId, setSavedReportId] = useState<string | null>(null);
   const [zipFile, setZipFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-  const [contextReports, setContextReports] = useState<any[]>([]);
+  const [contextReports, setContextReports] = useState<ContextReport[]>([]);
   const [loadingContext, setLoadingContext] = useState(false);
   const [doctorRedGates, setDoctorRedGates] = useState<string[]>([]);
 
   const currentMode = MODES.find((m) => m.key === mode)!;
 
   useEffect(() => {
-    getProjects().then((p) => setProjects((p as any[]) ?? [])).catch(() => {});
+    getProjects().then((p) => setProjects((p as Project[]) ?? [])).catch((e) => {
+      console.error("Failed to load projects:", e);
+    });
     getReports("doctor").then((reps) => {
-      const latest = (reps as any[])?.[0];
+      const latest = (reps as ContextReport[])?.[0];
       if (!latest?.payload) return;
       const p = latest.payload as Record<string, unknown>;
       const data = (p.data ?? p) as Record<string, unknown>;
@@ -59,7 +103,22 @@ export default function CodeHealthPage() {
       const gates = Array.isArray(data.gates) ? data.gates as Array<{ name: string; status: string }> : [];
       const redNames = gates.filter((g) => g.status === "RED").map((g) => g.name);
       setDoctorRedGates(redNames);
-    }).catch(() => {});
+      if (isDemoMode() && latest) {
+        const aiResult: AIResult = {
+          score: typeof data.health_score === "number" ? data.health_score : undefined,
+          go_signal: typeof data.go_no_go === "string" ? data.go_no_go : undefined,
+          gates: Array.isArray(data.gates) ? data.gates as Array<{ name: string; status: string }> : [],
+          data: data,
+          title: typeof latest.title === "string" ? latest.title : "Latest Scan",
+          summary: typeof latest.summary === "string" ? latest.summary : undefined,
+        };
+        setResult({ ai: aiResult });
+        setSavedReportId(latest.id);
+        setPhase("done");
+      }
+    }).catch((e) => {
+      console.error("Failed to load doctor reports:", e);
+    });
   }, []);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -75,11 +134,11 @@ export default function CodeHealthPage() {
   }, [handleKeyDown]);
 
   async function run() {
-    if (mode === "doctor" && !zipFile) {
+    if (mode === "doctor" && !zipFile && !isDemoMode()) {
       toast({ title: "Please upload a ZIP file", variant: "destructive" });
       return;
     }
-    if (mode === "launch" && !input.trim()) return;
+    if (mode === "launch" && !input.trim() && !isDemoMode()) return;
 
     setPhase("scanning");
     setError("");
@@ -89,32 +148,88 @@ export default function CodeHealthPage() {
     try {
       if (mode === "doctor") {
         setPhase("diagnosing");
-        const formData = new FormData();
-        formData.append("zip", zipFile!);
-        if (selectedProjectId) formData.append("project_id", selectedProjectId);
+        
+        let scanResult: ScanResult;
+        let aiResult: AIResult;
 
-        const response = await fetch("/api/scan", { method: "POST", body: formData });
-        if (!response.ok) throw new Error("Scan failed");
-        const scanResult = await response.json();
+        if (isDemoMode()) {
+          // Demo mode mock response
+          await new Promise(r => setTimeout(r, 1500));
+          setPhase("generating");
+          await new Promise(r => setTimeout(r, 1500));
+          scanResult = { 
+            files_analyzed: 45, 
+            frameworks: ["React", "Express"], 
+            issues: [] 
+          };
+          aiResult = {
+            score: 72,
+            go_signal: "HOLD",
+            gates: [
+              { name: "Auth Provider Security", status: "YELLOW" },
+              { name: "Production DB Config", status: "RED" },
+              { name: "API Rate Limiting", status: "RED" },
+              { name: "CI/CD Pipeline", status: "GREEN" }
+            ],
+            data: {
+              health_score: 72,
+              go_no_go: "HOLD",
+              gates: [
+                { name: "Auth Provider Security", status: "YELLOW" },
+                { name: "Production DB Config", status: "RED" },
+                { name: "API Rate Limiting", status: "RED" },
+                { name: "CI/CD Pipeline", status: "GREEN" }
+              ]
+            },
+            title: "Demo Scan Result",
+            summary: "Sample scan showing 2 launch blockers."
+          };
+        } else {
+          const formData = new FormData();
+          formData.append("file", zipFile!);
 
-        setPhase("generating");
-        const aiResult = await callStructuredAI("doctor", JSON.stringify(scanResult), {
-          project_id: selectedProjectId || undefined,
-        });
+          const scanUrl = selectedProjectId
+            ? `/api/projects/${selectedProjectId}/scan-upload`
+            : "/api/projects/scan";
+
+          const response = await authenticatedFetch(scanUrl, { method: "POST", body: formData });
+          if (!response.ok) {
+            const errBody = await response.json().catch(() => ({ error: "Scan failed" })) as { error?: string };
+            throw new Error(errBody.error ?? `Scan failed: ${response.status}`);
+          }
+          scanResult = await response.json() as ScanResult;
+
+          setPhase("generating");
+          aiResult = await callStructuredAI("doctor", JSON.stringify(scanResult), {
+            project_id: selectedProjectId || undefined,
+          }) as AIResult;
+        }
 
         setResult({ scan: scanResult, ai: aiResult });
         await autoSave(aiResult, "Product Doctor");
       } else {
-        const context: Record<string, unknown> = {};
-        if (selectedProjectId) context.project_id = selectedProjectId;
-        if (contextReports.length > 0) {
-          context.prior_analyses = contextReports.map((r) => ({
-            tool: r.tool, title: r.title, score: r.score, summary: r.summary,
-          }));
+        let res: AIResult;
+        
+        if (isDemoMode()) {
+          await new Promise(r => setTimeout(r, 2000));
+          res = {
+            score: 85,
+            go_no_go: "GO",
+            data: { health_score: 85, go_no_go: "GO", gates: [] },
+            title: "Demo Launch Check",
+            summary: "Your product looks ready to launch!"
+          };
+        } else {
+          const context: Record<string, unknown> = {};
+          if (selectedProjectId) context.project_id = selectedProjectId;
+          if (contextReports.length > 0) {
+            context.prior_analyses = contextReports.map((r) => ({
+              tool: r.tool, title: r.title, score: r.score, summary: r.summary,
+            }));
+          }
+          res = await callStructuredAI("launch", input.trim(), Object.keys(context).length ? context : undefined) as AIResult;
         }
-
-        const res = await callStructuredAI("launch", input.trim(), Object.keys(context).length ? context : undefined);
-        setResult(res);
+        setResult({ ai: res });
         await autoSave(res, "Launch Room");
       }
       setPhase("done");
@@ -125,7 +240,7 @@ export default function CodeHealthPage() {
     }
   }
 
-  async function autoSave(res: any, title: string) {
+  async function autoSave(res: AIResult, title: string) {
     try {
       const report = await saveReport({
         tool: mode,
@@ -161,19 +276,32 @@ export default function CodeHealthPage() {
     }
   }
 
-  const d = result?.ai?.data || result?.data || {};
-  const score = result?.ai?.score || result?.score || d?.health_score || d?.launch_score || null;
-  const goNoGo = d?.go_no_go as string || d?.go_signal as string || null;
+  const d = result?.ai?.data || {};
+  const score = result?.ai?.score || (d?.health_score as number) || (d?.launch_score as number) || null;
+  const goNoGo = (d?.go_no_go as string) || result?.ai?.go_signal || null;
   const gates = Array.isArray(d?.gates) ? d.gates as Array<{ name: string; status: string }> : [];
   const redGates = gates.filter((g) => g.status === "RED").map((g) => g.name);
 
   return (
     <AppShell>
       <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+        <DemoBanner />
         <motion.div {...fadeInUp} className="mb-6">
-          <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>Code Health</h1>
+          <h1 className="text-2xl font-bold text-display tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Code Health</h1>
           <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Scan codebases, diagnose launch blockers, and get go/no-go signals</p>
         </motion.div>
+
+        {isDemoMode() && (
+          <motion.div
+            {...fadeInUp}
+            className="mb-6 px-5 py-4 rounded-xl"
+            style={{ background: "var(--color-warning-soft)", border: "1px solid var(--color-warning-soft)" }}
+          >
+            <p className="text-sm font-medium" style={{ color: "var(--color-warning)" }}>
+              Demo mode uses sample scans. Sign in to scan your own repo.
+            </p>
+          </motion.div>
+        )}
 
         <motion.div {...fadeInUp} className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {MODES.map((m) => {
@@ -222,10 +350,29 @@ export default function CodeHealthPage() {
             style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}
           >
             <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Input</span>
+              <span className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Input</span>
             </div>
             <div className="p-5 space-y-4">
+              {mode === "doctor" && !isDemoMode() && <ScanGuide />}
               {mode === "doctor" ? (
+                isDemoMode() ? (
+                  <div
+                    className="border-2 border-dashed rounded-xl p-8 text-center"
+                    style={{ borderColor: "var(--border-default)", background: "var(--surface-2)" }}
+                  >
+                    <Upload size={32} className="mx-auto mb-3" style={{ color: "var(--text-tertiary)" }} />
+                    <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Demo mode</p>
+                    <p className="text-xs mb-3" style={{ color: "var(--text-tertiary)" }}>Sign in to scan your own projects</p>
+                    <button
+                      onClick={run}
+                      disabled={phase !== "idle"}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
+                      style={{ background: "var(--accent-cyan)", color: "var(--surface-0)" }}
+                    >
+                      <Zap size={14} /> Run Demo Scan
+                    </button>
+                  </div>
+                ) : (
                 <div
                   className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${dragOver ? "border-[var(--accent-cyan)]" : ""}`}
                   style={{ borderColor: dragOver ? "var(--accent-cyan)" : "var(--border-default)", background: dragOver ? "var(--accent-cyan-soft)" : "var(--surface-2)" }}
@@ -251,12 +398,13 @@ export default function CodeHealthPage() {
                       <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Drop your repo ZIP here</p>
                       <p className="text-xs mb-3" style={{ color: "var(--text-tertiary)" }}>or click to browse</p>
                       <input type="file" accept=".zip" onChange={handleFileSelect} className="hidden" id="zip-upload" />
-                      <label htmlFor="zip-upload" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer" style={{ background: "var(--accent-cyan)", color: "#000" }}>
+                      <label htmlFor="zip-upload" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer" style={{ background: "var(--accent-cyan)", color: "var(--surface-0)" }}>
                         <Upload size={14} /> Select ZIP
                       </label>
                     </>
                   )}
                 </div>
+                )
               ) : (
                 <textarea
                   value={input}
@@ -307,7 +455,7 @@ export default function CodeHealthPage() {
             style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}
           >
             <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Output</span>
+              <span className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Output</span>
             </div>
             <div className="p-5">
               <AnimatePresence mode="wait">
@@ -333,34 +481,34 @@ export default function CodeHealthPage() {
                 {phase === "done" && result && (
                   <motion.div key="done" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
                     {score != null && (
-                      <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
-                        <div>
-                          <p className="text-xs font-medium mb-1" style={{ color: "var(--text-tertiary)" }}>Health Score</p>
-                          <p className="text-3xl font-bold" style={{ color: score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)" }}>
-                            {score}
+                      <div className="flex items-center gap-5 p-5 rounded-xl" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+                        <ScoreRing value={score} size={80} stroke={7} label="Health" color={score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)"} />
+                        <div className="flex-1">
+                          <p className="eyebrow mb-1" style={{ color: "var(--text-tertiary)" }}>Health Score</p>
+                          <p className="text-3xl font-bold text-mono" style={{ color: score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)" }}>
+                            {score}<span className="text-sm font-normal" style={{ color: "var(--text-tertiary)" }}>/100</span>
                           </p>
+                          {goNoGo && (
+                            <span className="eyebrow mt-2 inline-block px-3 py-1 rounded-full" style={{
+                              background: goNoGo === "GO" ? "var(--color-success-soft)" : goNoGo === "NO-GO" ? "var(--color-danger-soft)" : "var(--color-warning-soft)",
+                              color: goNoGo === "GO" ? "var(--color-success)" : goNoGo === "NO-GO" ? "var(--color-danger)" : "var(--color-warning)",
+                            }}>
+                              {goNoGo === "GO" ? "GO SIGNAL" : goNoGo === "NO-GO" ? "NO-GO" : "HOLD"}
+                            </span>
+                          )}
                         </div>
-                        {goNoGo && (
-                          <span className="text-xs px-3 py-1.5 rounded-full font-medium" style={{
-                            background: goNoGo === "GO" ? "var(--color-success-soft)" : goNoGo === "NO-GO" ? "var(--color-danger-soft)" : "var(--color-warning-soft)",
-                            color: goNoGo === "GO" ? "var(--color-success)" : goNoGo === "NO-GO" ? "var(--color-danger)" : "var(--color-warning)",
-                          }}>
-                            {goNoGo === "GO" ? "🟢 GO" : goNoGo === "NO-GO" ? "🔴 NO-GO" : "🟡 HOLD"}
-                          </span>
-                        )}
                       </div>
                     )}
 
                     {gates.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Gate Status</p>
+                        <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Gate Status</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {gates.slice(0, 6).map((gate, i) => (
-                            <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: "var(--surface-2)" }}>
-                              {gate.status === "GREEN" ? <CheckCircle size={12} style={{ color: "var(--color-success)" }} /> :
-                               gate.status === "YELLOW" ? <AlertTriangle size={12} style={{ color: "var(--color-warning)" }} /> :
-                               <XCircle size={12} style={{ color: "var(--color-danger)" }} />}
-                              <span className="flex-1" style={{ color: "var(--text-secondary)" }}>{gate.name}</span>
+                            <div key={i} className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
+                              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: gate.status === "GREEN" ? "var(--color-success)" : gate.status === "YELLOW" ? "var(--color-warning)" : "var(--color-danger)", boxShadow: `0 0 6px ${gate.status === "GREEN" ? "var(--color-success)" : gate.status === "YELLOW" ? "var(--color-warning)" : "var(--color-danger)"}` }} />
+                              <span className="text-sm flex-1" style={{ color: "var(--text-primary)" }}>{gate.name}</span>
+                              <span className="text-mono text-[10px] font-medium" style={{ color: gate.status === "GREEN" ? "var(--color-success)" : gate.status === "YELLOW" ? "var(--color-warning)" : "var(--color-danger)" }}>{gate.status}</span>
                             </div>
                           ))}
                         </div>

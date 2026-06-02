@@ -31,20 +31,20 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div
           className="min-h-screen flex items-center justify-center p-6"
-          style={{ background: "var(--noctra-bg)" }}
+          style={{ background: "var(--surface-0)" }}
         >
           <div className="max-w-md w-full text-center space-y-5">
             <div
               className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center"
-              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}
+              style={{ background: "var(--color-danger-soft)", border: "1px solid var(--color-danger-soft)" }}
             >
-              <AlertTriangle size={22} style={{ color: "var(--noctra-rose)" }} />
+              <AlertTriangle size={22} style={{ color: "var(--color-danger)" }} />
             </div>
             <div>
-              <h1 className="text-lg font-bold mb-1" style={{ color: "var(--noctra-text)" }}>
+              <h1 className="text-lg font-bold mb-1" style={{ color: "var(--text-primary)" }}>
                 Something went wrong
               </h1>
-              <p className="text-sm" style={{ color: "var(--noctra-text-muted)" }}>
+              <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
                 {this.state.error.message || "An unexpected error occurred."}
               </p>
             </div>
@@ -52,9 +52,9 @@ export class ErrorBoundary extends Component<Props, State> {
               onClick={() => this.setState({ error: null })}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-opacity hover:opacity-80"
               style={{
-                background: "var(--noctra-surface)",
-                border: "1px solid var(--noctra-border)",
-                color: "var(--noctra-text-soft)",
+                background: "var(--surface-1)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-secondary)",
               }}
             >
               <RotateCcw size={14} />

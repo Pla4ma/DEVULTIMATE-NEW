@@ -34,7 +34,7 @@ export function getUsagePercent(usage: { used: number; limit: number | string })
 }
 
 export function getUsageColor(percent: number): string {
-  if (percent >= 90) return "var(--noctra-rose)";
-  if (percent >= 70) return "var(--noctra-amber)";
-  return "var(--noctra-emerald)";
+  if (percent >= 90) return "var(--color-danger)";
+  if (percent >= 70) return "var(--color-warning)";
+  return "var(--color-success)";
 }
