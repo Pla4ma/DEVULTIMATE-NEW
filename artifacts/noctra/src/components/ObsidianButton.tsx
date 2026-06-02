@@ -17,14 +17,13 @@ export function ObsidianButton({
   disabled,
   ...props
 }: Props) {
-  const base =
-    "inline-flex items-center justify-center gap-2 font-medium transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 active:scale-[0.98]";
+  const base = "inline-flex items-center justify-center gap-2 font-medium transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 active:scale-[0.98] relative overflow-hidden";
 
   const variants = {
     primary:
-      "bg-accent-gradient text-obsidian-0 font-semibold shadow-[0_0_24px_rgba(168,85,247,0.2)] hover:shadow-[0_0_40px_rgba(168,85,247,0.35)] hover:brightness-110",
+      "bg-aurora-gradient text-obsidian-0 font-semibold shadow-[0_0_24px_rgba(168,85,247,0.2)] hover:shadow-[0_0_40px_rgba(168,85,247,0.35)] hover:brightness-110 hover:-translate-y-0.5",
     secondary:
-      "bg-white/5 backdrop-blur-md border border-white/10 text-text-primary hover:bg-white/10 hover:border-accent/30",
+      "bg-white/5 backdrop-blur-md border border-white/10 text-text-primary hover:bg-white/10 hover:border-accent/30 hover:-translate-y-0.5",
     ghost:
       "text-text-muted hover:text-text-primary hover:bg-white/5",
     danger:
@@ -39,21 +38,11 @@ export function ObsidianButton({
 
   return (
     <button
-      className={cn(
-        base,
-        variants[variant],
-        sizes[size],
-        (disabled || isLoading) && "opacity-40 pointer-events-none",
-        className
-      )}
+      className={cn(base, variants[variant], sizes[size], (disabled || isLoading) && "opacity-40 pointer-events-none", className)}
       disabled={disabled || isLoading}
       {...props}
     >
-      {isLoading ? (
-        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-      ) : (
-        children
-      )}
+      {isLoading ? <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" /> : children}
     </button>
   );
 }

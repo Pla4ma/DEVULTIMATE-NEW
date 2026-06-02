@@ -5,24 +5,17 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   hover?: boolean;
   popular?: boolean;
+  glass?: boolean;
 }
 
 export function ObsidianCard({
-  children,
-  className,
-  hover = true,
-  popular = false,
-  ...props
+  children, className, hover = true, popular = false, glass = true, ...props
 }: Props) {
   return (
     <div
       className={cn(
         "rounded-xl p-6",
-        popular
-          ? "card-premium-popular"
-          : hover
-          ? "card-premium"
-          : "bg-obsidian-2 border border-border-default",
+        popular ? "card-glass-popular" : glass ? "card-glass" : hover ? "card-premium" : "bg-void-2 border border-border-default",
         className
       )}
       {...props}
