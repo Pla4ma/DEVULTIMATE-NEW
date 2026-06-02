@@ -12,6 +12,7 @@ import { saveReport, getReports, getProjects } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { useProgression } from "@/lib/progression-context";
 import { useToast } from "@/hooks/use-toast";
+import { ObsidianButton } from "@/components/ObsidianButton";
 import {
   Stethoscope, Rocket, Upload, Loader2, RotateCcw, CheckCircle, Zap,
   ArrowRight, AlertTriangle, XCircle, Shield, FileCode, ArrowUpRight,
@@ -284,10 +285,10 @@ export default function CodeHealthPage() {
 
   return (
     <AppShell>
-      <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-6xl mx-auto bg-void-0 min-h-screen">
         <DemoBanner />
         <motion.div {...fadeInUp} className="mb-6">
-          <h1 className="text-2xl font-bold text-display tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Code Health</h1>
+          <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Code Health</h1>
           <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Scan codebases, diagnose launch blockers, and get go/no-go signals</p>
         </motion.div>
 
@@ -308,21 +309,19 @@ export default function CodeHealthPage() {
             const Icon = m.icon;
             const active = mode === m.key;
             return (
-              <motion.button
+              <button
                 key={m.key}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={() => { setMode(m.key); reset(); }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
                 style={{
-                  background: active ? `${m.color}15` : "var(--surface-2)",
-                  border: `1px solid ${active ? m.color : "var(--border-default)"}`,
+                  background: active ? `${m.color}15` : "var(--void-2)",
+                  border: `1px solid ${active ? m.color : "var(--void-3)"}`,
                   color: active ? m.color : "var(--text-secondary)",
                 }}
               >
                 <Icon size={16} />
                 {m.label}
-              </motion.button>
+              </button>
             );
           })}
         </motion.div>
@@ -346,36 +345,34 @@ export default function CodeHealthPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <motion.div
             {...fadeInUp}
-            className="rounded-xl border overflow-hidden"
-            style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}
+            className="rounded-xl border overflow-hidden bg-void-1 border-void-3"
           >
-            <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-              <span className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Input</span>
+            <div className="px-5 py-3 border-b border-void-3">
+              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Input</span>
             </div>
             <div className="p-5 space-y-4">
               {mode === "doctor" && !isDemoMode() && <ScanGuide />}
               {mode === "doctor" ? (
                 isDemoMode() ? (
                   <div
-                    className="border-2 border-dashed rounded-xl p-8 text-center"
-                    style={{ borderColor: "var(--border-default)", background: "var(--surface-2)" }}
+                    className="border-2 border-dashed rounded-xl p-8 text-center bg-void-2 border-void-3"
                   >
                     <Upload size={32} className="mx-auto mb-3" style={{ color: "var(--text-tertiary)" }} />
                     <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Demo mode</p>
                     <p className="text-xs mb-3" style={{ color: "var(--text-tertiary)" }}>Sign in to scan your own projects</p>
-                    <button
+                    <ObsidianButton
+                      variant="primary"
+                      size="sm"
                       onClick={run}
                       disabled={phase !== "idle"}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
-                      style={{ background: "var(--accent-cyan)", color: "var(--surface-0)" }}
                     >
                       <Zap size={14} /> Run Demo Scan
-                    </button>
+                    </ObsidianButton>
                   </div>
                 ) : (
                 <div
-                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${dragOver ? "border-[var(--accent-cyan)]" : ""}`}
-                  style={{ borderColor: dragOver ? "var(--accent-cyan)" : "var(--border-default)", background: dragOver ? "var(--accent-cyan-soft)" : "var(--surface-2)" }}
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${dragOver ? "border-signal-amber" : ""}`}
+                  style={{ borderColor: dragOver ? "var(--signal-amber)" : "var(--void-3)", background: dragOver ? "var(--signal-amber-dim)" : "var(--void-2)" }}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
                   onDrop={(e) => {
@@ -387,7 +384,7 @@ export default function CodeHealthPage() {
                 >
                   {zipFile ? (
                     <div className="space-y-3">
-                      <FileCode size={32} className="mx-auto" style={{ color: "var(--accent-cyan)" }} />
+                      <FileCode size={32} className="mx-auto" style={{ color: "var(--signal-amber)" }} />
                       <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{zipFile.name}</p>
                       <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{(zipFile.size / 1024 / 1024).toFixed(2)} MB</p>
                       <button onClick={() => setZipFile(null)} className="text-xs" style={{ color: "var(--color-danger)" }}>Remove</button>
@@ -398,7 +395,7 @@ export default function CodeHealthPage() {
                       <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Drop your repo ZIP here</p>
                       <p className="text-xs mb-3" style={{ color: "var(--text-tertiary)" }}>or click to browse</p>
                       <input type="file" accept=".zip" onChange={handleFileSelect} className="hidden" id="zip-upload" />
-                      <label htmlFor="zip-upload" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer" style={{ background: "var(--accent-cyan)", color: "var(--surface-0)" }}>
+                      <label htmlFor="zip-upload" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer bg-signal-amber text-black">
                         <Upload size={14} /> Select ZIP
                       </label>
                     </>
@@ -412,38 +409,29 @@ export default function CodeHealthPage() {
                   placeholder="Describe your product and launch status..."
                   rows={8}
                   disabled={phase !== "idle"}
-                  className="w-full px-4 py-3 rounded-lg text-sm resize-none outline-none"
-                  style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
+                  className="w-full px-4 py-3 rounded-lg text-sm resize-none outline-none bg-void-2 border border-void-3 text-text-primary focus:border-signal-amber focus:shadow-[0_0_0_3px_var(--signal-amber-dim)]"
                   maxLength={4000}
                 />
               )}
 
               <div className="flex gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <ObsidianButton
+                  variant="primary"
                   onClick={run}
                   disabled={phase !== "idle" || (mode === "doctor" ? !zipFile : !input.trim())}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all"
-                  style={{
-                    background: phase !== "idle" ? "var(--surface-2)" : currentMode.color,
-                    color: phase !== "idle" ? "var(--text-tertiary)" : "#000",
-                    opacity: phase !== "idle" ? 0.5 : 1,
-                  }}
+                  className="flex-1"
                 >
                   {phase !== "idle" ? <Loader2 size={16} className="animate-spin" /> : currentMode.icon && <currentMode.icon size={16} />}
                   {phase === "scanning" ? "Scanning..." : phase === "diagnosing" ? "Diagnosing..." : phase === "generating" ? "Generating..." : `Run ${currentMode.label}`}
-                </motion.button>
+                </ObsidianButton>
                 {phase !== "idle" && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <ObsidianButton
+                    variant="secondary"
+                    size="sm"
                     onClick={reset}
-                    className="px-4 py-3 rounded-xl text-sm font-medium"
-                    style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
                   >
                     <RotateCcw size={16} />
-                  </motion.button>
+                  </ObsidianButton>
                 )}
               </div>
             </div>
@@ -451,11 +439,10 @@ export default function CodeHealthPage() {
 
           <motion.div
             {...fadeInUp}
-            className="rounded-xl border overflow-hidden"
-            style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}
+            className="rounded-xl border overflow-hidden bg-void-1 border-void-3"
           >
-            <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-              <span className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Output</span>
+            <div className="px-5 py-3 border-b border-void-3">
+              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Output</span>
             </div>
             <div className="p-5">
               <AnimatePresence mode="wait">
@@ -481,15 +468,15 @@ export default function CodeHealthPage() {
                 {phase === "done" && result && (
                   <motion.div key="done" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
                     {score != null && (
-                      <div className="flex items-center gap-5 p-5 rounded-xl" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+                      <div className="flex items-center gap-5 p-5 rounded-xl bg-void-2 border border-void-3">
                         <ScoreRing value={score} size={80} stroke={7} label="Health" color={score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)"} />
                         <div className="flex-1">
-                          <p className="eyebrow mb-1" style={{ color: "var(--text-tertiary)" }}>Health Score</p>
-                          <p className="text-3xl font-bold text-mono" style={{ color: score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)" }}>
+                          <p className="text-xs font-medium tracking-[0.12em] uppercase mb-1" style={{ color: "var(--text-tertiary)" }}>Health Score</p>
+                          <p className="text-3xl font-bold font-mono" style={{ color: score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)" }}>
                             {score}<span className="text-sm font-normal" style={{ color: "var(--text-tertiary)" }}>/100</span>
                           </p>
                           {goNoGo && (
-                            <span className="eyebrow mt-2 inline-block px-3 py-1 rounded-full" style={{
+                            <span className="text-xs font-medium tracking-[0.12em] uppercase mt-2 inline-block px-3 py-1 rounded-full" style={{
                               background: goNoGo === "GO" ? "var(--color-success-soft)" : goNoGo === "NO-GO" ? "var(--color-danger-soft)" : "var(--color-warning-soft)",
                               color: goNoGo === "GO" ? "var(--color-success)" : goNoGo === "NO-GO" ? "var(--color-danger)" : "var(--color-warning)",
                             }}>
@@ -502,13 +489,13 @@ export default function CodeHealthPage() {
 
                     {gates.length > 0 && (
                       <div className="space-y-2">
-                        <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Gate Status</p>
+                        <p className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Gate Status</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {gates.slice(0, 6).map((gate, i) => (
-                            <div key={i} className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
+                            <div key={i} className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-void-2 border border-void-3">
                               <span className="w-2 h-2 rounded-full shrink-0" style={{ background: gate.status === "GREEN" ? "var(--color-success)" : gate.status === "YELLOW" ? "var(--color-warning)" : "var(--color-danger)", boxShadow: `0 0 6px ${gate.status === "GREEN" ? "var(--color-success)" : gate.status === "YELLOW" ? "var(--color-warning)" : "var(--color-danger)"}` }} />
                               <span className="text-sm flex-1" style={{ color: "var(--text-primary)" }}>{gate.name}</span>
-                              <span className="text-mono text-[10px] font-medium" style={{ color: gate.status === "GREEN" ? "var(--color-success)" : gate.status === "YELLOW" ? "var(--color-warning)" : "var(--color-danger)" }}>{gate.status}</span>
+                              <span className="font-mono text-[10px] font-medium" style={{ color: gate.status === "GREEN" ? "var(--color-success)" : gate.status === "YELLOW" ? "var(--color-warning)" : "var(--color-danger)" }}>{gate.status}</span>
                             </div>
                           ))}
                         </div>
@@ -516,16 +503,15 @@ export default function CodeHealthPage() {
                     )}
 
                     {savedReportId && (
-                      <div className="flex gap-2 pt-3 border-t" style={{ borderColor: "var(--border-subtle)" }}>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                      <div className="flex gap-2 pt-3 border-t border-void-3">
+                        <ObsidianButton
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1"
                           onClick={() => navigate(`/app/reports/${savedReportId}`)}
-                          className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium"
-                          style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
                         >
                           <ArrowUpRight size={12} /> View Full Report
-                        </motion.button>
+                        </ObsidianButton>
                       </div>
                     )}
                   </motion.div>
@@ -536,15 +522,14 @@ export default function CodeHealthPage() {
                     <AlertTriangle size={32} className="mb-4" style={{ color: "var(--color-danger)" }} />
                     <p className="text-sm font-medium mb-1" style={{ color: "var(--color-danger)" }}>Analysis failed</p>
                     <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{error}</p>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <ObsidianButton
+                      variant="secondary"
+                      size="sm"
                       onClick={reset}
-                      className="mt-4 px-4 py-2 rounded-lg text-xs font-medium"
-                      style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
+                      className="mt-4"
                     >
                       Try Again
-                    </motion.button>
+                    </ObsidianButton>
                   </motion.div>
                 )}
               </AnimatePresence>

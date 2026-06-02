@@ -11,7 +11,7 @@ import { saveReport, getReports } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { useProgression } from "@/lib/progression-context";
 import { useToast } from "@/hooks/use-toast";
-import { VoidButton } from "@/components/VoidButton";
+import { ObsidianButton } from "@/components/ObsidianButton";
 import {
   Lightbulb, Terminal, Users, FlaskConical, ScanSearch, Wand2, Loader2,
   RotateCcw, CheckCircle, Zap, ArrowRight, AlertTriangle, Rocket,
@@ -148,9 +148,9 @@ export default function IdeaLabPage() {
 
   return (
     <AppShell>
-      <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-6xl mx-auto bg-void-0 min-h-screen">
         <motion.div {...fadeInUp} className="mb-6">
-          <h1 className="text-2xl font-bold text-display tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Idea Lab</h1>
+          <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Idea Lab</h1>
           <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Validate ideas, stress-test assumptions, and simulate market demand</p>
         </motion.div>
 
@@ -159,21 +159,19 @@ export default function IdeaLabPage() {
             const Icon = m.icon;
             const active = mode === m.key;
             return (
-              <motion.button
+              <button
                 key={m.key}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={() => { setMode(m.key); reset(); }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
                 style={{
-                  background: active ? `${m.color}15` : "var(--surface-2)",
-                  border: `1px solid ${active ? m.color : "var(--border-default)"}`,
+                  background: active ? `${m.color}15` : "var(--void-2)",
+                  border: `1px solid ${active ? m.color : "var(--void-3)"}`,
                   color: active ? m.color : "var(--text-secondary)",
                 }}
               >
                 <Icon size={16} />
                 {m.label}
-              </motion.button>
+              </button>
             );
           })}
         </motion.div>
@@ -181,17 +179,16 @@ export default function IdeaLabPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <motion.div
             {...fadeInUp}
-            className="rounded-xl border overflow-hidden"
-            style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}
+            className="rounded-xl border overflow-hidden bg-void-1 border-void-3"
           >
-            <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: "var(--border-subtle)" }}>
-              <span className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Input</span>
+            <div className="px-5 py-3 border-b border-void-3 flex items-center justify-between">
+              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Input</span>
               <span className="text-xs" style={{ color: "var(--text-quaternary)" }}>⌘↵ to run</span>
             </div>
             <div className="p-5 space-y-4">
               {injectedContext?.hasContext && injectedContext.reports.length > 0 && (
-                <div className="px-3 py-2 rounded-lg" style={{ background: "var(--accent-cyan-soft)", border: "1px solid var(--accent-cyan)" }}>
-                  <p className="text-xs font-medium mb-1" style={{ color: "var(--accent-cyan)" }}>
+                <div className="px-3 py-2 rounded-lg bg-void-2 border border-void-3">
+                  <p className="text-xs font-medium mb-1" style={{ color: "var(--signal-amber)" }}>
                     <Zap size={10} className="inline mr-1" />
                     Cross-tool intelligence injected
                   </p>
@@ -199,7 +196,7 @@ export default function IdeaLabPage() {
               )}
 
               {autoSaved && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "var(--color-success-soft)", border: "1px solid var(--color-success)" }}>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-void-2 border border-void-3">
                   <CheckCircle size={14} style={{ color: "var(--color-success)" }} />
                   <p className="text-xs" style={{ color: "var(--color-success)" }}>Report saved + tasks generated automatically</p>
                 </div>
@@ -211,41 +208,28 @@ export default function IdeaLabPage() {
                 placeholder={mode === "idea" ? "Describe your idea, product, or hypothesis..." : mode === "reality" ? "Describe your assumptions to stress-test..." : mode === "swarm" ? "Describe your offer or pitch for market simulation..." : "Describe what you want to validate with evidence..."}
                 rows={8}
                 disabled={phase === "running"}
-                className="w-full px-4 py-3 rounded-lg text-sm resize-none outline-none transition-colors"
-                style={{
-                  background: "var(--surface-2)",
-                  border: "1px solid var(--border-default)",
-                  color: "var(--text-primary)",
-                }}
+                className="w-full px-4 py-3 rounded-lg text-sm resize-none outline-none transition-colors bg-void-2 border border-void-3 text-text-primary focus:border-signal-amber focus:shadow-[0_0_0_3px_var(--signal-amber-dim)]"
                 maxLength={4000}
               />
 
               <div className="flex gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <ObsidianButton
+                  variant="primary"
                   onClick={run}
                   disabled={phase === "running" || !input.trim()}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all"
-                  style={{
-                    background: phase === "running" ? "var(--surface-2)" : currentMode.color,
-                    color: phase === "running" ? "var(--text-tertiary)" : "#000",
-                    opacity: phase === "running" || !input.trim() ? 0.5 : 1,
-                  }}
+                  className="flex-1"
                 >
                   {phase === "running" ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
                   {phase === "running" ? currentStage || "Analyzing..." : `Run ${currentMode.label}`}
-                </motion.button>
+                </ObsidianButton>
                 {phase !== "idle" && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <ObsidianButton
+                    variant="secondary"
+                    size="sm"
                     onClick={reset}
-                    className="px-4 py-3 rounded-xl text-sm font-medium transition-all"
-                    style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
                   >
                     <RotateCcw size={16} />
-                  </motion.button>
+                  </ObsidianButton>
                 )}
               </div>
             </div>
@@ -253,11 +237,10 @@ export default function IdeaLabPage() {
 
           <motion.div
             {...fadeInUp}
-            className="rounded-xl border overflow-hidden"
-            style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}
+            className="rounded-xl border overflow-hidden bg-void-1 border-void-3"
           >
-            <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: "var(--border-subtle)" }}>
-              <span className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Output</span>
+            <div className="px-5 py-3 border-b border-void-3 flex items-center justify-between">
+              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Output</span>
               {phase === "running" && <Loader2 size={14} className="animate-spin" style={{ color: currentMode.color }} />}
             </div>
             <div className="p-5">
@@ -300,15 +283,15 @@ export default function IdeaLabPage() {
                     className="space-y-4"
                   >
                     {score != null && (
-                      <div className="flex items-center gap-5 p-5 rounded-xl" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+                      <div className="flex items-center gap-5 p-5 rounded-xl bg-void-2 border border-void-3">
                         <ScoreRing value={score} size={80} stroke={7} label={currentMode.label} color={score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)"} />
                         <div className="flex-1">
-                          <p className="eyebrow mb-1" style={{ color: "var(--text-tertiary)" }}>Signal Score</p>
-                          <p className="text-3xl font-bold text-mono" style={{ color: score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)" }}>
+                          <p className="text-xs font-medium tracking-[0.12em] uppercase mb-1" style={{ color: "var(--text-tertiary)" }}>Signal Score</p>
+                          <p className="text-3xl font-bold font-mono" style={{ color: score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)" }}>
                             {score}<span className="text-sm font-normal" style={{ color: "var(--text-tertiary)" }}>/100</span>
                           </p>
                           {verdict && (
-                            <span className="eyebrow mt-2 inline-block px-3 py-1 rounded-full" style={{
+                            <span className="text-xs font-medium tracking-[0.12em] uppercase mt-2 inline-block px-3 py-1 rounded-full" style={{
                               background: verdict === "GO" ? "var(--color-success-soft)" : verdict === "NO-GO" ? "var(--color-danger-soft)" : "var(--color-warning-soft)",
                               color: verdict === "GO" ? "var(--color-success)" : verdict === "NO-GO" ? "var(--color-danger)" : "var(--color-warning)",
                             }}>
@@ -327,7 +310,7 @@ export default function IdeaLabPage() {
 
                     {redFlags.length > 0 && (
                       <div className="space-y-2">
-                        <p className="eyebrow" style={{ color: "var(--color-danger)" }}>Red Flags</p>
+                        <p className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--color-danger)" }}>Red Flags</p>
                         {redFlags.slice(0, 3).map((flag, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
                             <AlertTriangle size={12} className="mt-0.5 shrink-0" style={{ color: "var(--color-danger)" }} />
@@ -339,10 +322,10 @@ export default function IdeaLabPage() {
 
                     {nextActions.length > 0 && (
                       <div className="space-y-2">
-                        <p className="eyebrow" style={{ color: "var(--accent-cyan)" }}>Next Actions</p>
+                        <p className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--signal-amber)" }}>Next Actions</p>
                         {nextActions.slice(0, 3).map((action, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
-                            <ArrowRight size={12} className="mt-0.5 shrink-0" style={{ color: "var(--accent-cyan)" }} />
+                            <ArrowRight size={12} className="mt-0.5 shrink-0" style={{ color: "var(--signal-amber)" }} />
                             {action}
                           </div>
                         ))}
@@ -350,25 +333,23 @@ export default function IdeaLabPage() {
                     )}
 
                     {autoSaved && savedReportId && (
-                      <div className="flex gap-2 pt-3 border-t" style={{ borderColor: "var(--border-subtle)" }}>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                      <div className="flex gap-2 pt-3 border-t border-void-3">
+                        <ObsidianButton
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1"
                           onClick={() => navigate(`/app/reports/${savedReportId}`)}
-                          className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium"
-                          style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
                         >
                           <ArrowUpRight size={12} /> View Full Report
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                        </ObsidianButton>
+                        <ObsidianButton
+                          variant="primary"
+                          size="sm"
+                          className="flex-1"
                           onClick={() => { setMode("reality"); reset(); }}
-                          className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium"
-                          style={{ background: "var(--color-warning-soft)", border: "1px solid var(--color-warning)", color: "var(--color-warning)" }}
                         >
                           <Terminal size={12} /> Stress-Test
-                        </motion.button>
+                        </ObsidianButton>
                       </div>
                     )}
                   </motion.div>
@@ -385,15 +366,14 @@ export default function IdeaLabPage() {
                     <AlertTriangle size={32} className="mb-4" style={{ color: "var(--color-danger)" }} />
                     <p className="text-sm font-medium mb-1" style={{ color: "var(--color-danger)" }}>Analysis failed</p>
                     <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{error}</p>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <ObsidianButton
+                      variant="secondary"
+                      size="sm"
                       onClick={reset}
-                      className="mt-4 px-4 py-2 rounded-lg text-xs font-medium"
-                      style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
+                      className="mt-4"
                     >
                       Try Again
-                    </motion.button>
+                    </ObsidianButton>
                   </motion.div>
                 )}
               </AnimatePresence>

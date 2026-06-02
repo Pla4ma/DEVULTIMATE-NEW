@@ -8,6 +8,7 @@ import { saveReport, getTasks, getReports } from "@/lib/repository";
 import { generateTasksFromReport } from "@/lib/task-generator";
 import { useProgression } from "@/lib/progression-context";
 import { useToast } from "@/hooks/use-toast";
+import { ObsidianButton } from "@/components/ObsidianButton";
 import {
   Map, CheckSquare, Wand2, Loader2, RotateCcw, CheckCircle, Zap,
   ArrowRight, AlertTriangle, Clock, ArrowUpRight, Plus, Filter,
@@ -179,7 +180,7 @@ export default function BuildPlannerPage() {
     <AppShell>
       <div className="p-4 sm:p-6 max-w-6xl mx-auto">
         <motion.div {...fadeInUp} className="mb-6">
-          <h1 className="text-2xl font-bold text-display tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Build Planner</h1>
+          <h1 className="text-2xl font-bold tracking-tight mb-2 text-display" style={{ color: "var(--text-primary)" }}>Build Planner</h1>
           <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Plan MVP scope and track execution</p>
         </motion.div>
 
@@ -188,16 +189,14 @@ export default function BuildPlannerPage() {
             const Icon = m.icon;
             const active = mode === m.key;
             return (
-              <motion.button
+              <button
                 key={m.key}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={() => { setMode(m.key); if (m.key === "tasks") loadTasks(); }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
                 style={{
-                  background: active ? `${m.color}15` : "var(--surface-2)",
-                  border: `1px solid ${active ? m.color : "var(--border-default)"}`,
-                  color: active ? m.color : "var(--text-secondary)",
+                  background: active ? `rgba(255,159,28,0.12)` : "var(--surface-2)",
+                  border: `1px solid ${active ? "var(--signal-amber)" : "var(--border-default)"}`,
+                  color: active ? "var(--signal-amber)" : "var(--text-secondary)",
                 }}
               >
                 <Icon size={16} />
@@ -207,16 +206,16 @@ export default function BuildPlannerPage() {
                     {taskStats.critical}
                   </span>
                 )}
-              </motion.button>
+              </button>
             );
           })}
         </motion.div>
 
         {mode === "mvp" ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <motion.div {...fadeInUp} className="rounded-xl border overflow-hidden" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}>
+            <motion.div {...fadeInUp} className="rounded-xl border overflow-hidden" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
               <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-                <span className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Input</span>
+                <span className="eyebrow" style={{ color: "var(--void-1)" }}>Input</span>
               </div>
               <div className="p-5 space-y-4">
                 <textarea
@@ -226,59 +225,55 @@ export default function BuildPlannerPage() {
                   rows={8}
                   disabled={phase === "running"}
                   className="w-full px-4 py-3 rounded-lg text-sm resize-none outline-none"
-                  style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}
+                  style={{ background: "var(--void-0)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}
                   maxLength={4000}
                 />
                 <div className="flex gap-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <ObsidianButton
+                    variant="primary"
                     onClick={run}
                     disabled={phase === "running" || !input.trim()}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold"
-                    style={{ background: "var(--accent-cyan)", color: "var(--surface-0)", opacity: phase === "running" || !input.trim() ? 0.5 : 1 }}
+                    className="flex-1"
                   >
                     {phase === "running" ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
                     {phase === "running" ? "Generating plan..." : "Generate MVP Plan"}
-                  </motion.button>
+                  </ObsidianButton>
                   {phase !== "idle" && (
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={reset} className="px-4 py-3 rounded-xl text-sm font-medium" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}>
-                      <RotateCcw size={16} />
-                    </motion.button>
+                    <ObsidianButton variant="secondary" onClick={reset}><RotateCcw size={16} /></ObsidianButton>
                   )}
                 </div>
               </div>
             </motion.div>
 
-            <motion.div {...fadeInUp} className="rounded-xl border overflow-hidden" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}>
+            <motion.div {...fadeInUp} className="rounded-xl border overflow-hidden" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
               <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-                <span className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Output</span>
+                <span className="eyebrow" style={{ color: "var(--void-1)" }}>Output</span>
               </div>
               <div className="p-5">
                 <AnimatePresence mode="wait">
                   {phase === "idle" && (
                     <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16 text-center">
-                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "var(--accent-cyan-soft)" }}>
-                        <Map size={28} style={{ color: "var(--accent-cyan)" }} />
+                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "var(--void-1)" }}>
+                        <Map size={28} style={{ color: "var(--signal-amber)" }} />
                       </div>
-                      <p className="text-sm font-medium mb-1" style={{ color: "var(--text-secondary)" }}>MVP Planner awaiting input</p>
-                      <p className="text-xs" style={{ color: "var(--text-quaternary)" }}>Describe your idea to generate a ruthless scope and build plan</p>
+                      <p className="text-sm font-medium mb-1" style={{ color: "var(--void-2)" }}>MVP Planner awaiting input</p>
+                      <p className="text-xs" style={{ color: "var(--void-1)" }}>Describe your idea to generate a ruthless scope and build plan</p>
                     </motion.div>
                   )}
 
                   {phase === "running" && (
                     <motion.div key="running" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16">
-                      <Loader2 size={32} className="animate-spin mb-4" style={{ color: "var(--accent-cyan)" }} />
-                      <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Generating your build plan...</p>
+                      <Loader2 size={32} className="animate-spin mb-4" style={{ color: "var(--signal-amber)" }} />
+                      <p className="text-sm" style={{ color: "var(--void-1)" }}>Generating your build plan...</p>
                     </motion.div>
                   )}
 
                   {phase === "done" && result && (
                     <motion.div key="done" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
                       {northStar && (
-                        <div className="p-5 rounded-xl" style={{ background: "var(--signal-soft)", border: "1px solid var(--signal)" }}>
-                          <p className="eyebrow mb-2" style={{ color: "var(--signal)" }}>North Star Metric</p>
-                          <p className="text-base font-semibold text-display" style={{ color: "var(--text-primary)" }}>{northStar}</p>
+                        <div className="p-5 rounded-xl" style={{ background: "rgba(255,159,28,0.06)", border: "1px solid var(--signal-amber)" }}>
+                          <p className="eyebrow mb-2" style={{ color: "var(--signal-amber)" }}>North Star Metric</p>
+                          <p className="text-base font-semibold" style={{ color: "var(--void-3)" }}>{northStar}</p>
                         </div>
                       )}
 
@@ -289,7 +284,7 @@ export default function BuildPlannerPage() {
                             {buildNow.map((item, i) => (
                               <div key={i} className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
                                 <CheckCircle size={14} className="mt-0.5 shrink-0" style={{ color: "var(--color-success)" }} />
-                                <span className="text-sm" style={{ color: "var(--text-primary)" }}>{item}</span>
+                                <span className="text-sm" style={{ color: "var(--void-3)" }}>{item}</span>
                               </div>
                             ))}
                           </div>
@@ -298,12 +293,12 @@ export default function BuildPlannerPage() {
 
                       {buildLater.length > 0 && (
                         <div>
-                          <p className="eyebrow mb-2" style={{ color: "var(--text-tertiary)" }}>Build Later</p>
+                          <p className="eyebrow mb-2" style={{ color: "var(--void-1)" }}>Build Later</p>
                           <div className="space-y-1.5">
                             {buildLater.map((item, i) => (
                               <div key={i} className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg opacity-60" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
-                                <Clock size={14} className="mt-0.5 shrink-0" style={{ color: "var(--text-quaternary)" }} />
-                                <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>{item}</span>
+                                <Clock size={14} className="mt-0.5 shrink-0" style={{ color: "var(--void-1)" }} />
+                                <span className="text-sm" style={{ color: "var(--void-1)" }}>{item}</span>
                               </div>
                             ))}
                           </div>
@@ -311,15 +306,9 @@ export default function BuildPlannerPage() {
                       )}
 
                       {savedReportId && (
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => navigate(`/app/reports/${savedReportId}`)}
-                          className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium"
-                          style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
-                        >
+                        <ObsidianButton variant="secondary" onClick={() => navigate(`/app/reports/${savedReportId}`)} className="w-full">
                           <ArrowUpRight size={12} /> View Full Report
-                        </motion.button>
+                        </ObsidianButton>
                       )}
                     </motion.div>
                   )}
@@ -328,10 +317,8 @@ export default function BuildPlannerPage() {
                     <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16 text-center">
                       <AlertTriangle size={32} className="mb-4" style={{ color: "var(--color-danger)" }} />
                       <p className="text-sm font-medium mb-1" style={{ color: "var(--color-danger)" }}>Failed to generate plan</p>
-                      <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{error}</p>
-                      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={reset} className="mt-4 px-4 py-2 rounded-lg text-xs font-medium" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}>
-                        Try Again
-                      </motion.button>
+                      <p className="text-xs" style={{ color: "var(--void-1)" }}>{error}</p>
+                      <ObsidianButton variant="secondary" onClick={reset} className="mt-4">Try Again</ObsidianButton>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -342,13 +329,13 @@ export default function BuildPlannerPage() {
           <motion.div {...fadeInUp} className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Total", value: taskStats.total, color: "var(--text-primary)" },
+                { label: "Total", value: taskStats.total, color: "var(--void-3)" },
                 { label: "Completed", value: taskStats.completed, color: "var(--color-success)" },
                 { label: "In Progress", value: taskStats.inProgress, color: "var(--color-warning)" },
                 { label: "Critical", value: taskStats.critical, color: "var(--color-danger)" },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-xl border p-4" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
-                  <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{stat.label}</p>
+                  <p className="text-xs" style={{ color: "var(--void-1)" }}>{stat.label}</p>
                   <p className="text-2xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}</p>
                 </div>
               ))}
@@ -359,7 +346,7 @@ export default function BuildPlannerPage() {
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as TaskStatus | "all")}
                 className="px-3 py-2 rounded-lg text-xs"
-                style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
+                style={{ background: "var(--void-0)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}
               >
                 <option value="all">All Status</option>
                 <option value="todo">To Do</option>
@@ -370,7 +357,7 @@ export default function BuildPlannerPage() {
                 value={filterPriority}
                 onChange={(e) => setFilterPriority(e.target.value as TaskPriority | "all")}
                 className="px-3 py-2 rounded-lg text-xs"
-                style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}
+                style={{ background: "var(--void-0)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}
               >
                 <option value="all">All Priority</option>
                 <option value="critical">Critical</option>
@@ -386,9 +373,9 @@ export default function BuildPlannerPage() {
               </div>
             ) : filteredTasks.length === 0 ? (
               <div className="text-center py-16">
-                <CheckSquare size={32} className="mx-auto mb-4" style={{ color: "var(--text-quaternary)" }} />
-                <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>No tasks found</p>
-                <p className="text-xs mt-1" style={{ color: "var(--text-quaternary)" }}>Run Product Doctor or MVP Planner to generate tasks</p>
+                <CheckSquare size={32} className="mx-auto mb-4" style={{ color: "var(--void-1)" }} />
+                <p className="text-sm" style={{ color: "var(--void-2)" }}>No tasks found</p>
+                <p className="text-xs mt-1" style={{ color: "var(--void-1)" }}>Run Product Doctor or MVP Planner to generate tasks</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -416,20 +403,20 @@ export default function BuildPlannerPage() {
                         {task.status === "completed" && <CheckCircle size={12} style={{ color: "var(--color-success)" }} />}
                       </button>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium" style={{ color: task.status === "completed" ? "var(--text-tertiary)" : "var(--text-primary)", textDecoration: task.status === "completed" ? "line-through" : "none" }}>
+                        <p className="text-sm font-medium" style={{ color: task.status === "completed" ? "var(--void-1)" : "var(--void-3)", textDecoration: task.status === "completed" ? "line-through" : "none" }}>
                           {task.title}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[10px] px-1.5 py-0.5 rounded" style={{
                             background: task.priority === "critical" ? "var(--color-danger-soft)" : task.priority === "high" ? "var(--color-warning-soft)" : "var(--surface-2)",
-                            color: task.priority === "critical" ? "var(--color-danger)" : task.priority === "high" ? "var(--color-warning)" : "var(--text-tertiary)",
+                            color: task.priority === "critical" ? "var(--color-danger)" : task.priority === "high" ? "var(--color-warning)" : "var(--void-1)",
                           }}>
                             {task.priority}
                           </span>
-                          <span className="text-[10px]" style={{ color: "var(--text-quaternary)" }}>{task.category}</span>
+                          <span className="text-[10px]" style={{ color: "var(--void-1)" }}>{task.category}</span>
                         </div>
                       </div>
-                      {expandedTask === task.id ? <ChevronUp size={14} style={{ color: "var(--text-tertiary)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-tertiary)" }} />}
+                      {expandedTask === task.id ? <ChevronUp size={14} style={{ color: "var(--void-1)" }} /> : <ChevronDown size={14} style={{ color: "var(--void-1)" }} />}
                     </div>
 
                     <AnimatePresence>
@@ -440,7 +427,7 @@ export default function BuildPlannerPage() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <p className="text-xs mt-3 pl-8" style={{ color: "var(--text-secondary)" }}>{task.detail}</p>
+                          <p className="text-xs mt-3 pl-8" style={{ color: "var(--void-2)" }}>{task.detail}</p>
                         </motion.div>
                       )}
                     </AnimatePresence>

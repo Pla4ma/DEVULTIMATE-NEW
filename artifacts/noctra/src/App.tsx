@@ -7,8 +7,6 @@ import { AuthProvider } from "@/lib/auth";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProgressionProvider } from "@/lib/progression-context";
-import { VoidCursor } from "@/components/VoidCursor";
-
 const LandingPage = lazy(() => import("@/pages/landing"));
 const PricingPage = lazy(() => import("@/pages/pricing"));
 const PrivacyPage = lazy(() => import("@/pages/privacy"));
@@ -138,7 +136,6 @@ function AppRoutes() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <VoidCursor />
       <AuthProvider>
         <ProgressionProvider>
           <TooltipProvider>

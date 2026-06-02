@@ -16,17 +16,13 @@ import { buildProductBrain, type ProductBrain } from "@/lib/product-brain";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { VoidButton } from "@/components/VoidButton";
-import { VoidCard } from "@/components/VoidCard";
-import { StarfieldCanvas } from "@/components/StarfieldCanvas";
+import { ObsidianButton } from "@/components/ObsidianButton";
 import {
   ArrowRight, FileText, CheckSquare, Zap, AlertTriangle,
   TrendingUp, TrendingDown, Minus, Brain, Target, Stethoscope,
   XCircle, CheckCircle, Shield,
   RotateCcw, ListChecks, RefreshCw, Sparkles, Upload,
 } from "lucide-react";
-
-const SignalTower = lazy(() => import("@/components/SignalTower"));
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -163,12 +159,8 @@ export default function CommandCenterPage() {
 
   return (
     <AppShell>
-      <StarfieldCanvas opacity={0.5} />
-      <Suspense fallback={null}>
-        <SignalTower status={towerStatus} activeRisks={redGates} />
-      </Suspense>
       <motion.div
-        className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6 relative z-10"
+        className="max-w-6xl mx-auto space-y-6"
         variants={staggerContainer}
         initial="initial"
         animate="animate"
@@ -183,22 +175,22 @@ export default function CommandCenterPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <VoidButton
+            <ObsidianButton
               variant="primary"
               onClick={() => navigate(ROUTES.codeHealth)}
             >
               <Stethoscope size={16} />
               {lastDoctor ? "Rescan Project" : "Run Product Doctor"}
-            </VoidButton>
+            </ObsidianButton>
             {!loading && (
-              <VoidButton
+              <ObsidianButton
                 variant="secondary"
                 onClick={handleRefresh}
                 disabled={refreshing}
               >
                 <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
                 <span className="hidden sm:inline">Refresh</span>
-              </VoidButton>
+              </ObsidianButton>
             )}
           </div>
         </motion.div>
@@ -224,9 +216,9 @@ export default function CommandCenterPage() {
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
                 className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5"
-                style={{ background: "var(--accent-cyan)", boxShadow: "var(--shadow-glow)" }}
+                style={{ background: "var(--teal)", boxShadow: "0 0 20px rgba(45,212,191,0.2)" }}
               >
-                <Zap size={24} className="text-black" />
+                  <Zap size={24} className="text-obsidian-0" />
               </motion.div>
               <h2 className="text-xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>
                 Upload your project. We'll tell you what blocks launch.
@@ -247,9 +239,9 @@ export default function CommandCenterPage() {
                 </div>
                 <p className="text-base font-semibold mb-2" style={{ color: "var(--text-primary)" }}>Run Launch Scan</p>
                 <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>Upload your repo ZIP. Get launch readiness, blockers, and fix tasks in under 2 minutes.</p>
-                <VoidButton variant="danger">
+                <ObsidianButton variant="primary">
                   <Upload size={16} /> Upload Project ZIP
-                </VoidButton>
+                </ObsidianButton>
               </div>
             </div>
           </motion.div>
@@ -330,7 +322,7 @@ export default function CommandCenterPage() {
                 style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)" }}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <Target size={14} style={{ color: "var(--accent-cyan)" }} />
+                  <Target size={14} style={{ color: "var(--teal)" }} />
                   <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Next Fix</p>
                 </div>
                 <p className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
@@ -339,14 +331,14 @@ export default function CommandCenterPage() {
                 <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
                   {smartNextAction.reason || "Start the scan → fix → rescan loop"}
                 </p>
-                <VoidButton
+                <ObsidianButton
                   variant="primary"
                   size="sm"
                   onClick={() => navigate(smartNextAction.href || "/app/code-health")}
                   className="mt-3"
                 >
                   Go <ArrowRight size={12} />
-                </VoidButton>
+                </ObsidianButton>
               </motion.div>
 
               <motion.div
@@ -370,27 +362,27 @@ export default function CommandCenterPage() {
             </motion.div>
 
             <motion.div variants={fadeInUp} className="flex flex-wrap gap-3">
-              <VoidButton
+              <ObsidianButton
                 variant="danger"
                 onClick={() => navigate("/app/code-health")}
               >
                 <RotateCcw size={16} />
                 {lastDoctor ? "Rescan & Recheck Score" : "Run Product Doctor"}
-              </VoidButton>
-              <VoidButton
+              </ObsidianButton>
+              <ObsidianButton
                 variant="secondary"
                 onClick={() => navigate("/app/build")}
               >
                 <ListChecks size={16} />
                 View All Tasks ({allTasks.length})
-              </VoidButton>
-              <VoidButton
+              </ObsidianButton>
+              <ObsidianButton
                 variant="secondary"
                 onClick={() => navigate("/app/brain")}
               >
                 <FileText size={16} />
                 Reports ({reports.length})
-              </VoidButton>
+              </ObsidianButton>
             </motion.div>
 
             {redGates.length > 0 && (
@@ -403,13 +395,13 @@ export default function CommandCenterPage() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold" style={{ color: "var(--color-danger)" }}>{redGates.length} blocker{redGates.length !== 1 ? "s" : ""} blocking launch</p>
-                    <VoidButton
+                    <ObsidianButton
                       variant="danger"
                       size="sm"
                       onClick={() => navigate("/app/code-health")}
                     >
                       Fix Now <ArrowRight size={12} />
-                    </VoidButton>
+                    </ObsidianButton>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-3">
                     {redGates.slice(0, 4).map((g, i) => (
@@ -429,7 +421,7 @@ export default function CommandCenterPage() {
                 style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)" }}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <Brain size={16} style={{ color: "var(--accent-magenta)" }} />
+                  <Brain size={16} style={{ color: "var(--teal)" }} />
                   <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Product Brain</p>
                 </div>
                 <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{brain.insights[0]?.title ?? "Synthesis available"}</p>
@@ -444,7 +436,7 @@ export default function CommandCenterPage() {
                 style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)" }}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <Sparkles size={16} style={{ color: "var(--accent-gold)" }} />
+                  <Sparkles size={16} style={{ color: "var(--teal)" }} />
                   <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Daily Briefing</p>
                 </div>
                 <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>{briefing.greeting}</p>

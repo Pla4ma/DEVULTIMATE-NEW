@@ -28,6 +28,7 @@ import {
   ClipboardList, Rocket, DollarSign, TrendingUp,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ObsidianButton } from "@/components/ObsidianButton";
 import { LinkProjectModal } from "./report-detail/LinkProjectModal";
 import { SCORE_COLOR, TOOL_ACCENT, type Report, type Project, type ToolAction } from "./report-detail/types";
 import { scoreLabel, buildContextFromReport, getPayloadData, sprintToMarkdown, promptPackToMarkdown } from "./report-detail/utils";
@@ -78,7 +79,7 @@ export default function ReportDetailPage() {
   }, [id]);
 
   const tool = report ? TOOL_BY_KEY[report.tool as keyof typeof TOOL_BY_KEY] : null;
-  const accentColor = TOOL_ACCENT[report?.tool ?? ""] ?? "var(--signal)";
+  const accentColor = TOOL_ACCENT[report?.tool ?? ""] ?? "var(--signal-amber)";
   const linkedProject = projects.find((p) => p.id === report?.project_id);
 
   async function handleDelete() {
@@ -178,7 +179,7 @@ export default function ReportDetailPage() {
       case "idea":
         return [
 { id: "gen-reality", label: "Generate Reality Report", description: "Reality-check every assumption in this idea", icon: Zap, color: "var(--color-warning)", busy: generatingAction === "reality" },
-      { id: "gen-swarm", label: "Generate Market Swarm Report", description: "Simulate market demand with AI personas", icon: Zap, color: "var(--signal)", busy: generatingAction === "swarm" },
+      { id: "gen-swarm", label: "Generate Market Swarm Report", description: "Simulate market demand with AI personas", icon: Zap, color: "var(--signal-amber)", busy: generatingAction === "swarm" },
       { id: "gen-mvp", label: "Generate MVP Report", description: "Plan your build based on this idea", icon: Rocket, color: "var(--accent-violet)", busy: generatingAction === "mvp" },
       { id: "gen-proof", label: "Generate Proof Report", description: "Validate assumptions with evidence", icon: Zap, color: "var(--color-success)", busy: generatingAction === "proof" },
         ];
@@ -197,7 +198,7 @@ export default function ReportDetailPage() {
         ];
       case "mvp":
         return [
-{ id: "gen-tasks", label: "Generate Tasks", description: "Break MVP plan into execution tasks", icon: ClipboardList, color: "var(--signal)", busy: generatingAction === "tasks" },
+{ id: "gen-tasks", label: "Generate Tasks", description: "Break MVP plan into execution tasks", icon: ClipboardList, color: "var(--signal-amber)", busy: generatingAction === "tasks" },
       { id: "gen-sprint", label: "Generate Sprint", description: "Turn tasks into a sprint plan", icon: Calendar, color: "var(--accent-violet)", busy: generatingAction === "tasks" },
       { id: "gen-prompt-pack", label: "Generate Prompt Pack", description: "Export Replit/Cursor/Windsurf prompts", icon: Package, color: "var(--accent-violet)", busy: generatingAction === "pack" },
           { id: "export-prd", label: "Export PRD", description: "Download a product requirements document", icon: FileText },
@@ -207,7 +208,7 @@ export default function ReportDetailPage() {
         return [
 { id: "gen-tasks", label: "Generate Fix Tasks", description: "Turn blockers into high-priority tasks", icon: ClipboardList, color: "var(--color-danger)", busy: generatingAction === "tasks" },
       { id: "gen-prompt-pack", label: "Generate Prompt Pack", description: "Export Replit/Cursor/Windsurf fix prompts", icon: Package, color: "var(--accent-violet)", busy: generatingAction === "pack" },
-          { id: "copy-doctor-prompt", label: "Copy Next Build Prompt", description: "Copy diagnostic prompt for Codex/Replit/Cursor", icon: Copy, color: "var(--signal)" },
+          { id: "copy-doctor-prompt", label: "Copy Next Build Prompt", description: "Copy diagnostic prompt for Codex/Replit/Cursor", icon: Copy, color: "var(--signal-amber)" },
           { id: "export-fix-plan", label: "Export Fix Plan", description: "Download a structured doctor fix plan", icon: FileText, color: "var(--color-danger)" },
 { id: "gen-launch-blockers", label: "Create Launch Blocker Tasks", description: "Generate tasks specifically for RED gates", icon: ClipboardList, color: "var(--color-danger)", busy: generatingAction === "tasks" },
       { id: "gen-launch", label: "Generate Launch Report", description: "Create launch readiness report", icon: Rocket, color: "var(--color-warning)", busy: generatingAction === "launch" },
@@ -417,7 +418,7 @@ export default function ReportDetailPage() {
   }, [report, reportsList]);
 
   if (loading) {
-    return (<AppShell><div className="flex items-center justify-center h-64"><Loader2 size={24} className="animate-spin" style={{ color: "var(--signal)" }} /></div></AppShell>);
+    return (<AppShell><div className="flex items-center justify-center h-64"><Loader2 size={24} className="animate-spin" style={{ color: "var(--signal-amber)" }} /></div></AppShell>);
   }
 
   if (error || !report) {
@@ -425,7 +426,7 @@ export default function ReportDetailPage() {
       <AppShell>
         <div className="p-6 max-w-4xl mx-auto">
           <EmptyState icon={<AlertTriangle size={24} />} title="Report not found" body={error || "This report does not exist or you don't have access."} />
-          <div className="flex justify-center mt-4"><NoctraButton variant="ghost" onClick={() => navigate(ROUTES.reports)}><ArrowLeft size={14} /> Back to Reports</NoctraButton></div>
+          <div className="flex justify-center mt-4"><ObsidianButton variant="ghost" onClick={() => navigate(ROUTES.reports)}><ArrowLeft size={14} /> Back to Reports</ObsidianButton></div>
         </div>
       </AppShell>
     );
@@ -454,10 +455,10 @@ export default function ReportDetailPage() {
           {action.busy ? <Loader2 size={12} className="animate-spin" style={{ color: action.color ?? accentColor }} /> : <action.icon size={12} style={{ color: action.color ?? accentColor }} />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>{action.label}</p>
-          <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>{action.description}</p>
+          <p className="text-xs font-medium" style={{ color: "var(--void-3)" }}>{action.label}</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--void-1)" }}>{action.description}</p>
         </div>
-        <ArrowRight size={11} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />
+        <ArrowRight size={11} style={{ color: "var(--void-1)", flexShrink: 0 }} />
       </button>
     );
   }
@@ -468,10 +469,10 @@ export default function ReportDetailPage() {
       <button key={na.href + na.title} onClick={() => navigate(na.href)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all hover:opacity-90" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
         {naTool ? <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${naTool.accent}18`, border: `1px solid ${naTool.accent}25` }}><naTool.icon size={12} style={{ color: naTool.accent }} /></div> : null}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>{na.title}</p>
-          <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>{na.description}</p>
+          <p className="text-xs font-medium" style={{ color: "var(--void-3)" }}>{na.title}</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--void-1)" }}>{na.description}</p>
         </div>
-        <ArrowRight size={11} style={{ color: "var(--text-tertiary)", flexShrink: 0 }} />
+        <ArrowRight size={11} style={{ color: "var(--void-1)", flexShrink: 0 }} />
       </button>
     );
   }
@@ -487,11 +488,11 @@ export default function ReportDetailPage() {
             {confirmDelete ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs" style={{ color: "var(--color-danger)" }}>Delete?</span>
-                <NoctraButton variant="ghost" onClick={handleDelete} disabled={deleting}>{deleting ? <Loader2 size={12} className="animate-spin" /> : "Yes, delete"}</NoctraButton>
-                <NoctraButton variant="ghost" onClick={() => setConfirmDelete(false)}>Cancel</NoctraButton>
+                <ObsidianButton variant="ghost" onClick={handleDelete} disabled={deleting}>{deleting ? <Loader2 size={12} className="animate-spin" /> : "Yes, delete"}</ObsidianButton>
+                <ObsidianButton variant="ghost" onClick={() => setConfirmDelete(false)}>Cancel</ObsidianButton>
               </div>
             ) : (
-              <NoctraButton variant="ghost" onClick={() => setConfirmDelete(true)}><Trash2 size={13} style={{ color: "var(--color-danger)" }} /><span style={{ color: "var(--color-danger)" }}>Delete</span></NoctraButton>
+              <ObsidianButton variant="ghost" onClick={() => setConfirmDelete(true)}><Trash2 size={13} style={{ color: "var(--color-danger)" }} /><span style={{ color: "var(--color-danger)" }}>Delete</span></ObsidianButton>
             )}
           </div>
         </div>
@@ -504,11 +505,11 @@ export default function ReportDetailPage() {
                 {tool ? <Badge style={{ background: `${tool.accent}18`, color: tool.accent }}>{tool.label}</Badge> : null}
                 {report.score != null ? <Badge style={{ background: `${SCORE_COLOR(report.score)}18`, color: SCORE_COLOR(report.score) }}>{scoreLabel(report.score)} — {report.score}/100</Badge> : null}
               </div>
-              <h1 className="text-xl font-bold text-display tracking-tight" style={{ color: "var(--text-primary)" }}>{report.title}</h1>
-              {report.summary ? <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>{report.summary}</p> : null}
-              <div className="flex items-center gap-3 mt-2 text-xs flex-wrap" style={{ color: "var(--text-tertiary)" }}>
+              <h1 className="text-xl font-bold tracking-tight" style={{ color: "var(--void-3)" }}>{report.title}</h1>
+              {report.summary ? <p className="text-sm mt-1" style={{ color: "var(--void-1)" }}>{report.summary}</p> : null}
+              <div className="flex items-center gap-3 mt-2 text-xs flex-wrap" style={{ color: "var(--void-1)" }}>
                 <span className="flex items-center gap-1"><Calendar size={11} />{new Date(report.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</span>
-                {linkedProject && report.project_id ? <button onClick={() => navigate(ROUTES.projectDetail(report.project_id!))} className="flex items-center gap-1 hover:opacity-80" style={{ color: "var(--signal)" }}><FolderOpen size={11} /> {linkedProject.name}</button> : null}
+                {linkedProject && report.project_id ? <button onClick={() => navigate(ROUTES.projectDetail(report.project_id!))} className="flex items-center gap-1 hover:opacity-80" style={{ color: "var(--signal-amber)" }}><FolderOpen size={11} /> {linkedProject.name}</button> : null}
               </div>
             </div>
           </div>
@@ -520,12 +521,12 @@ export default function ReportDetailPage() {
           <Panel>
             <div className="flex items-center gap-2 mb-3">
               <DollarSign size={12} style={{ color: "var(--color-success)" }} />
-              <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Monetization Intelligence</p>
+              <p className="eyebrow" style={{ color: "var(--void-1)" }}>Monetization Intelligence</p>
               <Badge style={{ background: `${SCORE_COLOR(monetization.monetizationScore)}18`, color: SCORE_COLOR(monetization.monetizationScore), marginLeft: "auto" }}>{monetization.monetizationScore}/100</Badge>
             </div>
-            <div className="space-y-3 text-xs" style={{ color: "var(--text-primary)" }}>
-              <div className="flex gap-4 flex-wrap"><div><span className="font-semibold" style={{ color: "var(--text-tertiary)" }}>Model:</span> {monetization.bestModel}</div><div><span className="font-semibold" style={{ color: "var(--text-tertiary)" }}>Strategy:</span> {monetization.paywallStrategy.slice(0, 80)}…</div></div>
-              <p className="italic" style={{ color: "var(--text-tertiary)" }}>{monetization.pricingRecommendation}</p>
+            <div className="space-y-3 text-xs" style={{ color: "var(--void-3)" }}>
+              <div className="flex gap-4 flex-wrap"><div><span className="font-semibold" style={{ color: "var(--void-1)" }}>Model:</span> {monetization.bestModel}</div><div><span className="font-semibold" style={{ color: "var(--void-1)" }}>Strategy:</span> {monetization.paywallStrategy.slice(0, 80)}…</div></div>
+              <p className="italic" style={{ color: "var(--void-1)" }}>{monetization.pricingRecommendation}</p>
             </div>
           </Panel>
         ) : null}
@@ -533,41 +534,41 @@ export default function ReportDetailPage() {
         {retention ? (
           <Panel>
             <div className="flex items-center gap-2 mb-3">
-              <TrendingUp size={12} style={{ color: "var(--signal)" }} />
-              <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Retention Intelligence</p>
+              <TrendingUp size={12} style={{ color: "var(--signal-amber)" }} />
+              <p className="eyebrow" style={{ color: "var(--void-1)" }}>Retention Intelligence</p>
               <Badge style={{ background: `${SCORE_COLOR(retention.retentionScore)}18`, color: SCORE_COLOR(retention.retentionScore), marginLeft: "auto" }}>{retention.retentionScore}/100</Badge>
             </div>
-            <div className="space-y-2 text-xs" style={{ color: "var(--text-primary)" }}>
-              <p><span className="font-semibold" style={{ color: "var(--text-tertiary)" }}>Habit:</span> {retention.coreHabit}</p>
-              <p><span className="font-semibold" style={{ color: "var(--text-tertiary)" }}>Weakness:</span> {retention.loopWeakness.slice(0, 120)}</p>
+            <div className="space-y-2 text-xs" style={{ color: "var(--void-3)" }}>
+              <p><span className="font-semibold" style={{ color: "var(--void-1)" }}>Habit:</span> {retention.coreHabit}</p>
+              <p><span className="font-semibold" style={{ color: "var(--void-1)" }}>Weakness:</span> {retention.loopWeakness.slice(0, 120)}</p>
             </div>
           </Panel>
         ) : null}
 
         {continueWorkflowActions.length + workflowNextActions.length > 0 ? (
           <Panel>
-            <div className="flex items-center gap-2 mb-3"><Rocket size={12} style={{ color: accentColor }} /><p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Continue Workflow</p></div>
+            <div className="flex items-center gap-2 mb-3"><Rocket size={12} style={{ color: accentColor }} /><p className="eyebrow" style={{ color: "var(--void-1)" }}>Continue Workflow</p></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{continueWorkflowActions.map(renderActionButton)}{workflowNextActions.map(renderNextActionButton)}</div>
           </Panel>
         ) : null}
 
         {createExecutionActions.length + executionNextActions.length > 0 ? (
           <Panel>
-            <div className="flex items-center gap-2 mb-3"><Zap size={12} style={{ color: accentColor }} /><p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Create Execution</p></div>
+            <div className="flex items-center gap-2 mb-3"><Zap size={12} style={{ color: accentColor }} /><p className="eyebrow" style={{ color: "var(--void-1)" }}>Create Execution</p></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{createExecutionActions.map(renderActionButton)}{executionNextActions.map(renderNextActionButton)}</div>
           </Panel>
         ) : null}
 
         <Panel>
-          <div className="flex items-center gap-2 mb-3"><Download size={12} style={{ color: "var(--text-tertiary)" }} /><p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Export</p></div>
+          <div className="flex items-center gap-2 mb-3"><Download size={12} style={{ color: "var(--void-1)" }} /><p className="eyebrow" style={{ color: "var(--void-1)" }}>Export</p></div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button onClick={handleCopySummary} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: summaryCopied ? "var(--color-success-soft)" : "var(--surface-2)", border: `1px solid ${summaryCopied ? "var(--color-success)" : "var(--border-default)"}`, color: summaryCopied ? "var(--color-success)" : "var(--text-primary)" }}>
+            <button onClick={handleCopySummary} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: summaryCopied ? "var(--color-success-soft)" : "var(--surface-2)", border: `1px solid ${summaryCopied ? "var(--color-success)" : "var(--border-default)"}`, color: summaryCopied ? "var(--color-success)" : "var(--void-3)" }}>
               {summaryCopied ? <CheckCheck size={15} /> : <Copy size={15} />}{summaryCopied ? "Copied!" : "Copy Summary"}
             </button>
-            <button onClick={handleDownloadMD} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}><Download size={15} /> Download MD</button>
-            <button onClick={handleDownloadJSON} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}><FileText size={15} /> Download JSON</button>
+            <button onClick={handleDownloadMD} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}><Download size={15} /> Download MD</button>
+            <button onClick={handleDownloadJSON} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}><FileText size={15} /> Download JSON</button>
             {exportShareActions.map((action) => (
-              <button key={action.id} onClick={() => handleToolAction(action.id)} disabled={action.busy} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80 disabled:opacity-50" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}>
+              <button key={action.id} onClick={() => handleToolAction(action.id)} disabled={action.busy} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80 disabled:opacity-50" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}>
                 {action.busy ? <Loader2 size={15} className="animate-spin" /> : <action.icon size={15} />}{action.label}
               </button>
             ))}
@@ -575,15 +576,15 @@ export default function ReportDetailPage() {
         </Panel>
 
         <Panel>
-          <div className="flex items-center gap-2 mb-3"><Link2 size={12} style={{ color: "var(--text-tertiary)" }} /><p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Manage</p></div>
+          <div className="flex items-center gap-2 mb-3"><Link2 size={12} style={{ color: "var(--void-1)" }} /><p className="eyebrow" style={{ color: "var(--void-1)" }}>Manage</p></div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button onClick={() => setShowLinkModal(true)} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: linkedProject ? "var(--signal-soft)" : "var(--surface-2)", border: `1px solid ${linkedProject ? "var(--signal-soft)" : "var(--border-default)"}`, color: linkedProject ? "var(--signal)" : "var(--text-primary)" }}><Link2 size={15} />{linkedProject ? "Relink" : "Link Project"}</button>
+            <button onClick={() => setShowLinkModal(true)} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: linkedProject ? "rgba(255,159,28,0.06)" : "var(--surface-2)", border: `1px solid ${linkedProject ? "var(--signal-amber)" : "var(--border-default)"}`, color: linkedProject ? "var(--signal-amber)" : "var(--void-3)" }}><Link2 size={15} />{linkedProject ? "Relink" : "Link Project"}</button>
             {!report.project_id ? (
               <button onClick={handleCreateProject} disabled={creatingProject} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80 disabled:opacity-50" style={{ background: "var(--color-success-soft)", border: "1px solid var(--color-success-soft)", color: "var(--color-success)" }}>
                 {creatingProject ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}{creatingProject ? "Creating…" : "New Project"}
               </button>
             ) : (
-              <button onClick={() => report.project_id && navigate(ROUTES.projectDetail(report.project_id))} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}><FolderOpen size={15} /> View Project</button>
+              <button onClick={() => report.project_id && navigate(ROUTES.projectDetail(report.project_id))} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}><FolderOpen size={15} /> View Project</button>
             )}
             <button onClick={() => setConfirmDelete(true)} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: "var(--color-danger-soft)", border: "1px solid var(--color-danger-soft)", color: "var(--color-danger)" }}><Trash2 size={15} /> Delete</button>
             {manageNextActions.map(renderNextActionButton)}

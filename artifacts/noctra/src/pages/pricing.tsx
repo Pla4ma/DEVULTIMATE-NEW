@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { Check, X, ChevronDown } from "lucide-react";
 import { Logo, LogoMark } from "@/components/Logo";
-import { StarfieldCanvas } from "@/components/StarfieldCanvas";
-import { VoidButton } from "@/components/VoidButton";
-import { VoidCard } from "@/components/VoidCard";
-import { Appear } from "@/components/Appear";
+import { ObsidianButton } from "@/components/ObsidianButton";
+import { ObsidianCard } from "@/components/ObsidianCard";
 
 const plans = [
   {
@@ -119,46 +118,36 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-void-0 relative">
-      <StarfieldCanvas opacity={0.3} />
-
-      <header className="sticky top-0 z-50 border-b border-void-3 bg-void-0/80 backdrop-blur-xl">
+    <div className="min-h-screen bg-obsidian-0">
+      <header className="sticky top-0 z-50 border-b border-border-default bg-obsidian-0/90">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")}><Logo size={28} /></button>
           <button onClick={() => navigate("/")} className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Back to home</button>
         </div>
       </header>
 
-      <div className="py-20 px-4 sm:px-6 text-center relative overflow-hidden border-b border-void-3">
-        <Appear>
-          <p className="text-xs font-medium tracking-[0.12em] uppercase mb-4" style={{ color: "var(--signal-amber)" }}>Pricing</p>
-        </Appear>
-        <Appear delay={0.1}>
-          <h1 className="font-bold tracking-tight mb-4" style={{ color: "var(--text-primary)", fontSize: "clamp(2.2rem, 4.5vw, 3.4rem)" }}>Pick your altitude.</h1>
-        </Appear>
-        <Appear delay={0.2}>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: "var(--text-secondary)" }}>Every plan includes the full readiness loop. Scale scans and seats as you ship more.</p>
-        </Appear>
+      <div className="py-20 px-4 sm:px-6 text-center border-b border-border-default">
+        <p className="eyebrow mb-4 text-signal">Pricing</p>
+        <h1 className="font-bold tracking-tight mb-4 text-text-primary" style={{ fontSize: "clamp(2.2rem, 4.5vw, 3.4rem)" }}>Pick your altitude.</h1>
+        <p className="text-lg max-w-2xl mx-auto text-text-secondary">Every plan includes the full readiness loop. Scale scans and seats as you ship more.</p>
 
-        <Appear delay={0.3}>
-          <div className="mt-9 inline-flex items-center gap-3 p-1.5 rounded-full bg-void-2 border border-void-3">
-            <button
-              onClick={() => setBillingCycle("monthly")}
-              className="text-sm px-4 py-1.5 rounded-full transition-all"
-              style={{ background: billingCycle === "monthly" ? "var(--signal-amber)" : "transparent", color: billingCycle === "monthly" ? "var(--void-0)" : "var(--text-tertiary)", fontWeight: billingCycle === "monthly" ? 600 : 400 }}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingCycle("yearly")}
-              className="text-sm px-4 py-1.5 rounded-full transition-all inline-flex items-center gap-2"
-              style={{ background: billingCycle === "yearly" ? "var(--signal-amber)" : "transparent", color: billingCycle === "yearly" ? "var(--void-0)" : "var(--text-tertiary)", fontWeight: billingCycle === "yearly" ? 600 : 400 }}
-            >
-              Yearly
-              <span className="text-mono text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: billingCycle === "yearly" ? "var(--void-0)" : "var(--color-success-soft)", color: billingCycle === "yearly" ? "var(--signal-amber)" : "var(--color-success)" }}>-20%</span>
-            </button>
-          </div>
-        </Appear>
+        <div className="mt-9 inline-flex items-center gap-3 p-1.5 rounded-full bg-obsidian-2 border border-border-default">
+          <button
+            onClick={() => setBillingCycle("monthly")}
+            className="text-sm px-4 py-1.5 rounded-full transition-all"
+            style={{ background: billingCycle === "monthly" ? "var(--signal)" : "transparent", color: billingCycle === "monthly" ? "var(--obsidian-0)" : "var(--text-tertiary)", fontWeight: billingCycle === "monthly" ? 600 : 400 }}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingCycle("yearly")}
+            className="text-sm px-4 py-1.5 rounded-full transition-all inline-flex items-center gap-2"
+            style={{ background: billingCycle === "yearly" ? "var(--signal)" : "transparent", color: billingCycle === "yearly" ? "var(--obsidian-0)" : "var(--text-tertiary)", fontWeight: billingCycle === "yearly" ? 600 : 400 }}
+          >
+            Yearly
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: billingCycle === "yearly" ? "var(--obsidian-0)" : "rgba(52,211,153,0.12)", color: billingCycle === "yearly" ? "var(--signal)" : "var(--color-success)" }}>-20%</span>
+          </button>
+        </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 relative z-10">
@@ -179,9 +168,8 @@ export default function PricingPage() {
               whileHover={{ y: -6 }}
               className="relative"
             >
-              <VoidCard
-                featured={plan.popular}
-                className="h-full"
+              <ObsidianCard
+                className={cn("h-full", plan.popular && "border-signal/30")}
                 hover={true}
               >
                 {plan.popular && (
@@ -203,13 +191,13 @@ export default function PricingPage() {
                   )}
                 </div>
 
-                <VoidButton
+                <ObsidianButton
                   variant={plan.popular ? "primary" : "secondary"}
                   className="w-full mb-6"
                   onClick={() => handleCTA(plan.planId)}
                 >
                   {plan.cta}
-                </VoidButton>
+                </ObsidianButton>
 
                 <div className="space-y-3">
                   {plan.features.map((feature) => (
@@ -225,7 +213,7 @@ export default function PricingPage() {
                     </div>
                   ))}
                 </div>
-              </VoidCard>
+              </ObsidianCard>
             </motion.div>
             );
           })}
@@ -326,13 +314,13 @@ export default function PricingPage() {
           <div className="flex justify-center mb-5"><LogoMark size={40} animated /></div>
           <h2 className="text-2xl sm:text-3xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>Still charting your launch?</h2>
           <p className="text-lg mb-8 max-w-xl mx-auto" style={{ color: "var(--text-secondary)" }}>Tell us what you're building and we'll help you find the right altitude.</p>
-          <VoidButton
+          <ObsidianButton
             variant="primary"
             size="lg"
             onClick={() => { window.location.href = "mailto:sales@noctra.app"; }}
           >
             Contact Sales
-          </VoidButton>
+          </ObsidianButton>
         </div>
       </div>
     </div>

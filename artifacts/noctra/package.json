@@ -90,6 +90,8 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@types/three": "^0.184.1",
+    "three": "^0.184.0",
     "zustand": "^5.0.13"
   }
 }

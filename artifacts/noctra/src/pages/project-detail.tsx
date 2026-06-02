@@ -20,6 +20,7 @@ import { downloadMarkdown, copyText } from "@/lib/export";
 import { analyzeCodebaseAlignment } from "@/lib/codebase-alignment";
 import type { ReportSummary } from "@/lib/report-utils";
 import { useToast } from "@/hooks/use-toast";
+import { ObsidianButton } from "@/components/ObsidianButton";
 import {
   ArrowLeft, Trash2, Edit2, Loader2, Calendar,
   FolderOpen, AlertTriangle, Save, X,
@@ -264,7 +265,7 @@ export default function ProjectDetailPage() {
   if (loading) return (
     <AppShell>
       <div className="flex items-center justify-center h-64">
-        <Loader2 size={24} className="animate-spin" style={{ color: "var(--signal)" }} />
+        <Loader2 size={24} className="animate-spin" style={{ color: "var(--signal-amber)" }} />
       </div>
     </AppShell>
   );
@@ -274,7 +275,7 @@ export default function ProjectDetailPage() {
       <div className="p-6 max-w-4xl mx-auto">
         <EmptyState icon={<AlertTriangle size={24} />} title="Project not found" body={error || "This project does not exist."} />
         <div className="flex justify-center mt-4">
-          <NoctraButton variant="ghost" onClick={() => navigate(ROUTES.projects)}><ArrowLeft size={14} /> Back to Projects</NoctraButton>
+          <ObsidianButton variant="ghost" onClick={() => navigate(ROUTES.projects)}><ArrowLeft size={14} /> Back to Projects</ObsidianButton>
         </div>
       </div>
     </AppShell>
@@ -313,18 +314,18 @@ export default function ProjectDetailPage() {
             <ArrowLeft size={14} /> All Projects
           </button>
           <div className="flex items-center gap-2">
-            {editing ? null : <NoctraButton variant="ghost" onClick={() => setEditing(true)}><Edit2 size={13} /> Edit</NoctraButton>}
+            {editing ? null : <ObsidianButton variant="ghost" onClick={() => setEditing(true)}><Edit2 size={13} /> Edit</ObsidianButton>}
             {confirmDelete ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs" style={{ color: "var(--color-danger)" }}>Delete project?</span>
-                <NoctraButton variant="ghost" onClick={handleDelete} disabled={deleting}>{deleting ? <Loader2 size={12} className="animate-spin" /> : "Yes, delete"}</NoctraButton>
-                <NoctraButton variant="ghost" onClick={() => setConfirmDelete(false)}>Cancel</NoctraButton>
+                <ObsidianButton variant="ghost" onClick={handleDelete} disabled={deleting}>{deleting ? <Loader2 size={12} className="animate-spin" /> : "Yes, delete"}</ObsidianButton>
+                <ObsidianButton variant="ghost" onClick={() => setConfirmDelete(false)}>Cancel</ObsidianButton>
               </div>
             ) : (
-              <NoctraButton variant="ghost" onClick={() => setConfirmDelete(true)}>
+              <ObsidianButton variant="ghost" onClick={() => setConfirmDelete(true)}>
                 <Trash2 size={13} style={{ color: "var(--color-danger)" }} />
                 <span style={{ color: "var(--color-danger)" }}>Delete</span>
-              </NoctraButton>
+              </ObsidianButton>
             )}
           </div>
         </div>
@@ -334,26 +335,26 @@ export default function ProjectDetailPage() {
           <Panel>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-tertiary)" }}>Project Name</label>
-                <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+                <label className="block text-xs font-medium mb-1" style={{ color: "var(--void-1)" }}>Project Name</label>
+                <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "var(--void-0)", border: "1px solid var(--border-default)", color: "var(--void-3)" }} />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-tertiary)" }}>Core Idea</label>
-                <textarea value={editIdea} onChange={(e) => setEditIdea(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg text-sm resize-none outline-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+                <label className="block text-xs font-medium mb-1" style={{ color: "var(--void-1)" }}>Core Idea</label>
+                <textarea value={editIdea} onChange={(e) => setEditIdea(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg text-sm resize-none outline-none" style={{ background: "var(--void-0)", border: "1px solid var(--border-default)", color: "var(--void-3)" }} />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-tertiary)" }}>Stage</label>
+                <label className="block text-xs font-medium mb-1" style={{ color: "var(--void-1)" }}>Stage</label>
                 <div className="flex gap-2 flex-wrap">
                   {STAGES.map((s) => (
-                    <button key={s} onClick={() => setEditStage(s)} className="px-3 py-1 rounded-full text-xs font-medium capitalize" style={{ background: editStage === s ? `${STAGE_COLORS[s]}20` : "var(--surface-2)", border: `1px solid ${editStage === s ? STAGE_COLORS[s] : "var(--border-default)"}`, color: editStage === s ? STAGE_COLORS[s] : "var(--text-tertiary)" }}>
+                    <button key={s} onClick={() => setEditStage(s)} className="px-3 py-1 rounded-full text-xs font-medium capitalize" style={{ background: editStage === s ? `${STAGE_COLORS[s]}20` : "var(--surface-2)", border: `1px solid ${editStage === s ? STAGE_COLORS[s] : "var(--border-default)"}`, color: editStage === s ? STAGE_COLORS[s] : "var(--void-1)" }}>
                       {s}
                     </button>
                   ))}
                 </div>
               </div>
               <div className="flex gap-2 pt-1">
-                <NoctraButton onClick={handleSave} disabled={saving}>{saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save</NoctraButton>
-                <NoctraButton variant="ghost" onClick={() => setEditing(false)}><X size={12} /> Cancel</NoctraButton>
+                <ObsidianButton variant="primary" onClick={handleSave} disabled={saving}>{saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save</ObsidianButton>
+                <ObsidianButton variant="ghost" onClick={() => setEditing(false)}><X size={12} /> Cancel</ObsidianButton>
               </div>
             </div>
           </Panel>
@@ -374,21 +375,21 @@ export default function ProjectDetailPage() {
                   <Badge style={{ background: `${stageColor}18`, color: stageColor }}>{project.stage ?? "idea"}</Badge>
                   {project.status ? <Badge>{project.status}</Badge> : null}
                 </div>
-                <h1 className="text-xl font-bold text-display tracking-tight" style={{ color: "var(--text-primary)" }}>{project.name}</h1>
-                {project.idea ? <p className="text-sm mt-1 line-clamp-2" style={{ color: "var(--text-tertiary)" }}>{project.idea}</p> : null}
-                <p className="text-xs mt-2 flex items-center gap-1" style={{ color: "var(--text-quaternary)" }}>
+                <h1 className="text-xl font-bold tracking-tight" style={{ color: "var(--void-3)" }}>{project.name}</h1>
+                {project.idea ? <p className="text-sm mt-1 line-clamp-2" style={{ color: "var(--void-1)" }}>{project.idea}</p> : null}
+                <p className="text-xs mt-2 flex items-center gap-1" style={{ color: "var(--void-1)" }}>
                   <Calendar size={11} /> Created {new Date(project.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                 </p>
               </div>
               <div className="flex gap-5 text-center shrink-0">
                 {[
-                  { label: "Reports", value: reports.length, color: "var(--accent-violet)" },
+                  { label: "Reports", value: reports.length, color: "var(--signal-amber)" },
                   { label: "Tasks", value: tasks.length, color: "var(--color-success)" },
-                  { label: "Done", value: completedTasks, color: "var(--signal)" },
+                  { label: "Done", value: completedTasks, color: "var(--signal-amber)" },
                 ].map(({ label, value, color }) => (
                   <div key={label}>
                     <p className="text-xl font-bold text-mono" style={{ color }}>{value}</p>
-                    <p className="eyebrow mt-0.5" style={{ color: "var(--text-tertiary)" }}>{label}</p>
+                    <p className="eyebrow mt-0.5" style={{ color: "var(--void-1)" }}>{label}</p>
                   </div>
                 ))}
               </div>
@@ -399,9 +400,9 @@ export default function ProjectDetailPage() {
         {/* Tabs */}
         <div className="flex gap-1 p-1 rounded-xl overflow-x-auto" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
           {TABS.map((t) => (
-            <button key={t.key} onClick={() => { setTab(t.key); setSelectedReport(null); }} className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium capitalize transition-all" style={{ background: tab === t.key ? "var(--surface-1)" : "transparent", color: tab === t.key ? "var(--text-primary)" : "var(--text-tertiary)", border: tab === t.key ? "1px solid var(--border-default)" : "1px solid transparent", boxShadow: tab === t.key ? "var(--shadow-xs)" : "none", whiteSpace: "nowrap" }}>
+            <button key={t.key} onClick={() => { setTab(t.key); setSelectedReport(null); }} className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium capitalize transition-all" style={{ background: tab === t.key ? "var(--surface-1)" : "transparent", color: tab === t.key ? "var(--void-3)" : "var(--void-1)", border: tab === t.key ? "1px solid var(--signal-amber)" : "1px solid transparent", boxShadow: tab === t.key ? "var(--shadow-xs)" : "none", whiteSpace: "nowrap" }}>
               {t.label}
-              {t.count != null && t.count > 0 ? <span className="text-mono text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "var(--surface-3)", color: "var(--text-tertiary)" }}>{t.count}</span> : null}
+              {t.count != null && t.count > 0 ? <span className="text-mono text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "var(--surface-3)", color: "var(--void-1)" }}>{t.count}</span> : null}
             </button>
           ))}
         </div>
