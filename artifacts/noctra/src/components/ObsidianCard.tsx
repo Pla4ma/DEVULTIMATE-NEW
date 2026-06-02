@@ -15,9 +15,9 @@ export function ObsidianCard({
   return (
     <div
       className={cn(
-        "bg-obsidian-2 border border-border-default rounded-xl",
-        hover &&
-          "transition-all duration-200 hover:border-border-strong hover:-translate-y-px",
+        "rounded-xl p-6",
+        hover && "card-premium",
+        !hover && "bg-obsidian-2 border border-border-default",
         className
       )}
       {...props}

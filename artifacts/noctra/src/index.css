@@ -5,110 +5,156 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* ─── MIDNIGHT TEAL Design System ──────────────────────────────────────── */
-  
-  /* Background scale — deep blue-black, richer than pure black */
-  --color-obsidian-0: #030712;
-  --color-obsidian-1: #0a0f1a;
-  --color-obsidian-2: #0f172a;
-  --color-obsidian-3: #1e293b;
-  --color-obsidian-4: #334155;
-  
-  /* The Accent — Electric Teal */
-  --color-teal: #2dd4bf;
-  --color-teal-dim: rgba(45, 212, 191, 0.1);
-  --color-teal-glow: rgba(45, 212, 191, 0.25);
-  --color-teal-deep: #14b8a6;
-  
-  /* Text — crisp white hierarchy */
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #64748b;
-  --color-text-faint: #475569;
-  
-  /* Borders — visible but refined */
-  --color-border-default: rgba(255, 255, 255, 0.06);
-  --color-border-hover: rgba(255, 255, 255, 0.12);
-  --color-border-active: rgba(45, 212, 191, 0.4);
-  
-  /* Semantic */
-  --color-success: #4ade80;
-  --color-warning: #facc15;
-  --color-danger: #f87171;
-  
+  /* ─── PREMIUM MIDNIGHT Design System ───────────────────────────────── */
+
+  /* Background scale — ultra deep, almost void */
+  --color-obsidian-0: #02040a;
+  --color-obsidian-1: #080c14;
+  --color-obsidian-2: #0d111c;
+  --color-obsidian-3: #131825;
+  --color-obsidian-4: #1a2030;
+
+  /* The Accent — Deep sophisticated teal, used sparingly */
+  --color-teal: #0d9488;
+  --color-teal-dim: rgba(13, 148, 136, 0.08);
+  --color-teal-glow: rgba(13, 148, 136, 0.12);
+  --color-teal-deep: #0f766e;
+
+  /* Text — refined hierarchy, more muted */
+  --color-text-primary: #f0f1f5;
+  --color-text-secondary: #8a8f9d;
+  --color-text-muted: #5c6270;
+  --color-text-faint: #3a4050;
+
+  /* Borders — nearly invisible, refined */
+  --color-border-default: rgba(255, 255, 255, 0.045);
+  --color-border-hover: rgba(255, 255, 255, 0.08);
+  --color-border-active: rgba(13, 148, 136, 0.25);
+
+  /* Semantic — muted, not neon */
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-danger: #ef4444;
+
   /* shadcn/ui mapping */
-  --color-background: #030712;
-  --color-foreground: #f1f5f9;
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-input: rgba(255, 255, 255, 0.06);
-  --color-ring: rgba(45, 212, 191, 0.25);
-  --color-card: #0f172a;
-  --color-card-foreground: #f1f5f9;
-  --color-primary: #2dd4bf;
-  --color-primary-foreground: #030712;
-  --color-secondary: #1e293b;
-  --color-secondary-foreground: #f1f5f9;
-  --color-muted: #0f172a;
-  --color-muted-foreground: #64748b;
-  --color-accent: #1e293b;
-  --color-accent-foreground: #f1f5f9;
-  --color-destructive: #f87171;
-  --color-destructive-foreground: #f1f5f9;
-  
+  --color-background: #02040a;
+  --color-foreground: #f0f1f5;
+  --color-border: rgba(255, 255, 255, 0.045);
+  --color-input: rgba(255, 255, 255, 0.045);
+  --color-ring: rgba(13, 148, 136, 0.2);
+  --color-card: #0d111c;
+  --color-card-foreground: #f0f1f5;
+  --color-primary: #0d9488;
+  --color-primary-foreground: #02040a;
+  --color-secondary: #131825;
+  --color-secondary-foreground: #f0f1f5;
+  --color-muted: #0d111c;
+  --color-muted-foreground: #5c6270;
+  --color-accent: #131825;
+  --color-accent-foreground: #f0f1f5;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #f0f1f5;
+
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', ui-monospace, monospace;
-  
-  /* Radius */
+
+  /* Radius — consistent, generous */
   --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 24px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+}
+
+/* ─── Backward-Compatible Aliases (for app pages) ──────────────────── */
+:root {
+  --text-primary: #f0f1f5;
+  --text-secondary: #8a8f9d;
+  --text-tertiary: #5c6270;
+  --text-quaternary: #3a4050;
+  --text-muted: #5c6270;
+  --text-faint: #3a4050;
+  --text-display: #f0f1f5;
+
+  --surface-1: #0d111c;
+  --surface-2: #131825;
+  --surface-3: #1a2030;
+
+  --border-default: rgba(255, 255, 255, 0.045);
+  --border-hover: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.03);
+  --border-strong: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(13, 148, 136, 0.25);
+
+  --signal: #0d9488;
+  --signal-glow: rgba(13, 148, 136, 0.12);
+  --signal-amber: #0d9488;
+
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 30px rgba(13,148,136,0.08);
+
+  --color-success-soft: rgba(34, 197, 94, 0.1);
+  --color-warning-soft: rgba(234, 179, 8, 0.1);
+  --color-danger-soft: rgba(239, 68, 68, 0.1);
+
+  --void-1: #8a8f9d;
+  --void-2: #5c6270;
+  --void-3: #f0f1f5;
+  --void-4: #3a4050;
+  --void-5: #1a2030;
+
+  --accent-cyan: #0d9488;
+  --accent-gold: #0d9488;
+  --accent-magenta: #0d9488;
+  --accent-violet: #0d9488;
 }
 
 /* ─── Global Base ────────────────────────────────────────────────────── */
 @layer base {
   * { @apply border-border-default; }
-  
-  html { 
-    color-scheme: dark; 
-    scroll-behavior: smooth; 
+
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
   }
-  
+
   body {
     @apply bg-obsidian-0 text-text-primary antialiased;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight text-text-primary;
     font-family: var(--font-sans);
   }
-  
+
   p { @apply text-text-secondary; }
-  
+
   ::selection {
-    background: rgba(45, 212, 191, 0.25);
-    color: #f1f5f9;
+    background: rgba(13, 148, 136, 0.2);
+    color: #f0f1f5;
   }
-  
+
   :focus-visible {
-    outline: 2px solid rgba(45, 212, 191, 0.4);
+    outline: 2px solid rgba(13, 148, 136, 0.3);
     outline-offset: 2px;
   }
-  
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
+
+  /* Scrollbar — minimal */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { 
-    background: var(--color-obsidian-4); 
-    border-radius: 9999px; 
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-obsidian-4);
+    border-radius: 9999px;
   }
-  ::-webkit-scrollbar-thumb:hover { 
-    background: var(--color-text-faint); 
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-faint);
   }
   * {
     scrollbar-width: thin;
@@ -116,9 +162,9 @@
   }
 }
 
-/* ─── Animation Keyframes ────────────────────────────────────────────── */
+/* ─── Animation Keyframes ───────────────────────────────────────────── */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -129,73 +175,68 @@
 
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  50% { opacity: 0.5; }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-8px); }
 }
 
 /* ─── Utility Classes ────────────────────────────────────────────────── */
 @layer utilities {
   .animate-fade-in-up {
-    animation: fadeInUp 0.5s ease-out forwards;
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  
+
   .animate-shimmer {
     background: linear-gradient(90deg, var(--color-obsidian-2) 25%, var(--color-obsidian-3) 50%, var(--color-obsidian-2) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s ease-in-out infinite;
   }
-  
+
   .animate-pulse-subtle {
-    animation: pulse-subtle 2s ease-in-out infinite;
+    animation: pulse-subtle 2.5s ease-in-out infinite;
   }
-  
+
   .animate-float {
-    animation: float 4s ease-in-out infinite;
+    animation: float 5s ease-in-out infinite;
   }
-  
-  /* Eyebrow label style */
+
+  /* Eyebrow — refined, minimal */
   .eyebrow {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.2em;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--color-teal);
   }
-  
-  /* Gradient text — white to teal */
-  .text-gradient-teal {
-    background: linear-gradient(135deg, #f1f5f9 0%, #f1f5f9 30%, #2dd4bf 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+
+  /* Card base — the ONE card style */
+  .card-premium {
+    background: linear-gradient(180deg, rgba(13, 24, 37, 0.6) 0%, rgba(8, 12, 20, 0.6) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.045);
+    border-radius: var(--radius-xl);
+    transition: border-color 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  
-  /* Subtle radial glow for hero backgrounds */
-  .bg-glow-teal {
-    background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(45, 212, 191, 0.08) 0%, transparent 70%);
+  .card-premium:hover {
+    border-color: rgba(255, 255, 255, 0.08);
+    transform: translateY(-3px);
   }
-  
-  /* Card hover lift */
-  .card-lift {
-    transition: transform 0.2s ease-out, border-color 0.2s ease-out;
+
+  /* Section container */
+  .section-container {
+    @apply max-w-6xl mx-auto px-6;
   }
-  .card-lift:hover {
-    transform: translateY(-2px);
-    border-color: var(--color-border-hover);
+
+  /* Glow effects — very subtle */
+  .glow-teal-subtle {
+    box-shadow: 0 0 60px -20px rgba(13, 148, 136, 0.08);
   }
-  
-  /* Dashed border for upload zones */
-  .border-dashed-teal {
-    border: 2px dashed var(--color-border-default);
-    transition: border-color 0.2s ease-out;
-  }
-  .border-dashed-teal:hover {
-    border-color: var(--color-teal);
+
+  .glow-teal-strong {
+    box-shadow: 0 0 80px -20px rgba(13, 148, 136, 0.15);
   }
 }
 

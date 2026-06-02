@@ -18,23 +18,23 @@ export function ObsidianButton({
   ...props
 }: Props) {
   const base =
-    "inline-flex items-center justify-center gap-2 font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-signal-glow/50";
+    "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal/20";
 
   const variants = {
-      primary:
-        "bg-teal text-obsidian-0 hover:bg-teal-deep active:scale-[0.98] shadow-[0_0_20px_rgba(45,212,191,0.15)]",
-      secondary:
-        "bg-transparent border border-border-default text-text-secondary hover:bg-obsidian-3 hover:border-border-hover active:bg-obsidian-2",
-      ghost:
-        "bg-transparent text-text-muted hover:text-text-secondary hover:bg-obsidian-2",
-      danger:
-        "bg-danger/10 border border-danger/20 text-danger hover:bg-danger/20",
+    primary:
+      "bg-teal text-obsidian-0 hover:brightness-110 active:scale-[0.98] shadow-[0_0_24px_rgba(13,148,136,0.12)]",
+    secondary:
+      "bg-transparent border text-text-secondary hover:text-text-primary hover:border-text-muted/30 active:bg-obsidian-2",
+    ghost:
+      "bg-transparent text-text-muted hover:text-text-secondary hover:bg-obsidian-2/50",
+    danger:
+      "bg-danger/10 border border-danger/20 text-danger hover:bg-danger/20",
   };
 
   const sizes = {
-    sm: "px-3 py-1.5 text-xs rounded-md",
-    md: "px-4 py-2.5 text-sm rounded-md",
-    lg: "px-6 py-3.5 text-sm rounded-lg",
+    sm: "px-3.5 py-2 text-xs rounded-lg",
+    md: "px-5 py-2.5 text-sm rounded-lg",
+    lg: "px-7 py-3.5 text-sm rounded-xl",
   };
 
   return (
