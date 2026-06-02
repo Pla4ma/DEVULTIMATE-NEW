@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { forwardRef } from "react";
 
 const inputBase =
-  "w-full bg-obsidian-2 border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-teal/30 focus:ring-2 focus:ring-teal/10 hover:border-border-hover transition-colors duration-200";
+  "w-full bg-obsidian-2 border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/10 hover:border-border-hover transition-all duration-300";
 
 export const ObsidianInput = forwardRef<
   HTMLInputElement,

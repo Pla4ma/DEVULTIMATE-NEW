@@ -21,51 +21,54 @@ export function ObsidianTopBar() {
       className="sticky top-0 z-30 h-14 flex items-center justify-between px-5 backdrop-blur-xl"
       style={{
         borderBottom: "1px solid rgba(255,255,255,0.04)",
-        background: "rgba(8,12,20,0.7)",
+        background: "rgba(6, 3, 15, 0.7)",
       }}
     >
       <h1 className="text-sm font-semibold text-text-primary">{title}</h1>
       <div className="flex items-center gap-1">
         <button
-          className="p-2.5 rounded-lg transition-all duration-200"
-          style={{ color: "#5c6270" }}
+          className="p-2.5 rounded-lg transition-all duration-300"
+          style={{ color: "#6b6580" }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
-            (e.currentTarget as HTMLElement).style.color = "#8a8f9d";
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+            (e.currentTarget as HTMLElement).style.color = "#f5f0ff";
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.background = "transparent";
-            (e.currentTarget as HTMLElement).style.color = "#5c6270";
+            (e.currentTarget as HTMLElement).style.color = "#6b6580";
           }}
         >
           <Search size={18} strokeWidth={1.5} />
         </button>
         <button
-          className="p-2.5 rounded-lg transition-all duration-200 relative"
-          style={{ color: "#5c6270" }}
+          className="p-2.5 rounded-lg transition-all duration-300 relative"
+          style={{ color: "#6b6580" }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
-            (e.currentTarget as HTMLElement).style.color = "#8a8f9d";
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+            (e.currentTarget as HTMLElement).style.color = "#f5f0ff";
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.background = "transparent";
-            (e.currentTarget as HTMLElement).style.color = "#5c6270";
+            (e.currentTarget as HTMLElement).style.color = "#6b6580";
           }}
         >
           <Bell size={18} strokeWidth={1.5} />
           <span
             className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-            style={{ background: "#0d9488" }}
+            style={{
+              background: "#c084fc",
+              boxShadow: "0 0 6px rgba(192,132,252,0.6)",
+            }}
           />
         </button>
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center ml-1"
           style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.06)",
+            background: "linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(232,121,249,0.1) 100%)",
+            border: "1px solid rgba(168,85,247,0.2)",
           }}
         >
-          <User size={14} style={{ color: "#8a8f9d" }} strokeWidth={1.5} />
+          <User size={14} style={{ color: "#c084fc" }} strokeWidth={1.5} />
         </div>
       </div>
     </header>

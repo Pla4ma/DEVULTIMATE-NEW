@@ -18,15 +18,15 @@ export function ObsidianButton({
   ...props
 }: Props) {
   const base =
-    "inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal/20";
+    "inline-flex items-center justify-center gap-2 font-medium transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 active:scale-[0.98]";
 
   const variants = {
     primary:
-      "bg-teal text-obsidian-0 hover:brightness-110 active:scale-[0.98] shadow-[0_0_24px_rgba(13,148,136,0.12)]",
+      "bg-accent-gradient text-obsidian-0 font-semibold shadow-[0_0_24px_rgba(168,85,247,0.2)] hover:shadow-[0_0_40px_rgba(168,85,247,0.35)] hover:brightness-110",
     secondary:
-      "bg-transparent border text-text-secondary hover:text-text-primary hover:border-text-muted/30 active:bg-obsidian-2",
+      "bg-white/5 backdrop-blur-md border border-white/10 text-text-primary hover:bg-white/10 hover:border-accent/30",
     ghost:
-      "bg-transparent text-text-muted hover:text-text-secondary hover:bg-obsidian-2/50",
+      "text-text-muted hover:text-text-primary hover:bg-white/5",
     danger:
       "bg-danger/10 border border-danger/20 text-danger hover:bg-danger/20",
   };
