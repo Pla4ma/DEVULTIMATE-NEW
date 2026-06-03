@@ -29,7 +29,7 @@ export function ProofTab({ proofSignals, addingSignal, signalLabel, signalKind, 
         <NoctraButton variant="ghost" onClick={onToggleAddingSignal}><Plus size={13} /> Add Signal</NoctraButton>
       </div>
       {addingSignal ? (
-        <Panel>
+        <Panel className="glass">
           <p className="text-xs font-semibold mb-3" style={{ color: "var(--color-success)" }}>New Proof Signal</p>
           <div className="space-y-2">
             <input value={signalLabel} onChange={(e) => onSignalLabelChange(e.target.value)} placeholder="What did you validate?" className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
@@ -52,7 +52,7 @@ export function ProofTab({ proofSignals, addingSignal, signalLabel, signalKind, 
       ) : (
         <div className="space-y-2">
           {proofSignals.map((s) => (
-            <Panel key={s.id}>
+            <Panel key={s.id} className="glass">
               <div className="flex items-start gap-3">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: "var(--color-success-soft)", border: "1px solid var(--color-success-soft)" }}>
                   <FlaskConical size={12} style={{ color: "var(--color-success)" }} />

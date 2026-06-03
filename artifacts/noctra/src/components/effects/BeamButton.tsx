@@ -50,11 +50,11 @@ export function BeamButton({
   };
 
   const base =
-    "group relative inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-aurora-500/40 active:scale-[0.97] overflow-hidden whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed";
+    "group relative inline-flex items-center justify-center gap-2 rounded-xl font-bold transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-aurora-500/40 active:scale-[0.97] overflow-hidden whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variantClass =
     variant === "primary"
-      ? "text-void-0"
+      ? "text-white"
       : variant === "secondary"
       ? "text-text-primary glass-strong hover:border-aurora-500/30"
       : "text-text-secondary hover:text-text-primary";
@@ -70,8 +70,8 @@ export function BeamButton({
       style={
         variant === "primary"
           ? {
-              background: "linear-gradient(135deg, #a855f7 0%, #c084fc 50%, #e879f9 100%)",
-              boxShadow: "0 8px 32px -8px rgba(168,85,247,0.5), inset 0 1px 0 rgba(255,255,255,0.2)",
+              background: "linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #f97316 100%)",
+              boxShadow: "0 8px 32px -8px rgba(139, 92, 246, 0.5), 0 0 20px rgba(249, 115, 22, 0.2), inset 0 1px 0 rgba(255,255,255,0.2)",
             }
           : undefined
       }
@@ -80,7 +80,7 @@ export function BeamButton({
         <span
           className="absolute inset-0 -z-10 rounded-xl blur-xl opacity-60"
           style={{
-            background: "linear-gradient(135deg, #a855f7 0%, #e879f9 100%)",
+            background: "linear-gradient(135deg, #8b5cf6 0%, #f97316 100%)",
             animation: "breathe 3s ease-in-out infinite",
           }}
         />

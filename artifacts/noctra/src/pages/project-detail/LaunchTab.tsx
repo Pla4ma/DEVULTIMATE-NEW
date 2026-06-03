@@ -16,7 +16,7 @@ export function LaunchTab({ latestLaunchReport, generatingTasks, onGenerateTasks
     <div className="space-y-3">
       {latestLaunchReport ? (
         <>
-          <Panel>
+          <Panel className="glass">
             <div className="flex items-center gap-3 mb-3">
               <Rocket size={14} style={{ color: "var(--color-warning)" }} />
               <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Launch Assessment</p>
@@ -26,7 +26,7 @@ export function LaunchTab({ latestLaunchReport, generatingTasks, onGenerateTasks
             {latestLaunchReport.summary ? <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{latestLaunchReport.summary}</p> : null}
             <p className="text-xs mt-2" style={{ color: "var(--text-tertiary)" }}>{new Date(latestLaunchReport.created_at).toLocaleDateString()}</p>
           </Panel>
-          <Panel><ReportRenderer report={latestLaunchReport} /></Panel>
+          <Panel className="glass"><ReportRenderer report={latestLaunchReport} /></Panel>
           <div className="flex gap-2 flex-wrap">
             <NoctraButton variant="ghost" onClick={() => navigate(ROUTES.reportDetail(latestLaunchReport.id))}>Full Report <ArrowRight size={11} /></NoctraButton>
             <NoctraButton variant="ghost" onClick={() => onGenerateTasks(latestLaunchReport)} disabled={generatingTasks === latestLaunchReport.id}>

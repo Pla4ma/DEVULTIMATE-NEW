@@ -332,7 +332,7 @@ export default function ProjectDetailPage() {
 
         {/* Header */}
         {editing ? (
-          <Panel>
+          <Panel className="glass">
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium mb-1" style={{ color: "var(--void-1)" }}>Project Name</label>
@@ -359,7 +359,7 @@ export default function ProjectDetailPage() {
             </div>
           </Panel>
         ) : (
-          <Panel>
+          <Panel className="glass">
             <div className="flex items-start gap-5">
               {projectState ? (
                 <div className="shrink-0">
@@ -400,7 +400,7 @@ export default function ProjectDetailPage() {
         {/* Tabs */}
         <div className="flex gap-1 p-1 rounded-xl overflow-x-auto" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
           {TABS.map((t) => (
-            <button key={t.key} onClick={() => { setTab(t.key); setSelectedReport(null); }} className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium capitalize transition-all" style={{ background: tab === t.key ? "var(--surface-1)" : "transparent", color: tab === t.key ? "var(--void-3)" : "var(--void-1)", border: tab === t.key ? "1px solid var(--signal-amber)" : "1px solid transparent", boxShadow: tab === t.key ? "var(--shadow-xs)" : "none", whiteSpace: "nowrap" }}>
+            <button key={t.key} onClick={() => { setTab(t.key); setSelectedReport(null); }} className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium capitalize transition-all ${tab === t.key ? "glass" : ""}`} style={{ color: tab === t.key ? "var(--void-3)" : "var(--void-1)", border: tab === t.key ? "1px solid var(--signal-amber)" : "1px solid transparent", boxShadow: tab === t.key ? "var(--shadow-xs)" : "none", whiteSpace: "nowrap" }}>
               {t.label}
               {t.count != null && t.count > 0 ? <span className="text-mono text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "var(--surface-3)", color: "var(--void-1)" }}>{t.count}</span> : null}
             </button>

@@ -118,7 +118,7 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-obsidian-0">
+    <div className="min-h-screen bg-void-0 bg-texture">
       <header className="sticky top-0 z-50 border-b border-border-default bg-obsidian-0/90">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")}><Logo size={28} /></button>
@@ -220,7 +220,7 @@ export default function PricingPage() {
         </div>
       </div>
 
-      <div className="py-16 px-4 sm:px-6 border-t border-void-3 bg-void-1 relative z-10">
+      <div className="py-16 px-4 sm:px-6 border-t border-void-3 bg-void-0 bg-texture relative z-10">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-10" style={{ color: "var(--text-primary)" }}>Feature Comparison</h2>
           <div className="overflow-x-auto">
@@ -277,7 +277,7 @@ export default function PricingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="rounded-xl border overflow-hidden bg-void-1"
+                className="glass overflow-hidden"
                 style={{ borderColor: openFaq === i ? "var(--signal-amber)" : "var(--void-3)" }}
               >
                 <button
@@ -309,7 +309,7 @@ export default function PricingPage() {
         </div>
       </div>
 
-      <div className="py-20 px-4 sm:px-6 text-center border-t border-void-3 relative overflow-hidden bg-void-1">
+      <div className="py-20 px-4 sm:px-6 text-center border-t border-void-3 relative overflow-hidden glass">
         <div className="relative z-10">
           <div className="flex justify-center mb-5"><LogoMark size={40} animated /></div>
           <h2 className="text-2xl sm:text-3xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>Still charting your launch?</h2>

@@ -55,10 +55,11 @@ export function Panel({
   className?: string;
   style?: CSSProperties;
 }) {
+  const isGlass = className?.split(" ").some((c) => c.startsWith("glass"));
   return (
     <div
       className={`rounded-xl border p-4 ${className}`}
-      style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)", ...style }}
+      style={isGlass ? style : { background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)", ...style }}
     >
       {children}
     </div>

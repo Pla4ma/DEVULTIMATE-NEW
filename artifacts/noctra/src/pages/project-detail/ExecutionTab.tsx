@@ -43,7 +43,7 @@ export function ExecutionTab({ tasks, reports, taskFilter, completedTasks, filte
             {filteredTasks.length === 0 ? (
               <p className="text-xs text-center py-4" style={{ color: "var(--text-tertiary)" }}>No tasks in this filter.</p>
             ) : filteredTasks.map((t) => (
-              <Panel key={t.id}>
+              <Panel key={t.id} className="glass">
                 <div className="flex items-center gap-3">
                   <button onClick={() => onTaskToggle(t)} className="shrink-0">
                     {t.status === "completed" ? <CheckCircle2 size={16} style={{ color: "var(--color-success)" }} /> : <Circle size={16} style={{ color: "var(--text-tertiary)" }} />}
@@ -67,13 +67,13 @@ export function ExecutionTab({ tasks, reports, taskFilter, completedTasks, filte
         </>
       )}
       {reports.length > 0 ? (
-        <Panel>
+        <Panel className="glass">
           <p className="text-xs font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>Generate tasks from a report</p>
           <div className="space-y-1.5">
             {reports.slice(0, 5).map((r) => {
               const t = TOOL_BY_KEY[r.tool as keyof typeof TOOL_BY_KEY];
               return (
-                <button key={r.id} onClick={() => onGenerateTasks(r)} disabled={generatingTasks === r.id} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:opacity-80 disabled:opacity-50" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+                <button key={r.id} onClick={() => onGenerateTasks(r)} disabled={generatingTasks === r.id} className="glass w-full flex items-center gap-3 px-3 py-2 hover:opacity-80 disabled:opacity-50">
                   {t ? <t.icon size={12} style={{ color: t.accent }} /> : null}
                   <span className="text-xs flex-1 text-left truncate" style={{ color: "var(--text-primary)" }}>{r.title}</span>
                   {generatingTasks === r.id ? <Loader2 size={11} className="animate-spin" style={{ color: "var(--signal)" }} /> : <Plus size={11} style={{ color: "var(--text-tertiary)" }} />}

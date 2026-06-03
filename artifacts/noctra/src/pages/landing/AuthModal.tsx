@@ -59,8 +59,7 @@ export function AuthModal({ open, onClose, onSignIn, onSignUp, onDemo }: AuthMod
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="grain relative w-full max-w-md rounded-2xl border p-8 overflow-hidden"
-            style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-xl)" }}
+            className="grain relative w-full max-w-md glass p-8 overflow-hidden"
           >
             <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg transition-colors hover:bg-white/5" style={{ color: "var(--text-tertiary)" }} aria-label="Close">
               <X size={16} />
@@ -110,7 +109,7 @@ export function AuthModal({ open, onClose, onSignIn, onSignUp, onDemo }: AuthMod
             </form>
 
             <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--border-subtle)" }}>
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={handleDemo} className="w-full py-3 rounded-xl text-sm font-medium" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-secondary)" }}>
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} onClick={handleDemo} className="w-full py-3 text-sm font-medium glass">
                 <Sparkles size={14} className="inline mr-2" /> Try Demo Mode
               </motion.button>
             </div>

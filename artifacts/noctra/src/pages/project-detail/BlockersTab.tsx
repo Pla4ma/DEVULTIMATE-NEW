@@ -86,19 +86,19 @@ export function BlockersTab(props: { projectId: string; navigate: (url: string) 
     <div className="space-y-4">
       {/* Summary bar */}
       <div className="grid grid-cols-4 gap-3">
-        <Panel>
+        <Panel className="glass">
           <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-danger)" }}>P0 Critical</p>
           <p className="text-2xl font-bold" style={{ color: "var(--color-danger)" }}>{p0Count}</p>
         </Panel>
-        <Panel>
+        <Panel className="glass">
           <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-warning)" }}>P1 High</p>
           <p className="text-2xl font-bold" style={{ color: "var(--color-warning)" }}>{p1Count}</p>
         </Panel>
-        <Panel>
+        <Panel className="glass">
           <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-success)" }}>Fixed</p>
           <p className="text-2xl font-bold" style={{ color: "var(--color-success)" }}>{fixedCount}</p>
         </Panel>
-        <Panel>
+        <Panel className="glass">
           <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>Total</p>
           <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>{blockers.length}</p>
         </Panel>
@@ -125,7 +125,7 @@ export function BlockersTab(props: { projectId: string; navigate: (url: string) 
       {/* Blocker list */}
       <div className="space-y-3">
         {filtered.map((blocker) => (
-          <Panel key={blocker.id}>
+          <Panel key={blocker.id} className="glass">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">

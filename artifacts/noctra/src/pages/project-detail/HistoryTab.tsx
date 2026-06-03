@@ -15,7 +15,7 @@ export function HistoryTab({ timeline, scoreHistory, risks }: HistoryTabProps) {
   return (
     <div className="space-y-4">
       {timeline.length > 0 ? (
-        <Panel>
+        <Panel className="glass">
           <div className="flex items-center gap-2 mb-4">
             <History size={13} style={{ color: "var(--accent-violet)" }} />
             <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Project Timeline</p>
@@ -45,13 +45,13 @@ export function HistoryTab({ timeline, scoreHistory, risks }: HistoryTabProps) {
         <EmptyState icon={<History size={22} />} title="No history yet" body="Run reports and add proof signals to build your project timeline." />
       )}
       {scoreHistory.length > 0 ? (
-        <Panel>
+        <Panel className="glass">
           <p className="eyebrow mb-3" style={{ color: "var(--text-tertiary)" }}>Score History</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {scoreHistory.map((entry) => {
               const t = TOOL_BY_KEY[entry.tool as keyof typeof TOOL_BY_KEY];
               return (
-                <div key={entry.tool} className="rounded-lg p-3" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+                <div key={entry.tool} className="glass p-3">
                   <div className="flex items-center gap-1.5 mb-1.5">
                     {t ? <t.icon size={10} style={{ color: t.accent }} /> : null}
                     <span className="text-[10px] uppercase tracking-wide font-medium" style={{ color: "var(--text-tertiary)" }}>{t?.short ?? entry.tool}</span>
@@ -65,7 +65,7 @@ export function HistoryTab({ timeline, scoreHistory, risks }: HistoryTabProps) {
         </Panel>
       ) : null}
       {risks.length > 0 ? (
-        <Panel>
+        <Panel className="glass">
           <div className="flex items-center gap-2 mb-3">
             <ShieldAlert size={13} style={{ color: "var(--color-warning)" }} />
             <p className="eyebrow" style={{ color: "var(--color-warning)" }}>Risks & Blockers</p>
@@ -73,7 +73,7 @@ export function HistoryTab({ timeline, scoreHistory, risks }: HistoryTabProps) {
           </div>
           <div className="space-y-2">
             {risks.map((risk) => (
-              <div key={risk.id} className="flex items-start gap-3 px-3 py-2.5 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+              <div key={risk.id} className="glass flex items-start gap-3 px-3 py-2.5">
                 <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: RISK_SEV_COLOR[risk.severity] }} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">

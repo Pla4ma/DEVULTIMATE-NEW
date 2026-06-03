@@ -19,8 +19,7 @@ export function LinkProjectModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl p-5 space-y-3"
-        style={{ background: "var(--surface-1)", border: "1px solid var(--border-default)" }}
+        className="glass w-full max-w-md p-5 space-y-3"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-1">
@@ -50,7 +49,7 @@ export function LinkProjectModal({
                 key={p.id}
                 onClick={() => onLink(p.id)}
                 disabled={linking || p.id === currentProjectId}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left hover:opacity-80 transition-opacity"
+                className="glass w-full flex items-center gap-3 px-3 py-2.5 text-left hover:opacity-80 transition-opacity"
                 style={{
                   background: p.id === currentProjectId ? "var(--signal-soft)" : "var(--surface-2)",
                   border: `1px solid ${p.id === currentProjectId ? "var(--accent-cyan-glow)" : "var(--border-default)"}`,

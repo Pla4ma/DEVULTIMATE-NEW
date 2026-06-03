@@ -213,7 +213,7 @@ export default function BuildPlannerPage() {
 
         {mode === "mvp" ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <motion.div {...fadeInUp} className="rounded-xl border overflow-hidden" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
+            <motion.div {...fadeInUp} className="glass overflow-hidden">
               <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
                 <span className="eyebrow" style={{ color: "var(--void-1)" }}>Input</span>
               </div>
@@ -245,7 +245,7 @@ export default function BuildPlannerPage() {
               </div>
             </motion.div>
 
-            <motion.div {...fadeInUp} className="rounded-xl border overflow-hidden" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
+            <motion.div {...fadeInUp} className="glass overflow-hidden">
               <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
                 <span className="eyebrow" style={{ color: "var(--void-1)" }}>Output</span>
               </div>
@@ -334,7 +334,7 @@ export default function BuildPlannerPage() {
                 { label: "In Progress", value: taskStats.inProgress, color: "var(--color-warning)" },
                 { label: "Critical", value: taskStats.critical, color: "var(--color-danger)" },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-xl border p-4" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
+                <div key={stat.label} className="glass p-4">
                   <p className="text-xs" style={{ color: "var(--void-1)" }}>{stat.label}</p>
                   <p className="text-2xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}</p>
                 </div>
@@ -383,10 +383,9 @@ export default function BuildPlannerPage() {
                   <motion.div
                     key={task.id}
                     layout
-                    className="rounded-xl border p-4 cursor-pointer transition-colors"
+                    className="glass p-4 cursor-pointer transition-colors"
                     style={{
-                      background: task.status === "completed" ? "var(--surface-2)" : "var(--surface-1)",
-                      borderColor: task.priority === "critical" && task.status !== "completed" ? "var(--color-danger)" : "var(--border-default)",
+                      borderColor: task.priority === "critical" && task.status !== "completed" ? "var(--color-danger)" : undefined,
                       opacity: task.status === "completed" ? 0.7 : 1,
                     }}
                     onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}

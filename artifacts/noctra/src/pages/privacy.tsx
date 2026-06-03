@@ -78,7 +78,7 @@ export default function PrivacyPage() {
         </div>
 
         {sections.map(({ icon: Icon, title, body }) => (
-          <div key={title} className="flex gap-4 p-4 rounded-xl" style={{ background: "var(--surface-1)", border: "1px solid var(--border-default)" }}>
+          <div key={title} className="flex gap-4 p-4 glass">
             <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--signal-soft)" }}>
               <Icon size={18} style={{ color: "var(--signal)" }} />
             </div>

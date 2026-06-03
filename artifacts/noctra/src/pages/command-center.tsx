@@ -230,8 +230,7 @@ export default function CommandCenterPage() {
 
             <div className="max-w-lg mx-auto">
               <div
-                className="w-full rounded-xl border p-6 text-center transition-all group cursor-pointer"
-                style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-md)" }}
+                className="w-full glass p-6 text-center transition-all group cursor-pointer"
                 onClick={() => navigate(ROUTES.codeHealth)}
               >
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mx-auto" style={{ background: "var(--color-danger-soft)" }}>
@@ -250,8 +249,7 @@ export default function CommandCenterPage() {
             <motion.div variants={fadeInUp} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <motion.div
                 whileHover={{ y: -2 }}
-                className="rounded-xl border p-5"
-                style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)" }}
+                className="glass p-5"
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Shield size={14} style={{ color: "var(--text-tertiary)" }} />
@@ -294,8 +292,7 @@ export default function CommandCenterPage() {
 
               <motion.div
                 whileHover={{ y: -2 }}
-                className="rounded-xl border p-5"
-                style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)" }}
+                className="glass p-5"
               >
                 <div className="flex items-center gap-2 mb-3">
                   <XCircle size={14} style={{ color: hasIssues ? "var(--color-danger)" : "var(--text-tertiary)" }} />
@@ -318,8 +315,7 @@ export default function CommandCenterPage() {
 
               <motion.div
                 whileHover={{ y: -2 }}
-                className="rounded-xl border p-5"
-                style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)" }}
+                className="glass p-5"
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Target size={14} style={{ color: "var(--teal)" }} />
@@ -343,8 +339,7 @@ export default function CommandCenterPage() {
 
               <motion.div
                 whileHover={{ y: -2 }}
-                className="rounded-xl border p-5"
-                style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)" }}
+                className="glass p-5"
               >
                 <div className="flex items-center gap-2 mb-3">
                   <CheckSquare size={14} style={{ color: "var(--text-tertiary)" }} />
@@ -417,8 +412,7 @@ export default function CommandCenterPage() {
             {brain && brain.insights.length > 0 && (
               <motion.div
                 variants={fadeInUp}
-                className="rounded-xl border p-5"
-                style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)" }}
+                className="glass p-5"
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Brain size={16} style={{ color: "var(--teal)" }} />
@@ -432,8 +426,7 @@ export default function CommandCenterPage() {
             {briefing && (
               <motion.div
                 variants={fadeInUp}
-                className="rounded-xl border p-5"
-                style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)" }}
+                className="glass p-5"
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles size={16} style={{ color: "var(--teal)" }} />
@@ -447,8 +440,7 @@ export default function CommandCenterPage() {
             {scoreSeries.length > 1 && (
               <motion.div
                 variants={fadeInUp}
-                className="rounded-xl border p-5"
-                style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", boxShadow: "var(--shadow-sm)" }}
+                className="glass p-5"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">

@@ -345,7 +345,7 @@ export default function CodeHealthPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <motion.div
             {...fadeInUp}
-            className="rounded-xl border overflow-hidden bg-void-1 border-void-3"
+            className="glass overflow-hidden"
           >
             <div className="px-5 py-3 border-b border-void-3">
               <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Input</span>
@@ -439,9 +439,9 @@ export default function CodeHealthPage() {
 
           <motion.div
             {...fadeInUp}
-            className="rounded-xl border overflow-hidden bg-void-1 border-void-3"
+            className="glass overflow-hidden"
           >
-            <div className="px-5 py-3 border-b border-void-3">
+            <div className="px-5 py-3 border-b border-void-3 flex items-center justify-between">
               <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Output</span>
             </div>
             <div className="p-5">

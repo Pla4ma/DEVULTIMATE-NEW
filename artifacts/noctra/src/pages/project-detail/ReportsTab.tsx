@@ -31,7 +31,7 @@ export function ReportsTab({ reports, selectedReport, onSelectReport, generating
               <NoctraButton variant="ghost" onClick={() => navigate(`/app/reports/${selectedReport.id}`)}>Full Report <ArrowRight size={12} /></NoctraButton>
             </div>
           </div>
-          <Panel><ReportRenderer report={selectedReport} /></Panel>
+          <Panel className="glass"><ReportRenderer report={selectedReport} /></Panel>
         </>
       ) : (
         <>
@@ -45,7 +45,7 @@ export function ReportsTab({ reports, selectedReport, onSelectReport, generating
                 <div key={key} className="space-y-1.5">
                   <p className="eyebrow px-1" style={{ color: toolDef?.accent ?? "var(--text-tertiary)" }}>{toolDef?.label ?? key}</p>
                   {toolReports.map((r, idx) => (
-                    <Panel key={r.id} style={{ opacity: idx === 0 ? 1 : 0.7 }}>
+                    <Panel key={r.id} className="glass" style={{ opacity: idx === 0 ? 1 : 0.7 }}>
                       <div className="flex items-center justify-between gap-3">
                         <button className="flex items-center gap-3 min-w-0 flex-1 text-left" onClick={() => onSelectReport(r)}>
                           {toolDef ? <toolDef.icon size={13} style={{ color: toolDef.accent }} /> : null}
@@ -75,7 +75,7 @@ export function ReportsTab({ reports, selectedReport, onSelectReport, generating
           )}
 
           {INTELLIGENCE_TOOLS.filter((key) => !reports.some((r) => r.tool === key)).length > 0 ? (
-            <Panel style={{ opacity: 0.7 }}>
+            <Panel className="glass" style={{ opacity: 0.7 }}>
               <p className="text-xs font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>Not yet run</p>
               <div className="flex flex-wrap gap-1.5">
                 {INTELLIGENCE_TOOLS.filter((key) => !reports.some((r) => r.tool === key)).map((key) => {
@@ -87,7 +87,7 @@ export function ReportsTab({ reports, selectedReport, onSelectReport, generating
             </Panel>
           ) : null}
 
-          <Panel>
+          <Panel className="glass">
             <p className="text-xs font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>Link existing report by ID</p>
             <div className="flex gap-2">
               <input value={linkReportId} onChange={(e) => onLinkReportIdChange(e.target.value)} placeholder="Paste report ID…" className="flex-1 px-3 py-2 rounded-lg text-xs outline-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />

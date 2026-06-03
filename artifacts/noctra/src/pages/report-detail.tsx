@@ -450,7 +450,7 @@ export default function ReportDetailPage() {
 
   function renderActionButton(action: ToolAction) {
     return (
-      <button key={action.id} onClick={() => handleToolAction(action.id)} disabled={action.busy} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all hover:opacity-80 disabled:opacity-50" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+      <button key={action.id} onClick={() => handleToolAction(action.id)} disabled={action.busy} className="glass flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:opacity-80 disabled:opacity-50">
         <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${action.color ?? accentColor}18`, border: `1px solid ${action.color ?? accentColor}25` }}>
           {action.busy ? <Loader2 size={12} className="animate-spin" style={{ color: action.color ?? accentColor }} /> : <action.icon size={12} style={{ color: action.color ?? accentColor }} />}
         </div>
@@ -466,7 +466,7 @@ export default function ReportDetailPage() {
   function renderNextActionButton(na: typeof nextActions[number]) {
     const naTool = TOOL_BY_KEY[na.tool as keyof typeof TOOL_BY_KEY];
     return (
-      <button key={na.href + na.title} onClick={() => navigate(na.href)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all hover:opacity-90" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+      <button key={na.href + na.title} onClick={() => navigate(na.href)} className="glass flex items-center gap-3 px-3 py-2.5 text-left transition-all hover:opacity-90">
         {naTool ? <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${naTool.accent}18`, border: `1px solid ${naTool.accent}25` }}><naTool.icon size={12} style={{ color: naTool.accent }} /></div> : null}
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium" style={{ color: "var(--void-3)" }}>{na.title}</p>
@@ -562,13 +562,13 @@ export default function ReportDetailPage() {
         <Panel>
           <div className="flex items-center gap-2 mb-3"><Download size={12} style={{ color: "var(--void-1)" }} /><p className="eyebrow" style={{ color: "var(--void-1)" }}>Export</p></div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button onClick={handleCopySummary} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: summaryCopied ? "var(--color-success-soft)" : "var(--surface-2)", border: `1px solid ${summaryCopied ? "var(--color-success)" : "var(--border-default)"}`, color: summaryCopied ? "var(--color-success)" : "var(--void-3)" }}>
+            <button onClick={handleCopySummary} className="glass flex flex-col items-center gap-1.5 px-3 py-3 text-xs font-medium hover:opacity-80" style={{ background: summaryCopied ? "var(--color-success-soft)" : "var(--surface-2)", border: `1px solid ${summaryCopied ? "var(--color-success)" : "var(--border-default)"}`, color: summaryCopied ? "var(--color-success)" : "var(--void-3)" }}>
               {summaryCopied ? <CheckCheck size={15} /> : <Copy size={15} />}{summaryCopied ? "Copied!" : "Copy Summary"}
             </button>
-            <button onClick={handleDownloadMD} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}><Download size={15} /> Download MD</button>
-            <button onClick={handleDownloadJSON} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}><FileText size={15} /> Download JSON</button>
+            <button onClick={handleDownloadMD} className="glass flex flex-col items-center gap-1.5 px-3 py-3 text-xs font-medium hover:opacity-80"><Download size={15} /> Download MD</button>
+            <button onClick={handleDownloadJSON} className="glass flex flex-col items-center gap-1.5 px-3 py-3 text-xs font-medium hover:opacity-80"><FileText size={15} /> Download JSON</button>
             {exportShareActions.map((action) => (
-              <button key={action.id} onClick={() => handleToolAction(action.id)} disabled={action.busy} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80 disabled:opacity-50" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}>
+              <button key={action.id} onClick={() => handleToolAction(action.id)} disabled={action.busy} className="glass flex flex-col items-center gap-1.5 px-3 py-3 text-xs font-medium hover:opacity-80 disabled:opacity-50">
                 {action.busy ? <Loader2 size={15} className="animate-spin" /> : <action.icon size={15} />}{action.label}
               </button>
             ))}
@@ -578,15 +578,15 @@ export default function ReportDetailPage() {
         <Panel>
           <div className="flex items-center gap-2 mb-3"><Link2 size={12} style={{ color: "var(--void-1)" }} /><p className="eyebrow" style={{ color: "var(--void-1)" }}>Manage</p></div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button onClick={() => setShowLinkModal(true)} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: linkedProject ? "rgba(255,159,28,0.06)" : "var(--surface-2)", border: `1px solid ${linkedProject ? "var(--signal-amber)" : "var(--border-default)"}`, color: linkedProject ? "var(--signal-amber)" : "var(--void-3)" }}><Link2 size={15} />{linkedProject ? "Relink" : "Link Project"}</button>
+            <button onClick={() => setShowLinkModal(true)} className="glass flex flex-col items-center gap-1.5 px-3 py-3 text-xs font-medium hover:opacity-80" style={{ background: linkedProject ? "rgba(255,159,28,0.06)" : "var(--surface-2)", border: `1px solid ${linkedProject ? "var(--signal-amber)" : "var(--border-default)"}`, color: linkedProject ? "var(--signal-amber)" : "var(--void-3)" }}><Link2 size={15} />{linkedProject ? "Relink" : "Link Project"}</button>
             {!report.project_id ? (
-              <button onClick={handleCreateProject} disabled={creatingProject} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80 disabled:opacity-50" style={{ background: "var(--color-success-soft)", border: "1px solid var(--color-success-soft)", color: "var(--color-success)" }}>
+              <button onClick={handleCreateProject} disabled={creatingProject} className="glass flex flex-col items-center gap-1.5 px-3 py-3 text-xs font-medium hover:opacity-80 disabled:opacity-50" style={{ background: "var(--color-success-soft)", border: "1px solid var(--color-success-soft)", color: "var(--color-success)" }}>
                 {creatingProject ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}{creatingProject ? "Creating…" : "New Project"}
               </button>
             ) : (
-              <button onClick={() => report.project_id && navigate(ROUTES.projectDetail(report.project_id))} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}><FolderOpen size={15} /> View Project</button>
+              <button onClick={() => report.project_id && navigate(ROUTES.projectDetail(report.project_id))} className="glass flex flex-col items-center gap-1.5 px-3 py-3 text-xs font-medium hover:opacity-80"><FolderOpen size={15} /> View Project</button>
             )}
-            <button onClick={() => setConfirmDelete(true)} className="flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-xs font-medium hover:opacity-80" style={{ background: "var(--color-danger-soft)", border: "1px solid var(--color-danger-soft)", color: "var(--color-danger)" }}><Trash2 size={15} /> Delete</button>
+            <button onClick={() => setConfirmDelete(true)} className="glass flex flex-col items-center gap-1.5 px-3 py-3 text-xs font-medium hover:opacity-80" style={{ background: "var(--color-danger-soft)", border: "1px solid var(--color-danger-soft)", color: "var(--color-danger)" }}><Trash2 size={15} /> Delete</button>
             {manageNextActions.map(renderNextActionButton)}
           </div>
         </Panel>

@@ -56,7 +56,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
           { label: "Tasks", value: tasks.length, icon: CheckSquare, color: "var(--color-success)", onClick: () => onTabChange("execution") },
           { label: "Proof Signals", value: proofSignals.length, icon: FlaskConical, color: "var(--color-success)", onClick: () => onTabChange("proof") },
         ].map(({ label, value, icon: Icon, color, onClick }) => (
-          <Panel key={label}>
+          <Panel key={label} className="glass">
             <button className="w-full text-left" onClick={onClick}>
               <div className="flex items-center gap-2 mb-2"><Icon size={13} style={{ color }} /><span className="text-xs" style={{ color: "var(--text-tertiary)" }}>{label}</span></div>
               <p className="text-2xl font-bold" style={{ color }}>{value}</p>
@@ -67,7 +67,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
 
       {projectState ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Panel>
+          <Panel className="glass">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-medium" style={{ color: "var(--text-tertiary)" }}>Launch Readiness</p>
               <span className="text-xs font-mono" style={{ color: projectState.readiness >= 70 ? "var(--color-success)" : projectState.readiness >= 40 ? "var(--color-warning)" : "var(--color-danger)" }}>{projectState.readiness}%</span>
@@ -76,7 +76,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
             <p className="text-xs mt-1.5 capitalize" style={{ color: "var(--text-tertiary)" }}>Phase: {projectState.stage.replace("_", " ")}</p>
           </Panel>
           {tasks.length > 0 ? (
-            <Panel>
+            <Panel className="glass">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-medium" style={{ color: "var(--text-tertiary)" }}>Task Completion</p>
                 <span className="text-xs font-mono" style={{ color: "var(--color-success)" }}>{projectState.taskCompletionRate}%</span>
@@ -89,7 +89,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
       ) : null}
 
       {projectState && projectState.coveredTools.length > 0 ? (
-        <Panel>
+        <Panel className="glass">
           <p className="eyebrow mb-4" style={{ color: "var(--text-tertiary)" }}>Scores</p>
           <div className="flex flex-wrap gap-5 justify-center">
             {INTELLIGENCE_TOOLS.filter((k) => projectState.latestReportByTool[k]).map((key) => {
@@ -117,7 +117,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
       ) : null}
 
       {projectState && projectState.failedGates.length > 0 ? (
-        <Panel>
+        <Panel className="glass">
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle size={13} style={{ color: "var(--color-danger)" }} />
             <p className="eyebrow mb-2" style={{ color: "var(--color-danger)" }}>Failed Gates ({projectState.failedGates.length})</p>
@@ -137,7 +137,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
       ) : null}
 
       {risks.length > 0 ? (
-        <Panel>
+        <Panel className="glass">
           <div className="flex items-center gap-2 mb-3">
             <ShieldAlert size={13} style={{ color: "var(--color-warning)" }} />
             <p className="eyebrow mb-3" style={{ color: "var(--color-warning)" }}>Risks & Blockers</p>
@@ -145,7 +145,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
           </div>
           <div className="space-y-2">
             {risks.slice(0, 5).map((risk) => (
-              <div key={risk.id} className="flex items-start gap-3 px-3 py-2 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+              <div key={risk.id} className="glass flex items-start gap-3 px-3 py-2">
                 <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: RISK_SEV_COLOR[risk.severity] }} />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>{risk.title}</p>
@@ -160,18 +160,18 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
       ) : null}
 
       {projectState ? (
-        <Panel>
+        <Panel className="glass">
           <p className="eyebrow mb-3" style={{ color: "var(--text-tertiary)" }}>Export & Handoff</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button onClick={onCopyBrief} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium text-left" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: briefCopied ? "var(--color-success)" : "var(--text-primary)" }}>
+            <button onClick={onCopyBrief} className="glass flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-left" style={{ color: briefCopied ? "var(--color-success)" : "var(--text-primary)" }}>
               {briefCopied ? <Check size={12} style={{ color: "var(--color-success)" }} /> : <Copy size={12} />}
               <div><p>{briefCopied ? "Copied!" : "Copy Project Brief"}</p><p style={{ color: "var(--text-tertiary)" }}>Markdown status report</p></div>
             </button>
-            <button onClick={onDownloadBrief} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium text-left" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }}>
+            <button onClick={onDownloadBrief} className="glass flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-left" style={{ color: "var(--text-primary)" }}>
               <Download size={12} />
               <div><p>Download Brief</p><p style={{ color: "var(--text-tertiary)" }}>Save as .md file</p></div>
             </button>
-            <button onClick={onCopyPrompt} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium text-left sm:col-span-2" style={{ background: promptCopied ? "var(--signal-soft)" : "var(--surface-2)", border: `1px solid ${promptCopied ? "var(--accent-cyan-glow)" : "var(--border-default)"}`, color: promptCopied ? "var(--signal)" : "var(--text-primary)" }}>
+            <button onClick={onCopyPrompt} className="glass flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-left sm:col-span-2" style={{ background: promptCopied ? "var(--signal-soft)" : undefined, border: promptCopied ? "1px solid var(--accent-cyan-glow)" : undefined, color: promptCopied ? "var(--signal)" : "var(--text-primary)" }}>
               {promptCopied ? <Check size={12} style={{ color: "var(--signal)" }} /> : <Terminal size={12} />}
               <div><p>{promptCopied ? "Prompt copied!" : "Copy Dev Agent Prompt"}</p><p style={{ color: "var(--text-tertiary)" }}>Paste into Replit Agent, Cursor, or Windsurf</p></div>
             </button>
@@ -179,7 +179,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
         </Panel>
       ) : null}
 
-      <Panel>
+      <Panel className="glass">
           <p className="eyebrow mb-3" style={{ color: "var(--text-tertiary)" }}>Run Report</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {[
@@ -190,7 +190,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
             { label: "Product Doctor", href: ROUTES.doctor, color: "var(--color-danger)" },
             { label: "Launch Room", href: ROUTES.launch, color: "var(--color-warning)" },
           ].map(({ label, href, color }) => (
-            <button key={href} onClick={() => navigate(href)} className="px-3 py-2 rounded-lg text-xs font-medium text-left hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color }}>{label}</button>
+            <button key={href} onClick={() => navigate(href)} className="glass px-3 py-2 text-xs font-medium text-left hover:opacity-80" style={{ color }}>{label}</button>
           ))}
         </div>
       </Panel>

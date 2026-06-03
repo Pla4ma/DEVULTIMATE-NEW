@@ -32,7 +32,7 @@ export function DoctorTab({ doctorReports, latestDoctorReport, openScanGates, ta
         <>
           {latestDoctorReport ? (
             <>
-              <Panel>
+              <Panel className="glass">
                 <div className="flex items-center gap-3 mb-3">
                   <FileText size={14} style={{ color: "var(--color-danger)" }} />
                   <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Latest Scan</p>
@@ -45,7 +45,7 @@ export function DoctorTab({ doctorReports, latestDoctorReport, openScanGates, ta
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {latestDoctorReport.score != null && (
-                  <Panel>
+                  <Panel className="glass">
                     <p className="eyebrow mb-2" style={{ color: "var(--text-tertiary)" }}>Health Score</p>
                     <p className="text-2xl font-bold" style={{ color: SCORE_COLOR(latestDoctorReport.score) }}>{latestDoctorReport.score}/100</p>
                   </Panel>
@@ -56,7 +56,7 @@ export function DoctorTab({ doctorReports, latestDoctorReport, openScanGates, ta
                   const lr = data.launch_readiness as string;
                   if (!lr) return null;
                   return (
-                    <Panel>
+                    <Panel className="glass">
                       <p className="eyebrow mb-2" style={{ color: "var(--text-tertiary)" }}>Launch Readiness</p>
                       <p className="text-lg font-bold" style={{ color: lr === "GO" ? "var(--color-success)" : lr === "CONDITIONAL" ? "var(--color-warning)" : "var(--color-danger)" }}>{lr}</p>
                     </Panel>
@@ -67,7 +67,7 @@ export function DoctorTab({ doctorReports, latestDoctorReport, openScanGates, ta
           ) : null}
 
           {openScanGates.length > 0 ? (
-            <Panel>
+            <Panel className="glass">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle size={13} style={{ color: "var(--color-danger)" }} />
                 <p className="eyebrow" style={{ color: "var(--color-danger)" }}>Failed Gates ({openScanGates.length})</p>
@@ -92,7 +92,7 @@ export function DoctorTab({ doctorReports, latestDoctorReport, openScanGates, ta
                     </button>
                   </>
                 ) : null}
-                <button onClick={() => navigate(ROUTES.doctor)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{ color: "var(--color-danger)", background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+                <button onClick={() => navigate(ROUTES.doctor)} className="glass flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium" style={{ color: "var(--color-danger)" }}>
                   <RefreshCw size={11} /> Re-scan
                 </button>
               </div>
@@ -104,17 +104,17 @@ export function DoctorTab({ doctorReports, latestDoctorReport, openScanGates, ta
             </div>
           ) : null}
 
-          {latestDoctorReport ? <Panel><ReportRenderer report={latestDoctorReport} projectId={project?.id} /></Panel> : null}
+          {latestDoctorReport ? <Panel className="glass"><ReportRenderer report={latestDoctorReport} projectId={project?.id} /></Panel> : null}
 
           {projectState && projectState.doctorScore > 0 && tasks.filter(t => t.source_report_id === latestDoctorReport?.id).length > 0 && (
-            <Panel>
+            <Panel className="glass">
               <div className="flex items-center gap-2 mb-2">
                 <CheckSquare size={13} style={{ color: "var(--color-success)" }} />
                 <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Doctor Fix Tasks</p>
                 <span className="ml-auto text-xs font-mono" style={{ color: "var(--text-tertiary)" }}>{tasks.filter(t => t.source_report_id === latestDoctorReport?.id).length} tasks</span>
               </div>
               {tasks.filter(t => t.source_report_id === latestDoctorReport?.id).slice(0, 5).map(t => (
-                <div key={t.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg mb-1 text-xs" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+                <div key={t.id} className="glass flex items-center gap-2 px-3 py-1.5 mb-1 text-xs">
                   <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: PRIORITY_COLOR[t.priority] ?? "var(--text-tertiary)" }} />
                   <span className="flex-1" style={{ color: "var(--text-primary)" }}>{t.title}</span>
                   <Badge style={{ fontSize: "9px" }}>{t.status}</Badge>
@@ -127,7 +127,7 @@ export function DoctorTab({ doctorReports, latestDoctorReport, openScanGates, ta
           )}
 
           {doctorReports.length > 1 ? (
-            <Panel>
+            <Panel className="glass">
               <div className="flex items-center gap-2 mb-3">
                 <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Scan History ({doctorReports.length} scans)</p>
               </div>
@@ -165,7 +165,7 @@ export function DoctorTab({ doctorReports, latestDoctorReport, openScanGates, ta
               })()}
               <div className="space-y-1.5">
                 {doctorReports.map((r, i) => (
-                  <button key={r.id} onClick={() => navigate(ROUTES.reportDetail(r.id))} className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)" }}>
+                  <button key={r.id} onClick={() => navigate(ROUTES.reportDetail(r.id))} className="glass w-full flex items-center justify-between gap-3 px-3 py-2 hover:opacity-80">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-mono text-xs" style={{ color: "var(--text-tertiary)" }}>#{doctorReports.length - i}</span>
                       <span className="text-xs truncate" style={{ color: "var(--text-primary)" }}>{r.title}</span>

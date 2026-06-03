@@ -176,7 +176,7 @@ export default function ProjectBrainPage() {
 
         {tab === "chat" && (
           <motion.div {...fadeInUp} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 rounded-xl border overflow-hidden flex flex-col" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)", height: 520 }}>
+            <div className="lg:col-span-2 glass overflow-hidden flex flex-col" style={{ height: 520 }}>
               <div className="px-4 py-3 border-b flex items-center gap-2" style={{ borderColor: "var(--border-subtle)", background: "var(--surface-2)" }}>
                 <Brain size={14} style={{ color: "var(--signal-amber)" }} />
                 <p className="eyebrow" style={{ color: "var(--void-1)" }}>Product Twin</p>
@@ -228,7 +228,7 @@ export default function ProjectBrainPage() {
 
             <div className="space-y-4">
               {contradictions.length > 0 && (
-                <div className="rounded-xl border p-4" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
+                <div className="glass p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <AlertTriangle size={14} style={{ color: "var(--color-danger)" }} />
                     <p className="eyebrow" style={{ color: "var(--color-danger)" }}>Contradictions ({contradictions.length})</p>
@@ -243,7 +243,7 @@ export default function ProjectBrainPage() {
                 </div>
               )}
 
-              <div className="rounded-xl border p-4" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
+              <div className="glass p-4">
                 <p className="eyebrow mb-3" style={{ color: "var(--void-1)" }}>Quick Stats</p>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
@@ -282,8 +282,7 @@ export default function ProjectBrainPage() {
                   <motion.div
                     key={project.id}
                     whileHover={{ y: -2 }}
-                    className="rounded-xl border p-5 cursor-pointer transition-colors"
-                    style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}
+                    className="glass p-5 cursor-pointer transition-colors"
                     onClick={() => navigate(`/app/projects/${project.id}`)}
                   >
                     <div className="flex items-center gap-3 mb-3">
@@ -316,8 +315,7 @@ export default function ProjectBrainPage() {
                   <motion.div
                     key={report.id}
                     whileHover={{ x: 2 }}
-                    className="rounded-xl border p-4 cursor-pointer transition-colors flex items-center gap-4"
-                    style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}
+                    className="glass p-4 cursor-pointer transition-colors flex items-center gap-4"
                     onClick={() => navigate(`/app/reports/${report.id}`)}
                   >
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--surface-2)" }}>
@@ -348,7 +346,7 @@ export default function ProjectBrainPage() {
                 { label: "Tasks Done", value: completedTasks, suffix: `/${allTasks.length}`, color: "var(--color-success)" },
                 { label: "Reports", value: allReports.length, suffix: "", color: "var(--signal-amber)" },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-xl border p-5" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
+                <div key={stat.label} className="glass p-5">
                   <p className="text-xs" style={{ color: "var(--void-1)" }}>{stat.label}</p>
                   <p className="text-3xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}<span className="text-sm font-normal" style={{ color: "var(--void-1)" }}>{stat.suffix}</span></p>
                 </div>
@@ -356,7 +354,7 @@ export default function ProjectBrainPage() {
             </div>
 
             {toolsCovered.length > 0 && (
-              <div className="rounded-xl border p-5" style={{ background: "var(--surface-1)", borderColor: "var(--border-default)" }}>
+              <div className="glass p-5">
                 <p className="eyebrow mb-4" style={{ color: "var(--void-1)" }}>Tools Used</p>
                 <div className="flex flex-wrap gap-2">
                   {toolsCovered.map((tool) => (

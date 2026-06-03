@@ -14,7 +14,7 @@ interface TwinTabProps {
 export function TwinTab({ reports, projectState, navigate }: TwinTabProps) {
   return (
     <div className="space-y-4">
-      <Panel>
+      <Panel className="glass">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--color-danger-soft)", border: "1px solid var(--color-danger-soft)" }}>
             <Brain size={18} style={{ color: "var(--accent-magenta)" }} />
@@ -29,13 +29,13 @@ export function TwinTab({ reports, projectState, navigate }: TwinTabProps) {
         </p>
         <div className="space-y-2 mb-4">
           {["What are the biggest risks in this project?", "Summarize all intelligence findings so far", "What should I work on next?", "Are there any contradictions between my reports?"].map((q) => (
-            <div key={q} className="px-3 py-2 rounded-lg text-xs" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}>{q}</div>
+            <div key={q} className="glass px-3 py-2 text-xs" style={{ color: "var(--text-tertiary)" }}>{q}</div>
           ))}
         </div>
         <NoctraButton onClick={() => navigate(ROUTES.twin)}><Brain size={13} /> Open Product Twin <ArrowRight size={11} /></NoctraButton>
       </Panel>
       {projectState && projectState.coveredTools.length > 0 ? (
-        <Panel>
+        <Panel className="glass">
           <p className="eyebrow mb-3" style={{ color: "var(--text-tertiary)" }}>Project Intelligence Loaded</p>
           <div className="space-y-1.5">
             {projectState.coveredTools.map((key) => {

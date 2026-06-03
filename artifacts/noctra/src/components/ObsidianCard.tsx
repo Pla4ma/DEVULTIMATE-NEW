@@ -9,13 +9,13 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
 }
 
 export function ObsidianCard({
-  children, className, hover = true, popular = false, glass = true, ...props
+  children, className, hover, popular = false, glass = true, ...props
 }: Props) {
   return (
     <div
       className={cn(
-        "rounded-xl p-6",
-        popular ? "card-glass-popular" : glass ? "card-glass" : hover ? "card-premium" : "bg-void-2 border border-border-default",
+        "p-6",
+        popular ? "glass-popular" : glass ? "glass" : "bg-void-2 border border-border-default",
         className
       )}
       {...props}
