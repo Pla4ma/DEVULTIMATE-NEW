@@ -60,8 +60,8 @@ interface ContextReport {
 }
 
 const MODES: Array<{ key: ToolMode; label: string; icon: typeof Stethoscope; color: string; description: string }> = [
-  { key: "doctor", label: "Product Doctor", icon: Stethoscope, color: "var(--color-danger)", description: "Upload your repo. Get launch readiness, blockers, and fix queue." },
-  { key: "launch", label: "Launch Room", icon: Rocket, color: "var(--color-warning)", description: "Readiness check, gate verification, and go/no-go decision." },
+  { key: "doctor", label: "Product Doctor", icon: Stethoscope, color: "#8b5cf6", description: "Upload your repo. Get launch readiness, blockers, and fix queue." },
+  { key: "launch", label: "Launch Room", icon: Rocket, color: "#f97316", description: "Readiness check, gate verification, and go/no-go decision." },
 ];
 
 const fadeInUp = {
@@ -285,20 +285,20 @@ export default function CodeHealthPage() {
 
   return (
     <AppShell>
-      <div className="p-4 sm:p-6 max-w-6xl mx-auto bg-void-0 min-h-screen">
+      <div className="p-4 sm:p-6 max-w-6xl mx-auto">
         <DemoBanner />
         <motion.div {...fadeInUp} className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Code Health</h1>
-          <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Scan codebases, diagnose launch blockers, and get go/no-go signals</p>
+          <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "#fff" }}>Code Health</h1>
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Scan codebases, diagnose launch blockers, and get go/no-go signals</p>
         </motion.div>
 
         {isDemoMode() && (
           <motion.div
             {...fadeInUp}
             className="mb-6 px-5 py-4 rounded-xl"
-            style={{ background: "var(--color-warning-soft)", border: "1px solid var(--color-warning-soft)" }}
+            style={{ background: "rgba(249, 115, 22, 0.1)", border: "1px solid rgba(249, 115, 22, 0.12)" }}
           >
-            <p className="text-sm font-medium" style={{ color: "var(--color-warning)" }}>
+            <p className="text-sm font-medium" style={{ color: "#f97316" }}>
               Demo mode uses sample scans. Sign in to scan your own repo.
             </p>
           </motion.div>
@@ -314,9 +314,10 @@ export default function CodeHealthPage() {
                 onClick={() => { setMode(m.key); reset(); }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
                 style={{
-                  background: active ? `${m.color}15` : "var(--void-2)",
-                  border: `1px solid ${active ? m.color : "var(--void-3)"}`,
-                  color: active ? m.color : "var(--text-secondary)",
+                  background: active ? `${m.color}15` : "rgba(20, 18, 40, 0.5)",
+                  border: `1px solid ${active ? m.color : "rgba(139, 92, 246, 0.12)"}`,
+                  color: active ? m.color : "rgba(255,255,255,0.6)",
+                  backdropFilter: "blur(12px)",
                 }}
               >
                 <Icon size={16} />
@@ -330,14 +331,14 @@ export default function CodeHealthPage() {
           <motion.div
             {...fadeInUp}
             className="mb-6 px-5 py-4 rounded-xl flex items-start gap-4"
-            style={{ background: "var(--color-danger-soft)", border: "1px solid var(--color-danger)" }}
+            style={{ background: "rgba(249, 115, 22, 0.1)", border: "1px solid rgba(249, 115, 22, 0.12)" }}
           >
-            <AlertTriangle size={18} style={{ color: "var(--color-danger)", flexShrink: 0, marginTop: 2 }} />
+            <AlertTriangle size={18} style={{ color: "#f97316", flexShrink: 0, marginTop: 2 }} />
             <div>
-              <p className="text-sm font-bold" style={{ color: "var(--color-danger)" }}>
+              <p className="text-sm font-bold" style={{ color: "#f97316" }}>
                 {doctorRedGates.length} RED launch gate{doctorRedGates.length !== 1 ? "s" : ""} blocking GO signal
               </p>
-              <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>{doctorRedGates.join(" · ")}</p>
+              <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>{doctorRedGates.join(" · ")}</p>
             </div>
           </motion.div>
         )}
@@ -347,19 +348,20 @@ export default function CodeHealthPage() {
             {...fadeInUp}
             className="glass overflow-hidden"
           >
-            <div className="px-5 py-3 border-b border-void-3">
-              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Input</span>
+            <div className="px-5 py-3" style={{ borderBottom: "1px solid rgba(139, 92, 246, 0.12)" }}>
+              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "rgba(255,255,255,0.6)" }}>Input</span>
             </div>
             <div className="p-5 space-y-4">
               {mode === "doctor" && !isDemoMode() && <ScanGuide />}
               {mode === "doctor" ? (
                 isDemoMode() ? (
                   <div
-                    className="border-2 border-dashed rounded-xl p-8 text-center bg-void-2 border-void-3"
+                    className="border-2 border-dashed rounded-xl p-8 text-center"
+                    style={{ background: "rgba(20, 18, 40, 0.5)", borderColor: "rgba(139, 92, 246, 0.12)", backdropFilter: "blur(12px)" }}
                   >
-                    <Upload size={32} className="mx-auto mb-3" style={{ color: "var(--text-tertiary)" }} />
-                    <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Demo mode</p>
-                    <p className="text-xs mb-3" style={{ color: "var(--text-tertiary)" }}>Sign in to scan your own projects</p>
+                    <Upload size={32} className="mx-auto mb-3" style={{ color: "rgba(255,255,255,0.5)" }} />
+                    <p className="text-sm font-medium mb-1" style={{ color: "#fff" }}>Demo mode</p>
+                    <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>Sign in to scan your own projects</p>
                     <ObsidianButton
                       variant="primary"
                       size="sm"
@@ -371,8 +373,8 @@ export default function CodeHealthPage() {
                   </div>
                 ) : (
                 <div
-                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${dragOver ? "border-signal-amber" : ""}`}
-                  style={{ borderColor: dragOver ? "var(--signal-amber)" : "var(--void-3)", background: dragOver ? "var(--signal-amber-dim)" : "var(--void-2)" }}
+                  className="border-2 border-dashed rounded-xl p-8 text-center transition-colors"
+                  style={{ borderColor: dragOver ? "#f97316" : "rgba(139, 92, 246, 0.12)", background: dragOver ? "rgba(249, 115, 22, 0.15)" : "rgba(20, 18, 40, 0.5)", backdropFilter: "blur(12px)" }}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
                   onDrop={(e) => {
@@ -384,18 +386,18 @@ export default function CodeHealthPage() {
                 >
                   {zipFile ? (
                     <div className="space-y-3">
-                      <FileCode size={32} className="mx-auto" style={{ color: "var(--signal-amber)" }} />
-                      <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{zipFile.name}</p>
-                      <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{(zipFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                      <button onClick={() => setZipFile(null)} className="text-xs" style={{ color: "var(--color-danger)" }}>Remove</button>
+                      <FileCode size={32} className="mx-auto" style={{ color: "#f97316" }} />
+                      <p className="text-sm font-medium" style={{ color: "#fff" }}>{zipFile.name}</p>
+                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{(zipFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <button onClick={() => setZipFile(null)} className="text-xs" style={{ color: "#f97316" }}>Remove</button>
                     </div>
                   ) : (
                     <>
-                      <Upload size={32} className="mx-auto mb-3" style={{ color: "var(--text-tertiary)" }} />
-                      <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>Drop your repo ZIP here</p>
-                      <p className="text-xs mb-3" style={{ color: "var(--text-tertiary)" }}>or click to browse</p>
+                      <Upload size={32} className="mx-auto mb-3" style={{ color: "rgba(255,255,255,0.5)" }} />
+                      <p className="text-sm font-medium mb-1" style={{ color: "#fff" }}>Drop your repo ZIP here</p>
+                      <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>or click to browse</p>
                       <input type="file" accept=".zip" onChange={handleFileSelect} className="hidden" id="zip-upload" />
-                      <label htmlFor="zip-upload" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer bg-signal-amber text-black">
+                      <label htmlFor="zip-upload" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer" style={{ background: "linear-gradient(135deg, #8b5cf6 0%, #f97316 100%)", color: "#fff" }}>
                         <Upload size={14} /> Select ZIP
                       </label>
                     </>
@@ -409,7 +411,8 @@ export default function CodeHealthPage() {
                   placeholder="Describe your product and launch status..."
                   rows={8}
                   disabled={phase !== "idle"}
-                  className="w-full px-4 py-3 rounded-lg text-sm resize-none outline-none bg-void-2 border border-void-3 text-text-primary focus:border-signal-amber focus:shadow-[0_0_0_3px_var(--signal-amber-dim)]"
+                  className="w-full px-4 py-3 rounded-lg text-sm resize-none outline-none focus:border-[#f97316] focus:shadow-[0_0_0_3px_rgba(249,115,22,0.15)]"
+                  style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "#fff", backdropFilter: "blur(12px)" }}
                   maxLength={4000}
                 />
               )}
@@ -441,8 +444,8 @@ export default function CodeHealthPage() {
             {...fadeInUp}
             className="glass overflow-hidden"
           >
-            <div className="px-5 py-3 border-b border-void-3 flex items-center justify-between">
-              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Output</span>
+            <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(139, 92, 246, 0.12)" }}>
+              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "rgba(255,255,255,0.6)" }}>Output</span>
             </div>
             <div className="p-5">
               <AnimatePresence mode="wait">
@@ -451,15 +454,15 @@ export default function CodeHealthPage() {
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: `${currentMode.color}15` }}>
                       <currentMode.icon size={28} style={{ color: currentMode.color }} />
                     </div>
-                    <p className="text-sm font-medium mb-1" style={{ color: "var(--text-secondary)" }}>{currentMode.label} awaiting input</p>
-                    <p className="text-xs" style={{ color: "var(--text-quaternary)" }}>{currentMode.description}</p>
+                    <p className="text-sm font-medium mb-1" style={{ color: "rgba(255,255,255,0.7)" }}>{currentMode.label} awaiting input</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{currentMode.description}</p>
                   </motion.div>
                 )}
 
                 {(phase === "scanning" || phase === "diagnosing" || phase === "generating") && (
                   <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16">
                     <Loader2 size={32} className="animate-spin mb-4" style={{ color: currentMode.color }} />
-                    <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
                       {phase === "scanning" ? "Deep scanning codebase..." : phase === "diagnosing" ? "AI diagnosing launch blockers..." : "Generating fix tasks..."}
                     </p>
                   </motion.div>
@@ -468,12 +471,12 @@ export default function CodeHealthPage() {
                 {phase === "done" && result && (
                   <motion.div key="done" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
                     {score != null && (
-                      <div className="flex items-center gap-5 p-5 rounded-xl bg-void-2 border border-void-3">
+                      <div className="flex items-center gap-5 p-5 rounded-xl" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", backdropFilter: "blur(12px)" }}>
                         <ScoreRing value={score} size={80} stroke={7} label="Health" color={score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)"} />
                         <div className="flex-1">
-                          <p className="text-xs font-medium tracking-[0.12em] uppercase mb-1" style={{ color: "var(--text-tertiary)" }}>Health Score</p>
+                          <p className="text-xs font-medium tracking-[0.12em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.6)" }}>Health Score</p>
                           <p className="text-3xl font-bold font-mono" style={{ color: score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)" }}>
-                            {score}<span className="text-sm font-normal" style={{ color: "var(--text-tertiary)" }}>/100</span>
+                            {score}<span className="text-sm font-normal" style={{ color: "rgba(255,255,255,0.6)" }}>/100</span>
                           </p>
                           {goNoGo && (
                             <span className="text-xs font-medium tracking-[0.12em] uppercase mt-2 inline-block px-3 py-1 rounded-full" style={{
@@ -489,12 +492,12 @@ export default function CodeHealthPage() {
 
                     {gates.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Gate Status</p>
+                        <p className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "rgba(255,255,255,0.6)" }}>Gate Status</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {gates.slice(0, 6).map((gate, i) => (
-                            <div key={i} className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-void-2 border border-void-3">
+                            <div key={i} className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", backdropFilter: "blur(12px)" }}>
                               <span className="w-2 h-2 rounded-full shrink-0" style={{ background: gate.status === "GREEN" ? "var(--color-success)" : gate.status === "YELLOW" ? "var(--color-warning)" : "var(--color-danger)", boxShadow: `0 0 6px ${gate.status === "GREEN" ? "var(--color-success)" : gate.status === "YELLOW" ? "var(--color-warning)" : "var(--color-danger)"}` }} />
-                              <span className="text-sm flex-1" style={{ color: "var(--text-primary)" }}>{gate.name}</span>
+                              <span className="text-sm flex-1" style={{ color: "#fff" }}>{gate.name}</span>
                               <span className="font-mono text-[10px] font-medium" style={{ color: gate.status === "GREEN" ? "var(--color-success)" : gate.status === "YELLOW" ? "var(--color-warning)" : "var(--color-danger)" }}>{gate.status}</span>
                             </div>
                           ))}
@@ -503,7 +506,7 @@ export default function CodeHealthPage() {
                     )}
 
                     {savedReportId && (
-                      <div className="flex gap-2 pt-3 border-t border-void-3">
+                      <div className="flex gap-2 pt-3" style={{ borderTop: "1px solid rgba(139, 92, 246, 0.12)" }}>
                         <ObsidianButton
                           variant="secondary"
                           size="sm"
@@ -519,9 +522,9 @@ export default function CodeHealthPage() {
 
                 {phase === "error" && (
                   <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16 text-center">
-                    <AlertTriangle size={32} className="mb-4" style={{ color: "var(--color-danger)" }} />
-                    <p className="text-sm font-medium mb-1" style={{ color: "var(--color-danger)" }}>Analysis failed</p>
-                    <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{error}</p>
+                    <AlertTriangle size={32} className="mb-4" style={{ color: "#f97316" }} />
+                    <p className="text-sm font-medium mb-1" style={{ color: "#f97316" }}>Analysis failed</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{error}</p>
                     <ObsidianButton
                       variant="secondary"
                       size="sm"

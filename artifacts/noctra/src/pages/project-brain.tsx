@@ -148,8 +148,8 @@ export default function ProjectBrainPage() {
     <AppShell>
       <div className="p-4 sm:p-6 max-w-6xl mx-auto">
         <motion.div {...fadeInUp} className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight mb-2 text-display" style={{ color: "var(--text-primary)" }}>Project Brain</h1>
-          <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Your persistent product memory — AI chat, project intelligence, and reports</p>
+          <h1 className="text-2xl font-bold tracking-tight mb-2 text-display" style={{ color: "#fff" }}>Project Brain</h1>
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>Your persistent product memory — AI chat, project intelligence, and reports</p>
         </motion.div>
 
         <motion.div {...fadeInUp} className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -162,9 +162,9 @@ export default function ProjectBrainPage() {
                 onClick={() => setTab(t.key)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
                 style={{
-                  background: active ? `rgba(255,159,28,0.12)` : "var(--surface-2)",
-                  border: `1px solid ${active ? "var(--signal-amber)" : "var(--border-default)"}`,
-                  color: active ? "var(--signal-amber)" : "var(--text-secondary)",
+                  background: active ? `rgba(249, 115, 22, 0.12)` : "rgba(20, 18, 40, 0.5)",
+                  border: `1px solid ${active ? "rgba(249, 115, 22, 0.12)" : "rgba(139, 92, 246, 0.12)"}`,
+                  color: active ? "#f97316" : "rgba(255,255,255,0.6)",
                 }}
               >
                 <Icon size={16} />
@@ -177,10 +177,10 @@ export default function ProjectBrainPage() {
         {tab === "chat" && (
           <motion.div {...fadeInUp} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 glass overflow-hidden flex flex-col" style={{ height: 520 }}>
-              <div className="px-4 py-3 border-b flex items-center gap-2" style={{ borderColor: "var(--border-subtle)", background: "var(--surface-2)" }}>
-                <Brain size={14} style={{ color: "var(--signal-amber)" }} />
-                <p className="eyebrow" style={{ color: "var(--void-1)" }}>Product Twin</p>
-                <span className="ml-auto text-mono text-[10px]" style={{ color: "var(--void-1)" }}>{allReports.length} reports loaded</span>
+              <div className="px-4 py-3 border-b flex items-center gap-2" style={{ borderColor: "rgba(139, 92, 246, 0.12)", background: "rgba(20, 18, 40, 0.5)", backdropFilter: "blur(12px)" }}>
+                <Brain size={14} style={{ color: "#f97316" }} />
+                <p className="eyebrow" style={{ color: "rgba(255,255,255,0.5)" }}>Product Twin</p>
+                <span className="ml-auto text-mono text-[10px]" style={{ color: "rgba(255,255,255,0.5)" }}>{allReports.length} reports loaded</span>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.map((msg, i) => (
@@ -192,9 +192,9 @@ export default function ProjectBrainPage() {
                   >
                     <div className={`max-w-[80%] rounded-xl px-4 py-3 text-sm ${msg.role === "user" ? "rounded-br-sm" : "rounded-bl-sm"}`}
                       style={{
-                        background: msg.role === "user" ? "var(--signal-amber)" : "var(--surface-2)",
-                        color: msg.role === "user" ? "var(--void-0)" : "var(--void-2)",
-                        border: msg.role === "user" ? "none" : "1px solid var(--border-subtle)",
+                        background: msg.role === "user" ? "#f97316" : "rgba(20, 18, 40, 0.5)", backdropFilter: msg.role === "user" ? undefined : "blur(12px)",
+                        color: msg.role === "user" ? "#fff" : "rgba(255,255,255,0.6)",
+                        border: msg.role === "user" ? "none" : "1px solid rgba(139, 92, 246, 0.12)",
                       }}
                     >
                       {msg.content}
@@ -203,13 +203,13 @@ export default function ProjectBrainPage() {
                 ))}
                 {loading && (
                   <div className="flex justify-start">
-                    <div className="rounded-xl px-4 py-3 rounded-bl-sm" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
-                      <Loader2 size={16} className="animate-spin" style={{ color: "var(--signal-amber)" }} />
+                    <div className="rounded-xl px-4 py-3 rounded-bl-sm" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", backdropFilter: "blur(12px)" }}>
+                      <Loader2 size={16} className="animate-spin" style={{ color: "#f97316" }} />
                     </div>
                   </div>
                 )}
               </div>
-              <div className="p-4 border-t" style={{ borderColor: "var(--border-subtle)" }}>
+              <div className="p-4 border-t" style={{ borderColor: "rgba(139, 92, 246, 0.12)" }}>
                 <div className="flex gap-2">
                   <input
                     value={input}
@@ -217,7 +217,7 @@ export default function ProjectBrainPage() {
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
                     placeholder="Ask about your project..."
                     className="flex-1 px-4 py-2.5 rounded-lg text-sm outline-none"
-                    style={{ background: "var(--void-0)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}
+                    style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "#fff" }}
                   />
                   <ObsidianButton variant="primary" onClick={send} disabled={loading || !input.trim()}>
                     <Send size={16} />
@@ -235,8 +235,8 @@ export default function ProjectBrainPage() {
                   </div>
                   <div className="space-y-2">
                     {contradictions.slice(0, 3).map((c, i) => (
-                      <div key={i} className="text-xs p-2 rounded-lg" style={{ background: "var(--surface-2)" }}>
-                        <p style={{ color: "var(--void-2)" }}>{c.explanation}</p>
+                      <div key={i} className="text-xs p-2 rounded-lg" style={{ background: "rgba(20, 18, 40, 0.5)", backdropFilter: "blur(12px)" }}>
+                        <p style={{ color: "rgba(255,255,255,0.6)" }}>{c.explanation}</p>
                       </div>
                     ))}
                   </div>
@@ -244,23 +244,23 @@ export default function ProjectBrainPage() {
               )}
 
               <div className="glass p-4">
-                <p className="eyebrow mb-3" style={{ color: "var(--void-1)" }}>Quick Stats</p>
+                <p className="eyebrow mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>Quick Stats</p>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: "var(--void-1)" }}>Reports</span>
-                    <span style={{ color: "var(--void-3)" }}>{allReports.length}</span>
+                    <span style={{ color: "rgba(255,255,255,0.5)" }}>Reports</span>
+                    <span style={{ color: "#fff" }}>{allReports.length}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: "var(--void-1)" }}>Avg Score</span>
+                    <span style={{ color: "rgba(255,255,255,0.5)" }}>Avg Score</span>
                     <span style={{ color: avgScore >= 70 ? "var(--color-success)" : avgScore >= 40 ? "var(--color-warning)" : "var(--color-danger)" }}>{avgScore}/100</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: "var(--void-1)" }}>Tasks Done</span>
-                    <span style={{ color: "var(--void-3)" }}>{completedTasks}/{allTasks.length}</span>
+                    <span style={{ color: "rgba(255,255,255,0.5)" }}>Tasks Done</span>
+                    <span style={{ color: "#fff" }}>{completedTasks}/{allTasks.length}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: "var(--void-1)" }}>Tools Used</span>
-                    <span style={{ color: "var(--void-3)" }}>{toolsCovered.length}</span>
+                    <span style={{ color: "rgba(255,255,255,0.5)" }}>Tools Used</span>
+                    <span style={{ color: "#fff" }}>{toolsCovered.length}</span>
                   </div>
                 </div>
               </div>
@@ -272,9 +272,9 @@ export default function ProjectBrainPage() {
           <motion.div {...fadeInUp} className="space-y-4">
             {projects.length === 0 ? (
               <div className="text-center py-16">
-                <FolderOpen size={32} className="mx-auto mb-4" style={{ color: "var(--void-1)" }} />
-                <p className="text-sm" style={{ color: "var(--void-2)" }}>No projects yet</p>
-                <p className="text-xs mt-1" style={{ color: "var(--void-1)" }}>Projects are created automatically when you run tools</p>
+                <FolderOpen size={32} className="mx-auto mb-4" style={{ color: "rgba(255,255,255,0.5)" }} />
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>No projects yet</p>
+                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>Projects are created automatically when you run tools</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -286,11 +286,11 @@ export default function ProjectBrainPage() {
                     onClick={() => navigate(`/app/projects/${project.id}`)}
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <FolderOpen size={18} style={{ color: "var(--signal-amber)" }} />
-                      <p className="text-sm font-semibold truncate" style={{ color: "var(--void-3)" }}>{project.name}</p>
+                      <FolderOpen size={18} style={{ color: "#f97316" }} />
+                      <p className="text-sm font-semibold truncate" style={{ color: "#fff" }}>{project.name}</p>
                     </div>
                     {project.stage && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "rgba(255,159,28,0.12)", color: "var(--signal-amber)" }}>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "rgba(249, 115, 22, 0.12)", color: "#f97316" }}>
                         {project.stage}
                       </span>
                     )}
@@ -305,9 +305,9 @@ export default function ProjectBrainPage() {
           <motion.div {...fadeInUp} className="space-y-4">
             {allReports.length === 0 ? (
               <div className="text-center py-16">
-                <FileText size={32} className="mx-auto mb-4" style={{ color: "var(--void-1)" }} />
-                <p className="text-sm" style={{ color: "var(--void-2)" }}>No reports yet</p>
-                <p className="text-xs mt-1" style={{ color: "var(--void-1)" }}>Run tools to generate reports</p>
+                <FileText size={32} className="mx-auto mb-4" style={{ color: "rgba(255,255,255,0.5)" }} />
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>No reports yet</p>
+                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>Run tools to generate reports</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -318,19 +318,19 @@ export default function ProjectBrainPage() {
                     className="glass p-4 cursor-pointer transition-colors flex items-center gap-4"
                     onClick={() => navigate(`/app/reports/${report.id}`)}
                   >
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--surface-2)" }}>
-                      <FileText size={18} style={{ color: "var(--signal-amber)" }} />
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(20, 18, 40, 0.5)", backdropFilter: "blur(12px)" }}>
+                      <FileText size={18} style={{ color: "#f97316" }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate" style={{ color: "var(--void-3)" }}>{report.title}</p>
-                      <p className="text-xs" style={{ color: "var(--void-1)" }}>{report.tool} · {new Date(report.created_at).toLocaleDateString()}</p>
+                      <p className="text-sm font-medium truncate" style={{ color: "#fff" }}>{report.title}</p>
+                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{report.tool} · {new Date(report.created_at).toLocaleDateString()}</p>
                     </div>
                     {report.score != null && (
                       <span className="text-sm font-bold" style={{ color: report.score >= 70 ? "var(--color-success)" : report.score >= 40 ? "var(--color-warning)" : "var(--color-danger)" }}>
                         {report.score}
                       </span>
                     )}
-                    <ChevronRight size={14} style={{ color: "var(--void-1)" }} />
+                    <ChevronRight size={14} style={{ color: "rgba(255,255,255,0.5)" }} />
                   </motion.div>
                 ))}
               </div>
@@ -344,21 +344,21 @@ export default function ProjectBrainPage() {
               {[
                 { label: "Avg Score", value: avgScore, suffix: "/100", color: avgScore >= 70 ? "var(--color-success)" : avgScore >= 40 ? "var(--color-warning)" : "var(--color-danger)" },
                 { label: "Tasks Done", value: completedTasks, suffix: `/${allTasks.length}`, color: "var(--color-success)" },
-                { label: "Reports", value: allReports.length, suffix: "", color: "var(--signal-amber)" },
+                { label: "Reports", value: allReports.length, suffix: "", color: "#f97316" },
               ].map((stat) => (
                 <div key={stat.label} className="glass p-5">
-                  <p className="text-xs" style={{ color: "var(--void-1)" }}>{stat.label}</p>
-                  <p className="text-3xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}<span className="text-sm font-normal" style={{ color: "var(--void-1)" }}>{stat.suffix}</span></p>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{stat.label}</p>
+                  <p className="text-3xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}<span className="text-sm font-normal" style={{ color: "rgba(255,255,255,0.5)" }}>{stat.suffix}</span></p>
                 </div>
               ))}
             </div>
 
             {toolsCovered.length > 0 && (
               <div className="glass p-5">
-                <p className="eyebrow mb-4" style={{ color: "var(--void-1)" }}>Tools Used</p>
+                <p className="eyebrow mb-4" style={{ color: "rgba(255,255,255,0.5)" }}>Tools Used</p>
                 <div className="flex flex-wrap gap-2">
                   {toolsCovered.map((tool) => (
-                    <span key={tool} className="text-xs px-3 py-1.5 rounded-lg" style={{ background: "var(--surface-2)", color: "var(--void-2)" }}>
+                    <span key={tool} className="text-xs px-3 py-1.5 rounded-lg" style={{ background: "rgba(20, 18, 40, 0.5)", color: "rgba(255,255,255,0.6)", backdropFilter: "blur(12px)" }}>
                       {tool}
                     </span>
                   ))}

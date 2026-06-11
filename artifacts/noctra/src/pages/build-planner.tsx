@@ -31,8 +31,8 @@ interface Task {
 }
 
 const MODES: Array<{ key: ToolMode; label: string; icon: typeof Map; color: string; description: string }> = [
-  { key: "mvp", label: "MVP Planner", icon: Map, color: "var(--accent-cyan)", description: "Lock scope, define success metrics, and generate a build plan." },
-  { key: "tasks", label: "Fix Tasks", icon: CheckSquare, color: "var(--color-success)", description: "Tasks generated from your scans. Prioritized and ready to execute." },
+  { key: "mvp", label: "MVP Planner", icon: Map, color: "#8b5cf6", description: "Lock scope, define success metrics, and generate a build plan." },
+  { key: "tasks", label: "Fix Tasks", icon: CheckSquare, color: "#f97316", description: "Tasks generated from your scans. Prioritized and ready to execute." },
 ];
 
 const fadeInUp = {
@@ -180,8 +180,8 @@ export default function BuildPlannerPage() {
     <AppShell>
       <div className="p-4 sm:p-6 max-w-6xl mx-auto">
         <motion.div {...fadeInUp} className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight mb-2 text-display" style={{ color: "var(--text-primary)" }}>Build Planner</h1>
-          <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Plan MVP scope and track execution</p>
+          <h1 className="text-2xl font-bold tracking-tight mb-2 text-display" style={{ color: "#fff" }}>Build Planner</h1>
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Plan MVP scope and track execution</p>
         </motion.div>
 
         <motion.div {...fadeInUp} className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -194,9 +194,10 @@ export default function BuildPlannerPage() {
                 onClick={() => { setMode(m.key); if (m.key === "tasks") loadTasks(); }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
                 style={{
-                  background: active ? `rgba(255,159,28,0.12)` : "var(--surface-2)",
-                  border: `1px solid ${active ? "var(--signal-amber)" : "var(--border-default)"}`,
-                  color: active ? "var(--signal-amber)" : "var(--text-secondary)",
+                  background: active ? `${m.color}15` : "rgba(20, 18, 40, 0.5)",
+                  border: `1px solid ${active ? m.color : "rgba(139, 92, 246, 0.12)"}`,
+                  color: active ? m.color : "rgba(255,255,255,0.6)",
+                  backdropFilter: "blur(12px)",
                 }}
               >
                 <Icon size={16} />
@@ -214,8 +215,8 @@ export default function BuildPlannerPage() {
         {mode === "mvp" ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <motion.div {...fadeInUp} className="glass overflow-hidden">
-              <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-                <span className="eyebrow" style={{ color: "var(--void-1)" }}>Input</span>
+              <div className="px-5 py-3 border-b" style={{ borderColor: "rgba(139, 92, 246, 0.12)" }}>
+                <span className="eyebrow" style={{ color: "rgba(255,255,255,0.6)" }}>Input</span>
               </div>
               <div className="p-5 space-y-4">
                 <textarea
@@ -225,7 +226,7 @@ export default function BuildPlannerPage() {
                   rows={8}
                   disabled={phase === "running"}
                   className="w-full px-4 py-3 rounded-lg text-sm resize-none outline-none"
-                  style={{ background: "var(--void-0)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}
+                  style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "#fff", backdropFilter: "blur(12px)" }}
                   maxLength={4000}
                 />
                 <div className="flex gap-3">
@@ -246,34 +247,34 @@ export default function BuildPlannerPage() {
             </motion.div>
 
             <motion.div {...fadeInUp} className="glass overflow-hidden">
-              <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border-subtle)" }}>
-                <span className="eyebrow" style={{ color: "var(--void-1)" }}>Output</span>
+              <div className="px-5 py-3 border-b" style={{ borderColor: "rgba(139, 92, 246, 0.12)" }}>
+                <span className="eyebrow" style={{ color: "rgba(255,255,255,0.6)" }}>Output</span>
               </div>
               <div className="p-5">
                 <AnimatePresence mode="wait">
                   {phase === "idle" && (
                     <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16 text-center">
-                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "var(--void-1)" }}>
-                        <Map size={28} style={{ color: "var(--signal-amber)" }} />
+                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "rgba(20, 18, 40, 0.5)", backdropFilter: "blur(12px)" }}>
+                        <Map size={28} style={{ color: "#f97316" }} />
                       </div>
-                      <p className="text-sm font-medium mb-1" style={{ color: "var(--void-2)" }}>MVP Planner awaiting input</p>
-                      <p className="text-xs" style={{ color: "var(--void-1)" }}>Describe your idea to generate a ruthless scope and build plan</p>
+                      <p className="text-sm font-medium mb-1" style={{ color: "rgba(255,255,255,0.6)" }}>MVP Planner awaiting input</p>
+                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Describe your idea to generate a ruthless scope and build plan</p>
                     </motion.div>
                   )}
 
                   {phase === "running" && (
                     <motion.div key="running" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16">
-                      <Loader2 size={32} className="animate-spin mb-4" style={{ color: "var(--signal-amber)" }} />
-                      <p className="text-sm" style={{ color: "var(--void-1)" }}>Generating your build plan...</p>
+                      <Loader2 size={32} className="animate-spin mb-4" style={{ color: "#f97316" }} />
+                      <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Generating your build plan...</p>
                     </motion.div>
                   )}
 
                   {phase === "done" && result && (
                     <motion.div key="done" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
                       {northStar && (
-                        <div className="p-5 rounded-xl" style={{ background: "rgba(255,159,28,0.06)", border: "1px solid var(--signal-amber)" }}>
-                          <p className="eyebrow mb-2" style={{ color: "var(--signal-amber)" }}>North Star Metric</p>
-                          <p className="text-base font-semibold" style={{ color: "var(--void-3)" }}>{northStar}</p>
+                        <div className="p-5 rounded-xl" style={{ background: "rgba(249, 115, 22, 0.06)", border: "1px solid rgba(249, 115, 22, 0.12)" }}>
+                          <p className="eyebrow mb-2" style={{ color: "#f97316" }}>North Star Metric</p>
+                          <p className="text-base font-semibold" style={{ color: "#fff" }}>{northStar}</p>
                         </div>
                       )}
 
@@ -282,9 +283,9 @@ export default function BuildPlannerPage() {
                           <p className="eyebrow mb-2" style={{ color: "var(--color-success)" }}>Build Now</p>
                           <div className="space-y-1.5">
                             {buildNow.map((item, i) => (
-                              <div key={i} className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
+                              <div key={i} className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", backdropFilter: "blur(12px)" }}>
                                 <CheckCircle size={14} className="mt-0.5 shrink-0" style={{ color: "var(--color-success)" }} />
-                                <span className="text-sm" style={{ color: "var(--void-3)" }}>{item}</span>
+                                <span className="text-sm" style={{ color: "#fff" }}>{item}</span>
                               </div>
                             ))}
                           </div>
@@ -293,12 +294,12 @@ export default function BuildPlannerPage() {
 
                       {buildLater.length > 0 && (
                         <div>
-                          <p className="eyebrow mb-2" style={{ color: "var(--void-1)" }}>Build Later</p>
+                          <p className="eyebrow mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>Build Later</p>
                           <div className="space-y-1.5">
                             {buildLater.map((item, i) => (
-                              <div key={i} className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg opacity-60" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
-                                <Clock size={14} className="mt-0.5 shrink-0" style={{ color: "var(--void-1)" }} />
-                                <span className="text-sm" style={{ color: "var(--void-1)" }}>{item}</span>
+                              <div key={i} className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg opacity-60" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", backdropFilter: "blur(12px)" }}>
+                                <Clock size={14} className="mt-0.5 shrink-0" style={{ color: "rgba(255,255,255,0.5)" }} />
+                                <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{item}</span>
                               </div>
                             ))}
                           </div>
@@ -317,7 +318,7 @@ export default function BuildPlannerPage() {
                     <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16 text-center">
                       <AlertTriangle size={32} className="mb-4" style={{ color: "var(--color-danger)" }} />
                       <p className="text-sm font-medium mb-1" style={{ color: "var(--color-danger)" }}>Failed to generate plan</p>
-                      <p className="text-xs" style={{ color: "var(--void-1)" }}>{error}</p>
+                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>{error}</p>
                       <ObsidianButton variant="secondary" onClick={reset} className="mt-4">Try Again</ObsidianButton>
                     </motion.div>
                   )}
@@ -329,13 +330,13 @@ export default function BuildPlannerPage() {
           <motion.div {...fadeInUp} className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Total", value: taskStats.total, color: "var(--void-3)" },
+                { label: "Total", value: taskStats.total, color: "#fff" },
                 { label: "Completed", value: taskStats.completed, color: "var(--color-success)" },
                 { label: "In Progress", value: taskStats.inProgress, color: "var(--color-warning)" },
                 { label: "Critical", value: taskStats.critical, color: "var(--color-danger)" },
               ].map((stat) => (
                 <div key={stat.label} className="glass p-4">
-                  <p className="text-xs" style={{ color: "var(--void-1)" }}>{stat.label}</p>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{stat.label}</p>
                   <p className="text-2xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}</p>
                 </div>
               ))}
@@ -346,7 +347,7 @@ export default function BuildPlannerPage() {
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as TaskStatus | "all")}
                 className="px-3 py-2 rounded-lg text-xs"
-                style={{ background: "var(--void-0)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}
+                style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "#fff", backdropFilter: "blur(12px)" }}
               >
                 <option value="all">All Status</option>
                 <option value="todo">To Do</option>
@@ -357,7 +358,7 @@ export default function BuildPlannerPage() {
                 value={filterPriority}
                 onChange={(e) => setFilterPriority(e.target.value as TaskPriority | "all")}
                 className="px-3 py-2 rounded-lg text-xs"
-                style={{ background: "var(--void-0)", border: "1px solid var(--border-default)", color: "var(--void-3)" }}
+                style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "#fff", backdropFilter: "blur(12px)" }}
               >
                 <option value="all">All Priority</option>
                 <option value="critical">Critical</option>
@@ -373,9 +374,9 @@ export default function BuildPlannerPage() {
               </div>
             ) : filteredTasks.length === 0 ? (
               <div className="text-center py-16">
-                <CheckSquare size={32} className="mx-auto mb-4" style={{ color: "var(--void-1)" }} />
-                <p className="text-sm" style={{ color: "var(--void-2)" }}>No tasks found</p>
-                <p className="text-xs mt-1" style={{ color: "var(--void-1)" }}>Run Product Doctor or MVP Planner to generate tasks</p>
+                <CheckSquare size={32} className="mx-auto mb-4" style={{ color: "rgba(255,255,255,0.5)" }} />
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>No tasks found</p>
+                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>Run Product Doctor or MVP Planner to generate tasks</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -385,7 +386,7 @@ export default function BuildPlannerPage() {
                     layout
                     className="glass p-4 cursor-pointer transition-colors"
                     style={{
-                      borderColor: task.priority === "critical" && task.status !== "completed" ? "var(--color-danger)" : undefined,
+                      borderColor: task.priority === "critical" && task.status !== "completed" ? "var(--color-danger)" : "rgba(139, 92, 246, 0.12)",
                       opacity: task.status === "completed" ? 0.7 : 1,
                     }}
                     onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
@@ -395,27 +396,27 @@ export default function BuildPlannerPage() {
                         onClick={(e) => { e.stopPropagation(); updateTaskStatus(task.id, task.status === "completed" ? "todo" : "completed"); }}
                         className="mt-0.5 w-5 h-5 rounded border flex items-center justify-center shrink-0"
                         style={{
-                          borderColor: task.status === "completed" ? "var(--color-success)" : "var(--border-default)",
+                          borderColor: task.status === "completed" ? "var(--color-success)" : "rgba(139, 92, 246, 0.12)",
                           background: task.status === "completed" ? "var(--color-success-soft)" : "transparent",
                         }}
                       >
                         {task.status === "completed" && <CheckCircle size={12} style={{ color: "var(--color-success)" }} />}
                       </button>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium" style={{ color: task.status === "completed" ? "var(--void-1)" : "var(--void-3)", textDecoration: task.status === "completed" ? "line-through" : "none" }}>
+                        <p className="text-sm font-medium" style={{ color: task.status === "completed" ? "rgba(255,255,255,0.5)" : "#fff", textDecoration: task.status === "completed" ? "line-through" : "none" }}>
                           {task.title}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[10px] px-1.5 py-0.5 rounded" style={{
-                            background: task.priority === "critical" ? "var(--color-danger-soft)" : task.priority === "high" ? "var(--color-warning-soft)" : "var(--surface-2)",
-                            color: task.priority === "critical" ? "var(--color-danger)" : task.priority === "high" ? "var(--color-warning)" : "var(--void-1)",
+                            background: task.priority === "critical" ? "var(--color-danger-soft)" : task.priority === "high" ? "var(--color-warning-soft)" : "rgba(20, 18, 40, 0.5)",
+                            color: task.priority === "critical" ? "var(--color-danger)" : task.priority === "high" ? "var(--color-warning)" : "rgba(255,255,255,0.6)",
                           }}>
                             {task.priority}
                           </span>
-                          <span className="text-[10px]" style={{ color: "var(--void-1)" }}>{task.category}</span>
+                          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.5)" }}>{task.category}</span>
                         </div>
                       </div>
-                      {expandedTask === task.id ? <ChevronUp size={14} style={{ color: "var(--void-1)" }} /> : <ChevronDown size={14} style={{ color: "var(--void-1)" }} />}
+                      {expandedTask === task.id ? <ChevronUp size={14} style={{ color: "rgba(255,255,255,0.5)" }} /> : <ChevronDown size={14} style={{ color: "rgba(255,255,255,0.5)" }} />}
                     </div>
 
                     <AnimatePresence>
@@ -426,7 +427,7 @@ export default function BuildPlannerPage() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <p className="text-xs mt-3 pl-8" style={{ color: "var(--void-2)" }}>{task.detail}</p>
+                          <p className="text-xs mt-3 pl-8" style={{ color: "rgba(255,255,255,0.6)" }}>{task.detail}</p>
                         </motion.div>
                       )}
                     </AnimatePresence>

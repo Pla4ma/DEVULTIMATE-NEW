@@ -156,7 +156,7 @@ export function DoctorTab({ doctorReports, latestDoctorReport, openScanGates, ta
                       {sorted.map((r, i) => (
                         <div key={r.id} className="text-center">
                           <p className="text-mono text-xs font-bold" style={{ color: SCORE_COLOR(r.score ?? 0) }}>{r.score ?? "—"}</p>
-                          <p className="text-[9px]" style={{ color: "var(--text-quaternary)" }}>#{i + 1}</p>
+                          <p className="text-[9px]" style={{ color: "rgba(255,255,255,0.5)" }}>#{i + 1}</p>
                         </div>
                       ))}
                     </div>

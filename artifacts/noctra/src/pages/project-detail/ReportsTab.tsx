@@ -81,7 +81,7 @@ export function ReportsTab({ reports, selectedReport, onSelectReport, generating
                 {INTELLIGENCE_TOOLS.filter((key) => !reports.some((r) => r.tool === key)).map((key) => {
                   const t = TOOL_BY_KEY[key as keyof typeof TOOL_BY_KEY];
                   if (!t) return null;
-                  return <button key={key} onClick={() => navigate(t.route)} className="text-xs px-2.5 py-1 rounded-full hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}>+ {t.label}</button>;
+                  return <button key={key} onClick={() => navigate(t.route)} className="text-xs px-2.5 py-1 rounded-full hover:opacity-80" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "var(--text-tertiary)", backdropFilter: "blur(12px)" }}>+ {t.label}</button>;
                 })}
               </div>
             </Panel>
@@ -90,7 +90,7 @@ export function ReportsTab({ reports, selectedReport, onSelectReport, generating
           <Panel className="glass">
             <p className="text-xs font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>Link existing report by ID</p>
             <div className="flex gap-2">
-              <input value={linkReportId} onChange={(e) => onLinkReportIdChange(e.target.value)} placeholder="Paste report ID…" className="flex-1 px-3 py-2 rounded-lg text-xs outline-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+              <input value={linkReportId} onChange={(e) => onLinkReportIdChange(e.target.value)} placeholder="Paste report ID…" className="flex-1 px-3 py-2 rounded-lg text-xs outline-none" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "var(--text-primary)" }} />
               <NoctraButton onClick={onLinkReport} disabled={linkingReport || !linkReportId.trim()}>
                 {linkingReport ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Link
               </NoctraButton>

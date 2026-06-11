@@ -27,9 +27,9 @@ export function ExecutionTab({ tasks, reports, taskFilter, completedTasks, filte
       ) : (
         <>
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex gap-1 p-1 rounded-lg" style={{ background: "var(--surface-1)" }}>
+            <div className="flex gap-1 p-1 rounded-lg" style={{ background: "rgba(20, 18, 40, 0.5)", backdropFilter: "blur(12px)" }}>
               {(["all", "todo", "in-progress", "completed"] as const).map((f) => (
-                <button key={f} onClick={() => onTaskFilterChange(f)} className="flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all" style={{ background: taskFilter === f ? "var(--surface-2)" : "transparent", color: taskFilter === f ? "var(--text-primary)" : "var(--text-tertiary)", border: taskFilter === f ? "1px solid var(--border-default)" : "1px solid transparent", whiteSpace: "nowrap" }}>
+                <button key={f} onClick={() => onTaskFilterChange(f)} className="flex-1 px-2 py-1.5 rounded-lg text-xs font-medium transition-all" style={{ background: taskFilter === f ? "rgba(20, 18, 40, 0.5)" : "transparent", color: taskFilter === f ? "var(--text-primary)" : "var(--text-tertiary)", border: taskFilter === f ? "1px solid rgba(139, 92, 246, 0.12)" : "1px solid transparent", whiteSpace: "nowrap" }}>
                   {f === "all" ? `All (${tasks.length})` : f === "todo" ? `Todo (${tasks.filter((t) => t.status === "todo").length})` : f === "in-progress" ? `Active (${tasks.filter((t) => t.status === "in-progress").length})` : `Done (${completedTasks})`}
                 </button>
               ))}

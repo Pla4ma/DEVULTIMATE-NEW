@@ -21,7 +21,7 @@ export function HistoryTab({ timeline, scoreHistory, risks }: HistoryTabProps) {
             <p className="eyebrow" style={{ color: "var(--text-tertiary)" }}>Project Timeline</p>
           </div>
           <div className="relative">
-            <div className="absolute left-[5px] top-0 bottom-0 w-px" style={{ background: "var(--border-default)" }} />
+            <div className="absolute left-[5px] top-0 bottom-0 w-px" style={{ background: "rgba(139, 92, 246, 0.12)" }} />
             <div className="space-y-4 pl-6">
               {timeline.map((event) => (
                 <div key={event.id} className="relative">

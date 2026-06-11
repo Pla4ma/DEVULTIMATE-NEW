@@ -112,8 +112,8 @@ export function BlockersTab(props: { projectId: string; navigate: (url: string) 
             onClick={() => setFilter(f)}
             className="px-3 py-1 rounded-full text-xs capitalize"
             style={{
-              background: filter === f ? "var(--surface-2)" : "transparent",
-              border: `1px solid ${filter === f ? "var(--border-default)" : "transparent"}`,
+              background: filter === f ? "rgba(20, 18, 40, 0.5)" : "transparent",
+              border: `1px solid ${filter === f ? "rgba(139, 92, 246, 0.12)" : "transparent"}`,
               color: filter === f ? "var(--text-primary)" : "var(--text-tertiary)",
             }}
           >

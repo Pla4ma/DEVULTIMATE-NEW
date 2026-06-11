@@ -265,7 +265,7 @@ export default function ProjectDetailPage() {
   if (loading) return (
     <AppShell>
       <div className="flex items-center justify-center h-64">
-        <Loader2 size={24} className="animate-spin" style={{ color: "var(--signal-amber)" }} />
+        <Loader2 size={24} className="animate-spin" style={{ color: "#f97316" }} />
       </div>
     </AppShell>
   );
@@ -335,18 +335,18 @@ export default function ProjectDetailPage() {
           <Panel className="glass">
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: "var(--void-1)" }}>Project Name</label>
-                <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "var(--void-0)", border: "1px solid var(--border-default)", color: "var(--void-3)" }} />
+                <label className="block text-xs font-medium mb-1" style={{ color: "rgba(255,255,255,0.6)" }}>Project Name</label>
+                <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "#fff" }} />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: "var(--void-1)" }}>Core Idea</label>
-                <textarea value={editIdea} onChange={(e) => setEditIdea(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg text-sm resize-none outline-none" style={{ background: "var(--void-0)", border: "1px solid var(--border-default)", color: "var(--void-3)" }} />
+                <label className="block text-xs font-medium mb-1" style={{ color: "rgba(255,255,255,0.6)" }}>Core Idea</label>
+                <textarea value={editIdea} onChange={(e) => setEditIdea(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg text-sm resize-none outline-none" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "#fff" }} />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1" style={{ color: "var(--void-1)" }}>Stage</label>
+                <label className="block text-xs font-medium mb-1" style={{ color: "rgba(255,255,255,0.6)" }}>Stage</label>
                 <div className="flex gap-2 flex-wrap">
                   {STAGES.map((s) => (
-                    <button key={s} onClick={() => setEditStage(s)} className="px-3 py-1 rounded-full text-xs font-medium capitalize" style={{ background: editStage === s ? `${STAGE_COLORS[s]}20` : "var(--surface-2)", border: `1px solid ${editStage === s ? STAGE_COLORS[s] : "var(--border-default)"}`, color: editStage === s ? STAGE_COLORS[s] : "var(--void-1)" }}>
+                    <button key={s} onClick={() => setEditStage(s)} className="px-3 py-1 rounded-full text-xs font-medium capitalize" style={{ background: editStage === s ? `${STAGE_COLORS[s]}20` : "rgba(20, 18, 40, 0.5)", border: `1px solid ${editStage === s ? STAGE_COLORS[s] : "rgba(139, 92, 246, 0.12)"}`, color: editStage === s ? STAGE_COLORS[s] : "rgba(255,255,255,0.6)" }}>
                       {s}
                     </button>
                   ))}
@@ -375,21 +375,21 @@ export default function ProjectDetailPage() {
                   <Badge style={{ background: `${stageColor}18`, color: stageColor }}>{project.stage ?? "idea"}</Badge>
                   {project.status ? <Badge>{project.status}</Badge> : null}
                 </div>
-                <h1 className="text-xl font-bold tracking-tight" style={{ color: "var(--void-3)" }}>{project.name}</h1>
-                {project.idea ? <p className="text-sm mt-1 line-clamp-2" style={{ color: "var(--void-1)" }}>{project.idea}</p> : null}
-                <p className="text-xs mt-2 flex items-center gap-1" style={{ color: "var(--void-1)" }}>
+                <h1 className="text-xl font-bold tracking-tight" style={{ color: "#fff" }}>{project.name}</h1>
+                {project.idea ? <p className="text-sm mt-1 line-clamp-2" style={{ color: "rgba(255,255,255,0.6)" }}>{project.idea}</p> : null}
+                <p className="text-xs mt-2 flex items-center gap-1" style={{ color: "rgba(255,255,255,0.6)" }}>
                   <Calendar size={11} /> Created {new Date(project.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                 </p>
               </div>
               <div className="flex gap-5 text-center shrink-0">
                 {[
-                  { label: "Reports", value: reports.length, color: "var(--signal-amber)" },
+                  { label: "Reports", value: reports.length, color: "#f97316" },
                   { label: "Tasks", value: tasks.length, color: "var(--color-success)" },
-                  { label: "Done", value: completedTasks, color: "var(--signal-amber)" },
+                  { label: "Done", value: completedTasks, color: "#f97316" },
                 ].map(({ label, value, color }) => (
                   <div key={label}>
                     <p className="text-xl font-bold text-mono" style={{ color }}>{value}</p>
-                    <p className="eyebrow mt-0.5" style={{ color: "var(--void-1)" }}>{label}</p>
+                    <p className="eyebrow mt-0.5" style={{ color: "rgba(255,255,255,0.6)" }}>{label}</p>
                   </div>
                 ))}
               </div>
@@ -398,11 +398,11 @@ export default function ProjectDetailPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-1 p-1 rounded-xl overflow-x-auto" style={{ background: "var(--surface-2)", border: "1px solid var(--border-subtle)" }}>
+        <div className="flex gap-1 p-1 rounded-xl overflow-x-auto" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", backdropFilter: "blur(12px)" }}>
           {TABS.map((t) => (
-            <button key={t.key} onClick={() => { setTab(t.key); setSelectedReport(null); }} className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium capitalize transition-all ${tab === t.key ? "glass" : ""}`} style={{ color: tab === t.key ? "var(--void-3)" : "var(--void-1)", border: tab === t.key ? "1px solid var(--signal-amber)" : "1px solid transparent", boxShadow: tab === t.key ? "var(--shadow-xs)" : "none", whiteSpace: "nowrap" }}>
+            <button key={t.key} onClick={() => { setTab(t.key); setSelectedReport(null); }} className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium capitalize transition-all ${tab === t.key ? "glass" : ""}`} style={{ color: tab === t.key ? "#fff" : "rgba(255,255,255,0.6)", border: tab === t.key ? "1px solid rgba(249, 115, 22, 0.12)" : "1px solid transparent", boxShadow: tab === t.key ? "var(--shadow-xs)" : "none", whiteSpace: "nowrap" }}>
               {t.label}
-              {t.count != null && t.count > 0 ? <span className="text-mono text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "var(--surface-3)", color: "var(--void-1)" }}>{t.count}</span> : null}
+              {t.count != null && t.count > 0 ? <span className="text-mono text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "rgba(20, 18, 40, 0.5)", color: "rgba(255,255,255,0.6)" }}>{t.count}</span> : null}
             </button>
           ))}
         </div>

@@ -26,7 +26,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
   return (
     <div className="space-y-4">
       {projectState ? (
-        <div className="flex items-center justify-between gap-4 px-4 py-4 rounded-xl" style={{ background: "var(--signal-soft)", border: "1px solid var(--border-default)" }}>
+        <div className="flex items-center justify-between gap-4 px-4 py-4 rounded-xl" style={{ background: "var(--signal-soft)", border: "1px solid rgba(139, 92, 246, 0.12)" }}>
           <div className="flex items-start gap-3 min-w-0">
             <ArrowRight size={16} style={{ color: "var(--signal)", flexShrink: 0, marginTop: 2 }} />
             <div className="min-w-0">
@@ -104,12 +104,12 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
             })}
           </div>
           {projectState.missingTools.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t" style={{ borderColor: "var(--border-default)" }}>
+            <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t" style={{ borderColor: "rgba(139, 92, 246, 0.12)" }}>
               <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>Not run:</span>
               {projectState.missingTools.map((key) => {
                 const t = TOOL_BY_KEY[key as keyof typeof TOOL_BY_KEY];
                 if (!t) return null;
-                return <button key={key} onClick={() => navigate(t.route)} className="text-xs px-2 py-0.5 rounded-full hover:opacity-80" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-tertiary)" }}>{t.label}</button>;
+                return <button key={key} onClick={() => navigate(t.route)} className="text-xs px-2 py-0.5 rounded-full hover:opacity-80" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "var(--text-tertiary)", backdropFilter: "blur(12px)" }}>{t.label}</button>;
               })}
             </div>
           ) : null}
@@ -171,7 +171,7 @@ export function OverviewTab({ project, projectState, reports, tasks, proofSignal
               <Download size={12} />
               <div><p>Download Brief</p><p style={{ color: "var(--text-tertiary)" }}>Save as .md file</p></div>
             </button>
-            <button onClick={onCopyPrompt} className="glass flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-left sm:col-span-2" style={{ background: promptCopied ? "var(--signal-soft)" : undefined, border: promptCopied ? "1px solid var(--accent-cyan-glow)" : undefined, color: promptCopied ? "var(--signal)" : "var(--text-primary)" }}>
+            <button onClick={onCopyPrompt} className="glass flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-left sm:col-span-2" style={{ background: promptCopied ? "var(--signal-soft)" : undefined, border: promptCopied ? "1px solid rgba(139, 92, 246, 0.12)" : undefined, color: promptCopied ? "var(--signal)" : "var(--text-primary)" }}>
               {promptCopied ? <Check size={12} style={{ color: "var(--signal)" }} /> : <Terminal size={12} />}
               <div><p>{promptCopied ? "Prompt copied!" : "Copy Dev Agent Prompt"}</p><p style={{ color: "var(--text-tertiary)" }}>Paste into Replit Agent, Cursor, or Windsurf</p></div>
             </button>

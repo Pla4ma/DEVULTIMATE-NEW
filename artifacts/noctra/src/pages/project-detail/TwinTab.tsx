@@ -17,7 +17,7 @@ export function TwinTab({ reports, projectState, navigate }: TwinTabProps) {
       <Panel className="glass">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "var(--color-danger-soft)", border: "1px solid var(--color-danger-soft)" }}>
-            <Brain size={18} style={{ color: "var(--accent-magenta)" }} />
+            <Brain size={18} style={{ color: "#8b5cf6" }} />
           </div>
           <div>
             <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Product Twin</p>

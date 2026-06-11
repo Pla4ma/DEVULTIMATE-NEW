@@ -8,12 +8,12 @@
   /* ─── COOL OBSIDIAN — Deep charcoal with indigo accent ───────────────── */
   /* No warm tones. No brown. Clean, cool, premium. */
 
-  /* Background — deep indigo-black (richer than pure black) */
-  --color-void-0: #0a0a1a;
-  --color-void-1: #0f0f23;
-  --color-void-2: #11111f;
-  --color-void-3: #16162a;
-  --color-void-4: #1e1e38;
+  /* Background — deep violet-navy (matches landing page) */
+  --color-void-0: #151030;
+  --color-void-1: #1a1640;
+  --color-void-2: #201a50;
+  --color-void-3: #252060;
+  --color-void-4: #2a2570;
 
   /* Accent — violet + orange dual palette */
   --color-accent: #8b5cf6;
@@ -28,11 +28,11 @@
   --color-accent-warm-glow: rgba(249, 115, 22, 0.12);
 
   /* Backward-compat aliases */
-  --color-obsidian-0: #0a0a1a;
-  --color-obsidian-1: #0f0f23;
-  --color-obsidian-2: #11111f;
-  --color-obsidian-3: #16162a;
-  --color-obsidian-4: #1e1e38;
+  --color-obsidian-0: #151030;
+  --color-obsidian-1: #1a1640;
+  --color-obsidian-2: #201a50;
+  --color-obsidian-3: #252060;
+  --color-obsidian-4: #2a2570;
   --color-teal: #8b5cf6;
   --color-teal-dim: rgba(139, 92, 246, 0.06);
   --color-teal-glow: rgba(139, 92, 246, 0.12);
@@ -55,20 +55,20 @@
   --color-danger: #ef4444;
 
   /* shadcn/ui */
-  --color-background: #0a0a1a;
+  --color-background: #151030;
   --color-foreground: #f1f5f9;
-  --color-border: rgba(255, 255, 255, 0.05);
-  --color-input: rgba(255, 255, 255, 0.05);
-  --color-ring: rgba(139, 92, 246, 0.2);
-  --color-card: #11111f;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-input: rgba(255, 255, 255, 0.06);
+  --color-ring: rgba(139, 92, 246, 0.25);
+  --color-card: rgba(20, 18, 40, 0.5);
   --color-card-foreground: #f1f5f9;
   --color-primary: #8b5cf6;
-  --color-primary-foreground: #07070d;
-  --color-secondary: #16162a;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: rgba(20, 18, 40, 0.5);
   --color-secondary-foreground: #f1f5f9;
-  --color-muted: #11111f;
-  --color-muted-foreground: #64748b;
-  --color-accent: #16162a;
+  --color-muted: rgba(20, 18, 40, 0.5);
+  --color-muted-foreground: #94a3b8;
+  --color-accent: rgba(20, 18, 40, 0.5);
   --color-accent-foreground: #f1f5f9;
   --color-destructive: #ef4444;
   --color-destructive-foreground: #f1f5f9;
@@ -95,15 +95,15 @@
   --text-faint: #475569;
   --text-display: #f1f5f9;
 
-  --surface-1: #11111f;
-  --surface-2: #16162a;
-  --surface-3: #1e1e38;
+  --surface-1: rgba(20, 18, 40, 0.5);
+  --surface-2: rgba(25, 20, 50, 0.6);
+  --surface-3: rgba(30, 25, 60, 0.7);
 
-  --border-default: rgba(255, 255, 255, 0.05);
-  --border-hover: rgba(255, 255, 255, 0.08);
-  --border-subtle: rgba(255, 255, 255, 0.03);
-  --border-strong: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(99, 102, 241, 0.25);
+  --border-default: rgba(139, 92, 246, 0.12);
+  --border-hover: rgba(139, 92, 246, 0.2);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-strong: rgba(139, 92, 246, 0.15);
+  --border-active: rgba(139, 92, 246, 0.3);
 
   --signal: #8b5cf6;
   --signal-glow: rgba(139, 92, 246, 0.12);
@@ -217,79 +217,79 @@
   }
 
   /* ─── CONSISTENT TEXTURE BACKGROUND ─────────────────────────────────── */
-  /* Fine dot grid — subtle, uniform, no dark patches */
+  /* Fine dot grid — subtle, uniform, violet tinted */
   .bg-texture {
-    background-image: radial-gradient(circle, rgba(99, 102, 241, 0.035) 1px, transparent 1px);
+    background-image: radial-gradient(circle, rgba(139, 92, 246, 0.04) 1px, transparent 1px);
     background-size: 32px 32px;
   }
 
   /* Alternative: fine line grid */
   .bg-grid-fine {
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      linear-gradient(rgba(139, 92, 246, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 92, 246, 0.02) 1px, transparent 1px);
     background-size: 48px 48px;
   }
 
   /* ─── REAL GLASS MORPHISM ──────────────────────────────────────────── */
   /* Proper glass: semi-transparent + backdrop blur + inner highlight */
   .glass {
-    background: rgba(17, 17, 31, 0.45);
-    backdrop-filter: blur(20px) saturate(150%);
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(20, 18, 40, 0.5);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(139, 92, 246, 0.12);
+    border-top: 1px solid rgba(139, 92, 246, 0.15);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.04),
-      0 4px 24px rgba(0, 0, 0, 0.4);
+      inset 0 1px 0 rgba(255, 255, 255, 0.03),
+      0 4px 24px rgba(0, 0, 0, 0.3);
     border-radius: var(--radius-lg);
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .glass:hover {
-    background: rgba(17, 17, 31, 0.55);
-    border-color: rgba(255, 255, 255, 0.09);
-    border-top-color: rgba(255, 255, 255, 0.12);
+    background: rgba(20, 18, 40, 0.6);
+    border-color: rgba(139, 92, 246, 0.18);
+    border-top-color: rgba(139, 92, 246, 0.22);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.05),
-      0 8px 32px rgba(0, 0, 0, 0.5);
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 8px 32px rgba(0, 0, 0, 0.4);
     transform: translateY(-2px);
   }
 
   /* Glass card with accent border hint */
   .glass-accent {
-    background: rgba(17, 17, 31, 0.5);
-    backdrop-filter: blur(20px) saturate(150%);
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
-    border: 1px solid rgba(99, 102, 241, 0.1);
-    border-top: 1px solid rgba(99, 102, 241, 0.15);
+    background: rgba(20, 18, 40, 0.5);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.03),
-      0 4px 24px rgba(0, 0, 0, 0.4);
+      0 4px 24px rgba(0, 0, 0, 0.3);
     border-radius: var(--radius-lg);
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .glass-accent:hover {
-    background: rgba(17, 17, 31, 0.6);
-    border-color: rgba(99, 102, 241, 0.15);
-    border-top-color: rgba(99, 102, 241, 0.2);
+    background: rgba(20, 18, 40, 0.6);
+    border-color: rgba(139, 92, 246, 0.2);
+    border-top-color: rgba(139, 92, 246, 0.25);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.04),
-      0 8px 32px rgba(0, 0, 0, 0.5),
-      0 0 30px rgba(99, 102, 241, 0.06);
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 0 30px rgba(139, 92, 246, 0.06);
     transform: translateY(-2px);
   }
 
   /* Glass — popular/pricing highlight */
   .glass-popular {
-    background: rgba(17, 17, 31, 0.6);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    border-top: 1px solid rgba(99, 102, 241, 0.3);
+    background: rgba(20, 18, 40, 0.6);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(249, 115, 22, 0.2);
+    border-top: 1px solid rgba(249, 115, 22, 0.3);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.04),
-      0 8px 32px rgba(0, 0, 0, 0.5),
-      0 0 40px rgba(99, 102, 241, 0.08);
+      inset 0 1px 0 rgba(255, 255, 255, 0.03),
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 0 40px rgba(249, 115, 22, 0.06);
     border-radius: var(--radius-lg);
   }
 

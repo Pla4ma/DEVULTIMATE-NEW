@@ -216,7 +216,7 @@ export default function CommandCenterPage() {
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
                 className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5"
-                style={{ background: "linear-gradient(135deg, #a855f7 0%, #c084fc 50%, #e879f9 100%)", boxShadow: "0 0 30px rgba(168,85,247,0.3)" }}
+                style={{ background: "linear-gradient(135deg, #8b5cf6 0%, #f97316 100%)", boxShadow: "0 0 30px rgba(139,92,246,0.3)" }}
               >
                   <Zap size={24} className="text-obsidian-0" />
               </motion.div>

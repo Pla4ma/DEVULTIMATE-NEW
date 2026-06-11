@@ -22,10 +22,10 @@ type ToolMode = "idea" | "reality" | "swarm" | "proof";
 type Phase = "idle" | "running" | "done" | "error";
 
 const MODES: Array<{ key: ToolMode; label: string; icon: typeof Lightbulb; color: string; description: string }> = [
-  { key: "idea", label: "Idea Checker", icon: ScanSearch, color: "var(--accent-violet)", description: "Score your idea for signal strength, red flags, and ICP fit" },
-  { key: "reality", label: "Reality Compiler", icon: Terminal, color: "var(--color-warning)", description: "Stress-test assumptions across feasibility and market viability" },
-  { key: "swarm", label: "Market Swarm", icon: Users, color: "var(--accent-cyan)", description: "Simulate market demand with AI-generated user personas" },
-  { key: "proof", label: "Proof Engine", icon: FlaskConical, color: "var(--color-success)", description: "Track validation evidence and find critical gaps" },
+  { key: "idea", label: "Idea Checker", icon: ScanSearch, color: "#8b5cf6", description: "Score your idea for signal strength, red flags, and ICP fit" },
+  { key: "reality", label: "Reality Compiler", icon: Terminal, color: "#f97316", description: "Stress-test assumptions across feasibility and market viability" },
+  { key: "swarm", label: "Market Swarm", icon: Users, color: "#8b5cf6", description: "Simulate market demand with AI-generated user personas" },
+  { key: "proof", label: "Proof Engine", icon: FlaskConical, color: "#f97316", description: "Track validation evidence and find critical gaps" },
 ];
 
 const fadeInUp = {
@@ -148,10 +148,10 @@ export default function IdeaLabPage() {
 
   return (
     <AppShell>
-      <div className="p-4 sm:p-6 max-w-6xl mx-auto bg-void-0 min-h-screen">
+      <div className="p-4 sm:p-6 max-w-6xl mx-auto">
         <motion.div {...fadeInUp} className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "var(--text-primary)" }}>Idea Lab</h1>
-          <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>Validate ideas, stress-test assumptions, and simulate market demand</p>
+          <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: "#fff" }}>Idea Lab</h1>
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Validate ideas, stress-test assumptions, and simulate market demand</p>
         </motion.div>
 
         <motion.div {...fadeInUp} className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -164,9 +164,10 @@ export default function IdeaLabPage() {
                 onClick={() => { setMode(m.key); reset(); }}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
                 style={{
-                  background: active ? `${m.color}15` : "var(--void-2)",
-                  border: `1px solid ${active ? m.color : "var(--void-3)"}`,
-                  color: active ? m.color : "var(--text-secondary)",
+                  background: active ? `${m.color}15` : "rgba(20, 18, 40, 0.5)",
+                  border: `1px solid ${active ? m.color : "rgba(139, 92, 246, 0.12)"}`,
+                  color: active ? m.color : "rgba(255,255,255,0.6)",
+                  backdropFilter: "blur(12px)",
                 }}
               >
                 <Icon size={16} />
@@ -181,14 +182,14 @@ export default function IdeaLabPage() {
             {...fadeInUp}
             className="glass overflow-hidden"
           >
-            <div className="px-5 py-3 border-b border-void-3 flex items-center justify-between">
-              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Input</span>
-              <span className="text-xs" style={{ color: "var(--text-quaternary)" }}>⌘↵ to run</span>
+            <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: "rgba(139, 92, 246, 0.12)" }}>
+              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "rgba(255,255,255,0.6)" }}>Input</span>
+              <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>⌘↵ to run</span>
             </div>
             <div className="p-5 space-y-4">
               {injectedContext?.hasContext && injectedContext.reports.length > 0 && (
-                <div className="px-3 py-2 rounded-lg bg-void-2 border border-void-3">
-                  <p className="text-xs font-medium mb-1" style={{ color: "var(--signal-amber)" }}>
+                <div className="px-3 py-2 rounded-lg border" style={{ background: "rgba(20, 18, 40, 0.5)", borderColor: "rgba(139, 92, 246, 0.12)", backdropFilter: "blur(12px)" }}>
+                  <p className="text-xs font-medium mb-1" style={{ color: "#f97316" }}>
                     <Zap size={10} className="inline mr-1" />
                     Cross-tool intelligence injected
                   </p>
@@ -196,7 +197,7 @@ export default function IdeaLabPage() {
               )}
 
               {autoSaved && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-void-2 border border-void-3">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ background: "rgba(20, 18, 40, 0.5)", borderColor: "rgba(139, 92, 246, 0.12)", backdropFilter: "blur(12px)" }}>
                   <CheckCircle size={14} style={{ color: "var(--color-success)" }} />
                   <p className="text-xs" style={{ color: "var(--color-success)" }}>Report saved + tasks generated automatically</p>
                 </div>
@@ -208,7 +209,13 @@ export default function IdeaLabPage() {
                 placeholder={mode === "idea" ? "Describe your idea, product, or hypothesis..." : mode === "reality" ? "Describe your assumptions to stress-test..." : mode === "swarm" ? "Describe your offer or pitch for market simulation..." : "Describe what you want to validate with evidence..."}
                 rows={8}
                 disabled={phase === "running"}
-                className="w-full px-4 py-3 rounded-lg text-sm resize-none outline-none transition-colors bg-void-2 border border-void-3 text-text-primary focus:border-signal-amber focus:shadow-[0_0_0_3px_var(--signal-amber-dim)]"
+                className="w-full px-4 py-3 rounded-lg text-sm resize-none outline-none transition-colors"
+                style={{
+                  background: "rgba(20, 18, 40, 0.5)",
+                  border: "1px solid rgba(139, 92, 246, 0.12)",
+                  color: "#fff",
+                  backdropFilter: "blur(12px)",
+                }}
                 maxLength={4000}
               />
 
@@ -239,8 +246,8 @@ export default function IdeaLabPage() {
             {...fadeInUp}
             className="glass overflow-hidden"
           >
-            <div className="px-5 py-3 border-b border-void-3 flex items-center justify-between">
-              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Output</span>
+            <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: "rgba(139, 92, 246, 0.12)" }}>
+              <span className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "rgba(255,255,255,0.6)" }}>Output</span>
               {phase === "running" && <Loader2 size={14} className="animate-spin" style={{ color: currentMode.color }} />}
             </div>
             <div className="p-5">
@@ -253,11 +260,11 @@ export default function IdeaLabPage() {
                     exit={{ opacity: 0 }}
                     className="flex flex-col items-center justify-center py-16 text-center"
                   >
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: `${currentMode.color}15` }}>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: `${currentMode.color}15`, backdropFilter: "blur(12px)" }}>
                       <currentMode.icon size={28} style={{ color: currentMode.color }} />
                     </div>
-                    <p className="text-sm font-medium mb-1" style={{ color: "var(--text-secondary)" }}>{currentMode.label} awaiting input</p>
-                    <p className="text-xs" style={{ color: "var(--text-quaternary)" }}>{currentMode.description}</p>
+                    <p className="text-sm font-medium mb-1" style={{ color: "rgba(255,255,255,0.6)" }}>{currentMode.label} awaiting input</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{currentMode.description}</p>
                   </motion.div>
                 )}
 
@@ -270,7 +277,7 @@ export default function IdeaLabPage() {
                     className="flex flex-col items-center justify-center py-16"
                   >
                     <Loader2 size={32} className="animate-spin mb-4" style={{ color: currentMode.color }} />
-                    <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>{currentStage || "Analyzing..."}</p>
+                    <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{currentStage || "Analyzing..."}</p>
                   </motion.div>
                 )}
 
@@ -283,12 +290,12 @@ export default function IdeaLabPage() {
                     className="space-y-4"
                   >
                     {score != null && (
-                      <div className="flex items-center gap-5 p-5 rounded-xl bg-void-2 border border-void-3">
+                      <div className="flex items-center gap-5 p-5 rounded-xl border" style={{ background: "rgba(20, 18, 40, 0.5)", borderColor: "rgba(139, 92, 246, 0.12)", backdropFilter: "blur(12px)" }}>
                         <ScoreRing value={score} size={80} stroke={7} label={currentMode.label} color={score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)"} />
                         <div className="flex-1">
-                          <p className="text-xs font-medium tracking-[0.12em] uppercase mb-1" style={{ color: "var(--text-tertiary)" }}>Signal Score</p>
+                          <p className="text-xs font-medium tracking-[0.12em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.6)" }}>Signal Score</p>
                           <p className="text-3xl font-bold font-mono" style={{ color: score >= 70 ? "var(--color-success)" : score >= 40 ? "var(--color-warning)" : "var(--color-danger)" }}>
-                            {score}<span className="text-sm font-normal" style={{ color: "var(--text-tertiary)" }}>/100</span>
+                            {score}<span className="text-sm font-normal" style={{ color: "rgba(255,255,255,0.6)" }}>/100</span>
                           </p>
                           {verdict && (
                             <span className="text-xs font-medium tracking-[0.12em] uppercase mt-2 inline-block px-3 py-1 rounded-full" style={{
@@ -312,7 +319,7 @@ export default function IdeaLabPage() {
                       <div className="space-y-2">
                         <p className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--color-danger)" }}>Red Flags</p>
                         {redFlags.slice(0, 3).map((flag, i) => (
-                          <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
+                          <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
                             <AlertTriangle size={12} className="mt-0.5 shrink-0" style={{ color: "var(--color-danger)" }} />
                             {flag}
                           </div>
@@ -322,10 +329,10 @@ export default function IdeaLabPage() {
 
                     {nextActions.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--signal-amber)" }}>Next Actions</p>
+                        <p className="text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "#f97316" }}>Next Actions</p>
                         {nextActions.slice(0, 3).map((action, i) => (
-                          <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-secondary)" }}>
-                            <ArrowRight size={12} className="mt-0.5 shrink-0" style={{ color: "var(--signal-amber)" }} />
+                          <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
+                            <ArrowRight size={12} className="mt-0.5 shrink-0" style={{ color: "#f97316" }} />
                             {action}
                           </div>
                         ))}
@@ -333,7 +340,7 @@ export default function IdeaLabPage() {
                     )}
 
                     {autoSaved && savedReportId && (
-                      <div className="flex gap-2 pt-3 border-t border-void-3">
+                      <div className="flex gap-2 pt-3 border-t" style={{ borderColor: "rgba(139, 92, 246, 0.12)" }}>
                         <ObsidianButton
                           variant="secondary"
                           size="sm"
@@ -365,7 +372,7 @@ export default function IdeaLabPage() {
                   >
                     <AlertTriangle size={32} className="mb-4" style={{ color: "var(--color-danger)" }} />
                     <p className="text-sm font-medium mb-1" style={{ color: "var(--color-danger)" }}>Analysis failed</p>
-                    <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{error}</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>{error}</p>
                     <ObsidianButton
                       variant="secondary"
                       size="sm"

@@ -4,10 +4,9 @@ import { useAuth } from "@/lib/auth";
 import { supabaseConfigError } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import {
-  Play, Star, Stethoscope, Brain, Zap, TrendingUp,
-  Check, ArrowRight, BarChart3, Layers, Database,
-  BrainCircuit, Lock, Gauge, CheckCircle, XCircle,
-  Shield, RefreshCw, ChevronRight,
+  Play, Star, Stethoscope, Brain, Zap,
+  Check, ArrowRight, BarChart3, Layers,
+  BrainCircuit, Lock, Gauge,
 } from "lucide-react";
 import { Logo, LogoMark } from "@/components/Logo";
 import { AnimatedBackground } from "@/components/effects/AnimatedBackground";
@@ -18,10 +17,10 @@ import { AuthModal } from "./landing/AuthModal";
 const TRUSTED_BY = ["Stripe","Vercel","Linear","Notion","Figma","Raycast","Supabase","GitHub"];
 
 const STATS = [
-  { value: "94%", label: "Blocker Detection", accent: "orange" },
-  { value: "$2.4M", label: "Revenue Saved", accent: "violet" },
-  { value: "1,200+", label: "Active Teams", accent: "orange" },
-  { value: "32%", label: "Churn Reduction", accent: "violet" },
+  { value: "94%", label: "Blocker Detection", accent: "violet" },
+  { value: "$2.4M", label: "Revenue Saved", accent: "orange" },
+  { value: "1,200+", label: "Active Teams", accent: "violet" },
+  { value: "32%", label: "Churn Reduction", accent: "orange" },
 ];
 
 const FEATURES = [
@@ -74,12 +73,11 @@ function accentColor(name: string, type: "hex" | "rgb" | "bg" | "border" | "glow
   const isOrange = name === "orange";
   const hex = isOrange ? "#f97316" : "#8b5cf6";
   const rgb = isOrange ? "249,115,22" : "139,92,246";
-  const lightHex = isOrange ? "#fb923c" : "#a78bfa";
   if (type === "hex") return hex;
   if (type === "rgb") return rgb;
-  if (type === "bg") return `rgba(${rgb},0.1)`;
-  if (type === "border") return `rgba(${rgb},0.25)`;
-  if (type === "glow") return `rgba(${rgb},0.15)`;
+  if (type === "bg") return `rgba(${rgb},0.08)`;
+  if (type === "border") return `rgba(${rgb},0.2)`;
+  if (type === "glow") return `rgba(${rgb},0.1)`;
   return hex;
 }
 
@@ -114,19 +112,15 @@ function DashboardMockup() {
       transition={{ duration: 0.8, delay: 0.4 }}
       className="relative w-full max-w-5xl mx-auto"
     >
-      {/* Glow behind mockup */}
-      <div className="absolute -inset-8 rounded-3xl opacity-30 blur-3xl -z-10"
-        style={{ background: "radial-gradient(circle at 50% 50%, rgba(139,92,246,0.3) 0%, rgba(249,115,22,0.2) 50%, transparent 70%)" }} />
-
-      <div className="rounded-xl overflow-hidden border"
+      <div className="rounded-xl overflow-hidden border shadow-2xl"
         style={{
-          background: "#080810",
+          background: "rgba(20, 18, 40, 0.85)",
           borderColor: "rgba(139, 92, 246, 0.15)",
-          boxShadow: "0 25px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
+          boxShadow: "0 25px 80px rgba(0,0,0,0.5), 0 0 60px rgba(139,92,246,0.05)",
+          backdropFilter: "blur(20px)",
         }}>
-        {/* Browser chrome */}
         <div className="flex items-center gap-3 px-5 py-3 border-b"
-          style={{ borderColor: "rgba(255,255,255,0.05)", background: "#080810" }}>
+          style={{ borderColor: "rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}>
           <div className="flex gap-2">
             <div className="w-3 h-3 rounded-full" style={{ background: "#f97316" }} />
             <div className="w-3 h-3 rounded-full" style={{ background: "#a78bfa" }} />
@@ -134,7 +128,7 @@ function DashboardMockup() {
           </div>
           <div className="flex-1 flex justify-center">
             <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-mono"
-              style={{ background: "rgba(139, 92, 246, 0.08)", border: "1px solid rgba(139, 92, 246, 0.15)", color: "#a78bfa" }}>
+              style={{ background: "rgba(139, 92, 246, 0.06)", border: "1px solid rgba(139, 92, 246, 0.1)", color: "#a78bfa" }}>
               <Lock size={10} /><span>app.noctra.dev</span>
             </div>
           </div>
@@ -142,7 +136,6 @@ function DashboardMockup() {
         </div>
 
         <div className="p-5 grid grid-cols-12 gap-3">
-          {/* Sidebar */}
           <div className="col-span-2 space-y-1">
             {[{ icon: Gauge, label: "Dashboard", active: true },
               { icon: Stethoscope, label: "Health", active: false },
@@ -151,9 +144,9 @@ function DashboardMockup() {
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-2 px-3 py-2 rounded-lg text-[11px]"
                 style={{
-                  background: item.active ? "rgba(139, 92, 246, 0.12)" : "transparent",
+                  background: item.active ? "rgba(139, 92, 246, 0.1)" : "transparent",
                   color: item.active ? "#a78bfa" : "rgba(255,255,255,0.4)",
-                  border: item.active ? "1px solid rgba(139, 92, 246, 0.25)" : "1px solid transparent",
+                  border: item.active ? "1px solid rgba(139, 92, 246, 0.2)" : "1px solid transparent",
                 }}>
                 <item.icon size={13} strokeWidth={item.active ? 2 : 1.5} />
                 <span className="font-medium">{item.label}</span>
@@ -161,20 +154,18 @@ function DashboardMockup() {
             ))}
           </div>
 
-          {/* Main content */}
           <div className="col-span-10 space-y-3">
-            {/* Metric cards */}
             <div className="grid grid-cols-3 gap-3">
-              {[{ label: "Launch Score", value: "87", color: "#f97316", bg: "rgba(249,115,22,0.08)", border: "rgba(249,115,22,0.15)", width: "87%" },
-                { label: "Blockers", value: "3", color: "#ef4444", bg: "rgba(239,68,68,0.06)", border: "rgba(239,68,68,0.12)", width: "30%" },
-                { label: "Health Trend", value: "+12%", color: "#8b5cf6", bg: "rgba(139,92,246,0.08)", border: "rgba(139,92,246,0.15)", width: "65%" },
+              {[{ label: "Launch Score", value: "87", color: "#f97316", bg: "rgba(249,115,22,0.06)", border: "rgba(249,115,22,0.1)", width: "87%" },
+                { label: "Blockers", value: "3", color: "#ef4444", bg: "rgba(239,68,68,0.04)", border: "rgba(239,68,68,0.08)", width: "30%" },
+                { label: "Health Trend", value: "+12%", color: "#8b5cf6", bg: "rgba(139,92,246,0.06)", border: "rgba(139,92,246,0.1)", width: "65%" },
               ].map((card) => (
                 <div key={card.label} className="rounded-xl p-3.5"
                   style={{ background: card.bg, border: `1px solid ${card.border}` }}>
-                  <p className="text-[9px] uppercase tracking-[0.15em] mb-2 font-medium" style={{ color: card.color, opacity: 0.8 }}>{card.label}</p>
+                  <p className="text-[9px] uppercase tracking-[0.15em] mb-2 font-medium" style={{ color: card.color, opacity: 0.7 }}>{card.label}</p>
                   <div className="flex items-end justify-between">
                     <p className="text-2xl font-bold" style={{ color: card.color }}>{card.value}</p>
-                    <div className="w-14 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <div className="w-14 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
                       <div className="h-full rounded-full" style={{ width: card.width, background: card.color }} />
                     </div>
                   </div>
@@ -182,16 +173,15 @@ function DashboardMockup() {
               ))}
             </div>
 
-            {/* Chart */}
             <div className="rounded-xl p-4"
-              style={{ background: "rgba(139, 92, 246, 0.04)", border: "1px solid rgba(139, 92, 246, 0.1)" }}>
+              style={{ background: "rgba(139, 92, 246, 0.03)", border: "1px solid rgba(139, 92, 246, 0.06)" }}>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-[9px] uppercase tracking-[0.15em] font-bold" style={{ color: "#a78bfa" }}>Readiness Trend</p>
                 <div className="flex gap-1">
                   {["1W","1M","3M","6M"].map((p, i) => (
                     <span key={p} className="text-[9px] px-2 py-0.5 rounded font-medium"
                       style={{
-                        background: i === 1 ? "rgba(139, 92, 246, 0.15)" : "rgba(249, 115, 22, 0.08)",
+                        background: i === 1 ? "rgba(139, 92, 246, 0.1)" : "rgba(249, 115, 22, 0.05)",
                         color: i === 1 ? "#a78bfa" : "#fb923c",
                       }}>{p}</span>
                   ))}
@@ -205,7 +195,7 @@ function DashboardMockup() {
                       ? "#f97316"
                       : i >= 10
                         ? "#a78bfa"
-                        : `rgba(139, 92, 246, ${0.3 + (i / 20) * 0.5})`,
+                        : `rgba(139, 92, 246, ${0.2 + (i / 20) * 0.4})`,
                   }} />
                 ))}
               </div>
@@ -239,7 +229,7 @@ export default function LandingPage() {
   async function handleDemo() { await signInDemo(); navigate("/app"); }
 
   return (
-    <div className="min-h-screen text-white overflow-x-hidden" style={{ background: "#080810" }}>
+    <div className="min-h-screen text-white overflow-x-hidden" style={{ background: "transparent" }}>
       <AnimatedBackground />
 
       {/* ─── Header ─────────────────────────────────────────────── */}
@@ -248,7 +238,7 @@ export default function LandingPage() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
         className="fixed top-0 left-0 right-0 z-50 border-b"
-        style={{ borderColor: "rgba(255,255,255,0.05)", background: "#080810", backdropFilter: "blur(20px)" }}
+        style={{ borderColor: "rgba(255,255,255,0.05)", background: "rgba(10, 8, 32, 0.85)", backdropFilter: "blur(20px)" }}
       >
         <div className="section-container h-16 flex items-center justify-between">
           <a href="#top" className="flex items-center gap-2">
@@ -292,52 +282,48 @@ export default function LandingPage() {
       <section className="relative pt-36 pb-20 lg:pt-44 lg:pb-28 overflow-hidden">
         <div className="section-container relative">
           <div className="max-w-4xl mx-auto text-center mb-16">
-            {/* Label */}
             <motion.div {...fadeUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mb-8"
-              style={{ borderColor: "rgba(249, 115, 22, 0.25)", background: "#080810" }}>
+              style={{ borderColor: "rgba(249, 115, 22, 0.25)", background: "rgba(249, 115, 22, 0.06)" }}>
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#f97316" }} />
               <span className="text-[11px] font-bold tracking-wider uppercase" style={{ color: "#fb923c" }}>
                 AI-Powered Developer Intelligence
               </span>
             </motion.div>
 
-            {/* Headline */}
             <motion.h1 {...fadeUp} className="font-bold mb-8 leading-[1.05] tracking-[-0.03em]"
-              style={{ fontSize: "clamp(3rem, 7vw, 5.5rem)", textShadow: "0 2px 20px rgba(0,0,0,0.8)" }}>
+              style={{ fontSize: "clamp(3rem, 7vw, 5.5rem)", textShadow: "0 4px 30px rgba(0,0,0,0.5)" }}>
               <span className="text-white">Ship With </span>
-              <span style={{ color: "#f97316", textShadow: "0 2px 20px rgba(249,115,22,0.3)" }}>Evidence,</span>
+              <span style={{ color: "#f97316" }}>Evidence,</span>
               <br />
               <span className="text-white">Not </span>
-              <span style={{ color: "#a78bfa", textShadow: "0 2px 20px rgba(139,92,246,0.3)" }}>Hope.</span>
+              <span style={{ color: "#a78bfa" }}>Hope.</span>
             </motion.h1>
 
-            {/* Subheadline */}
             <motion.p {...fadeUp} className="text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
-              style={{ color: "rgba(255,255,255,0.7)", textShadow: "0 2px 10px rgba(0,0,0,0.6)" }}>
+              style={{ color: "rgba(255,255,255,0.6)", textShadow: "0 2px 10px rgba(0,0,0,0.3)" }}>
               Point NOCTRA at your codebase. Get a launch readiness score,
               prioritized blockers, and fix prompts you can paste straight into
               your AI IDE.
             </motion.p>
 
-            {/* CTA Buttons */}
             <motion.div {...fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button onClick={() => setShowAuth(true)}
                 className="inline-flex items-center justify-center gap-2 rounded-lg px-8 py-4 text-sm font-bold transition-all duration-300"
                 style={{
                   background: "linear-gradient(135deg, #8b5cf6 0%, #f97316 100%)",
                   color: "#fff",
-                  boxShadow: "0 0 30px rgba(139, 92, 246, 0.25)",
+                  boxShadow: "0 0 30px rgba(139, 92, 246, 0.3)",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 0 40px rgba(249, 115, 22, 0.35)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 0 30px rgba(139, 92, 246, 0.25)"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}>
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 0 40px rgba(249, 115, 22, 0.4)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "0 0 30px rgba(139, 92, 246, 0.3)"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}>
                 <Play size={16} fill="currentColor" />
                 Start Your Free Trial
               </button>
               <button onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
                 className="inline-flex items-center justify-center gap-2 rounded-lg px-8 py-4 text-sm font-bold transition-all duration-300 border"
-                style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.03)" }}
+                style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", background: "rgba(255,255,255,0.03)" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(139, 92, 246, 0.4)"; (e.currentTarget as HTMLElement).style.color = "#a78bfa"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.1)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)"; }}>
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.1)"; (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.7)"; }}>
                 See How It Works
               </button>
             </motion.div>
@@ -368,7 +354,7 @@ export default function LandingPage() {
         <div className="section-container max-w-5xl">
           <motion.div {...fadeUp} className="text-center mb-16">
             <p className="text-xs font-bold uppercase tracking-[0.2em] mb-5" style={{ color: "#f97316" }}>Impact</p>
-            <h2 className="font-bold tracking-[-0.03em] leading-[1.05] mb-6" style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}>
+            <h2 className="font-bold tracking-[-0.03em] leading-[1.05] mb-6" style={{ fontSize: "clamp(2rem, 4vw, 3rem)", textShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
               <span className="text-white">Numbers That </span>
               <span style={{ color: "#f97316" }}>Speak</span>
             </h2>
@@ -382,17 +368,17 @@ export default function LandingPage() {
                 transition={{ duration: 0.5, delay: i * 0.1 }}
                 className="text-center p-8 rounded-xl border relative overflow-hidden"
                 style={{
-                  background: "#080810",
+                  background: "rgba(20, 18, 40, 0.6)",
                   borderColor: accentColor(stat.accent, "border"),
+                  backdropFilter: "blur(12px)",
                 }}
               >
-                <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accentColor(stat.accent)}, transparent)` }} />
-                <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, transparent, ${accentColor(stat.accent)}, transparent)` }} />
+                <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, transparent, ${accentColor(stat.accent)}, transparent)` }} />
                 <p className="text-4xl sm:text-5xl font-bold mb-3 tracking-[-0.03em] leading-none"
-                  style={{ color: accentColor(stat.accent) }}>
+                  style={{ color: accentColor(stat.accent), textShadow: `0 0 40px ${accentColor(stat.accent, "glow")}` }}>
                   {stat.value}
                 </p>
-                <p className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>{stat.label}</p>
+                <p className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -404,7 +390,7 @@ export default function LandingPage() {
         <div className="section-container max-w-5xl">
           <motion.div {...fadeUp} className="text-center mb-20">
             <p className="text-xs font-bold uppercase tracking-[0.2em] mb-5" style={{ color: "#f97316" }}>Features</p>
-            <h2 className="font-bold tracking-[-0.03em] leading-[1.05] mb-6" style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}>
+            <h2 className="font-bold tracking-[-0.03em] leading-[1.05] mb-6" style={{ fontSize: "clamp(2rem, 4vw, 3rem)", textShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
               <span className="text-white">Intelligence That </span>
               <span style={{ color: "#f97316" }}>Pays</span>
             </h2>
@@ -417,16 +403,17 @@ export default function LandingPage() {
               <motion.div key={feature.title} {...staggerItem}
                 className="group p-8 rounded-xl border transition-all duration-300 hover:scale-[1.01]"
                 style={{
-                  background: "#080810",
+                  background: "rgba(20, 18, 40, 0.5)",
                   borderColor: accentColor(feature.accent, "border"),
+                  backdropFilter: "blur(12px)",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = accentColor(feature.accent, "hex");
-                  (e.currentTarget as HTMLElement).style.background = "#0a0a18";
+                  (e.currentTarget as HTMLElement).style.background = "rgba(20, 18, 40, 0.7)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = accentColor(feature.accent, "border");
-                  (e.currentTarget as HTMLElement).style.background = "#080810";
+                  (e.currentTarget as HTMLElement).style.background = "rgba(20, 18, 40, 0.5)";
                 }}
               >
                 <div className="flex items-center justify-between mb-6">
@@ -453,7 +440,7 @@ export default function LandingPage() {
         <div className="section-container max-w-5xl">
           <motion.div {...fadeUp} className="text-center mb-20">
             <p className="text-xs font-bold uppercase tracking-[0.2em] mb-5" style={{ color: "#f97316" }}>How It Works</p>
-            <h2 className="font-bold tracking-[-0.03em] leading-[1.05] mb-6" style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}>
+            <h2 className="font-bold tracking-[-0.03em] leading-[1.05] mb-6" style={{ fontSize: "clamp(2rem, 4vw, 3rem)", textShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
               <span className="text-white">From Code to </span>
               <span style={{ color: "#f97316" }}>Launch</span>
             </h2>
@@ -469,7 +456,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.15 }}
                 className="p-6 rounded-xl border"
-                style={{ background: "#080810", borderColor: accentColor(step.accent, "border") }}
+                style={{ background: "rgba(20, 18, 40, 0.5)", borderColor: accentColor(step.accent, "border"), backdropFilter: "blur(12px)" }}
               >
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold"
@@ -493,7 +480,7 @@ export default function LandingPage() {
         <div className="section-container max-w-5xl">
           <motion.div {...fadeUp} className="text-center mb-20">
             <p className="text-xs font-bold uppercase tracking-[0.2em] mb-5" style={{ color: "#f97316" }}>Pricing</p>
-            <h2 className="font-bold tracking-[-0.03em] leading-[1.05] mb-6" style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}>
+            <h2 className="font-bold tracking-[-0.03em] leading-[1.05] mb-6" style={{ fontSize: "clamp(2rem, 4vw, 3rem)", textShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
               <span className="text-white">Invest in Your </span>
               <span style={{ color: "#f97316" }}>Launch</span>
             </h2>
@@ -506,14 +493,15 @@ export default function LandingPage() {
               <motion.div key={plan.name} {...staggerItem}
                 className="p-8 rounded-xl border transition-all duration-300 hover:scale-[1.01]"
                 style={{
-                  background: "#080810",
-                  borderColor: plan.popular ? "rgba(249, 115, 22, 0.3)" : "rgba(255,255,255,0.06)",
+                  background: plan.popular ? "rgba(30, 20, 10, 0.6)" : "rgba(20, 18, 40, 0.5)",
+                  borderColor: plan.popular ? "rgba(249, 115, 22, 0.3)" : accentColor("violet", "border"),
+                  backdropFilter: "blur(12px)",
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = plan.popular ? "#f97316" : "rgba(139,92,246,0.4)";
+                  (e.currentTarget as HTMLElement).style.borderColor = plan.popular ? "#f97316" : "#8b5cf6";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = plan.popular ? "rgba(249, 115, 22, 0.3)" : "rgba(255,255,255,0.06)";
+                  (e.currentTarget as HTMLElement).style.borderColor = plan.popular ? "rgba(249, 115, 22, 0.3)" : accentColor("violet", "border");
                 }}
               >
                 {plan.popular && (
@@ -539,27 +527,27 @@ export default function LandingPage() {
                 <button onClick={() => setShowAuth(true)}
                   className="w-full py-3 rounded-lg text-sm font-bold transition-all duration-300"
                   style={{
-                    background: plan.popular ? "linear-gradient(135deg, #f97316 0%, #fb923c 100%)" : "rgba(139,92,246,0.08)",
+                    background: plan.popular ? "linear-gradient(135deg, #f97316 0%, #fb923c 100%)" : "rgba(139,92,246,0.06)",
                     color: plan.popular ? "#fff" : "#a78bfa",
-                    border: `1px solid ${plan.popular ? "rgba(249,115,22,0.3)" : "rgba(139,92,246,0.2)"}`,
-                    boxShadow: plan.popular ? "0 0 20px rgba(249,115,22,0.15)" : "none",
+                    border: `1px solid ${plan.popular ? "rgba(249,115,22,0.2)" : "rgba(139,92,246,0.15)"}`,
+                    boxShadow: plan.popular ? "0 0 20px rgba(249,115,22,0.1)" : "none",
                   }}
                   onMouseEnter={(e) => {
                     if (plan.popular) {
-                      (e.currentTarget as HTMLElement).style.boxShadow = "0 0 30px rgba(249,115,22,0.25)";
+                      (e.currentTarget as HTMLElement).style.boxShadow = "0 0 30px rgba(249,115,22,0.2)";
                       (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
                     } else {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(139,92,246,0.15)";
-                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(139,92,246,0.4)";
+                      (e.currentTarget as HTMLElement).style.background = "rgba(139,92,246,0.12)";
+                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(139,92,246,0.3)";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (plan.popular) {
-                      (e.currentTarget as HTMLElement).style.boxShadow = "0 0 20px rgba(249,115,22,0.15)";
+                      (e.currentTarget as HTMLElement).style.boxShadow = "0 0 20px rgba(249,115,22,0.1)";
                       (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
                     } else {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(139,92,246,0.08)";
-                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(139,92,246,0.2)";
+                      (e.currentTarget as HTMLElement).style.background = "rgba(139,92,246,0.06)";
+                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(139,92,246,0.15)";
                     }
                   }}>
                   {plan.cta}
@@ -575,7 +563,7 @@ export default function LandingPage() {
         <div className="section-container max-w-5xl">
           <motion.div {...fadeUp} className="text-center mb-20">
             <p className="text-xs font-bold uppercase tracking-[0.2em] mb-5" style={{ color: "#f97316" }}>Testimonials</p>
-            <h2 className="font-bold tracking-[-0.03em] leading-[1.05]" style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}>
+            <h2 className="font-bold tracking-[-0.03em] leading-[1.05]" style={{ fontSize: "clamp(2rem, 4vw, 3rem)", textShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
               <span className="text-white">Loved by </span>
               <span style={{ color: "#f97316" }}>Founders</span>
             </h2>
@@ -585,7 +573,7 @@ export default function LandingPage() {
             {TESTIMONIALS.map((t) => (
               <motion.div key={t.author} {...staggerItem}>
                 <div className="p-8 h-full flex flex-col rounded-xl border"
-                  style={{ background: "#080810", borderColor: accentColor(t.accent, "border") }}>
+                  style={{ background: "rgba(20, 18, 40, 0.5)", borderColor: accentColor(t.accent, "border"), backdropFilter: "blur(12px)" }}>
                   <div className="flex gap-1.5 mb-6">
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} size={14} style={{ color: accentColor(t.accent) }} fill={accentColor(t.accent)} />
@@ -621,12 +609,13 @@ export default function LandingPage() {
         <div className="section-container max-w-3xl text-center">
           <motion.div {...fadeUp} className="p-12 lg:p-16 rounded-2xl border"
             style={{
-              background: "#080810",
+              background: "rgba(20, 18, 40, 0.6)",
               borderColor: "rgba(139, 92, 246, 0.2)",
-              boxShadow: "0 0 60px rgba(139, 92, 246, 0.08)",
+              boxShadow: "0 8px 48px rgba(139, 92, 246, 0.05)",
+              backdropFilter: "blur(16px)",
             }}>
-            <div className="absolute top-0 left-0 right-0 h-px" style={{ background: "linear-gradient(90deg, transparent, #f97316, #8b5cf6, transparent)" }} />
-            <h2 className="font-bold mb-7 tracking-[-0.03em] leading-[1.05]" style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}>
+            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #f97316, #8b5cf6, transparent)" }} />
+            <h2 className="font-bold mb-7 tracking-[-0.03em] leading-[1.05]" style={{ fontSize: "clamp(2rem, 4vw, 3rem)", textShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
               <span className="text-white">Stop Guessing.</span>
               <br />
               <span style={{ color: "#f97316" }}>Start </span>
@@ -652,7 +641,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Footer ───────────────────────────────────────────────── */}
-      <footer className="border-t py-16" style={{ borderColor: "rgba(255,255,255,0.05)", background: "#080810" }}>
+      <footer className="border-t py-16" style={{ borderColor: "rgba(255,255,255,0.05)", background: "rgba(10, 8, 32, 0.5)" }}>
         <div className="section-container max-w-6xl">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
             <div className="col-span-2 md:col-span-1">

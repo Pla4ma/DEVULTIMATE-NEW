@@ -32,14 +32,14 @@ export function ProofTab({ proofSignals, addingSignal, signalLabel, signalKind, 
         <Panel className="glass">
           <p className="text-xs font-semibold mb-3" style={{ color: "var(--color-success)" }}>New Proof Signal</p>
           <div className="space-y-2">
-            <input value={signalLabel} onChange={(e) => onSignalLabelChange(e.target.value)} placeholder="What did you validate?" className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            <input value={signalLabel} onChange={(e) => onSignalLabelChange(e.target.value)} placeholder="What did you validate?" className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "var(--text-primary)" }} />
             <div className="flex gap-2">
               {["qualitative", "quantitative", "behavioral"].map((k) => (
-                <button key={k} onClick={() => onSignalKindChange(k)} className="px-3 py-1 rounded-full text-xs capitalize" style={{ background: signalKind === k ? "var(--color-success-soft)" : "var(--surface-2)", border: `1px solid ${signalKind === k ? "var(--color-success)" : "var(--border-default)"}`, color: signalKind === k ? "var(--color-success)" : "var(--text-tertiary)" }}>{k}</button>
+                <button key={k} onClick={() => onSignalKindChange(k)} className="px-3 py-1 rounded-full text-xs capitalize" style={{ background: signalKind === k ? "var(--color-success-soft)" : "rgba(20, 18, 40, 0.5)", border: `1px solid ${signalKind === k ? "var(--color-success)" : "rgba(139, 92, 246, 0.12)"}`, color: signalKind === k ? "var(--color-success)" : "var(--text-tertiary)" }}>{k}</button>
               ))}
             </div>
-            <input value={signalSource} onChange={(e) => onSignalSourceChange(e.target.value)} placeholder="Source (optional)" className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
-            <textarea value={signalEvidence} onChange={(e) => onSignalEvidenceChange(e.target.value)} placeholder="Evidence / notes (optional)" rows={2} className="w-full px-3 py-2 rounded-lg text-sm resize-none outline-none" style={{ background: "var(--surface-2)", border: "1px solid var(--border-default)", color: "var(--text-primary)" }} />
+            <input value={signalSource} onChange={(e) => onSignalSourceChange(e.target.value)} placeholder="Source (optional)" className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "var(--text-primary)" }} />
+            <textarea value={signalEvidence} onChange={(e) => onSignalEvidenceChange(e.target.value)} placeholder="Evidence / notes (optional)" rows={2} className="w-full px-3 py-2 rounded-lg text-sm resize-none outline-none" style={{ background: "rgba(20, 18, 40, 0.5)", border: "1px solid rgba(139, 92, 246, 0.12)", color: "var(--text-primary)" }} />
             <div className="flex gap-2">
               <NoctraButton onClick={onAddSignal} disabled={savingSignal || !signalLabel.trim()}>{savingSignal ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />} Save</NoctraButton>
               <NoctraButton variant="ghost" onClick={onCancelAddSignal}><X size={12} /> Cancel</NoctraButton>

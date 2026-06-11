@@ -118,11 +118,11 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-void-0 bg-texture">
+    <div className="min-h-screen">
       <header className="sticky top-0 z-50 border-b border-border-default bg-obsidian-0/90">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button onClick={() => navigate("/")}><Logo size={28} /></button>
-          <button onClick={() => navigate("/")} className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>Back to home</button>
+          <button onClick={() => navigate("/")} className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>Back to home</button>
         </div>
       </header>
 
@@ -135,17 +135,17 @@ export default function PricingPage() {
           <button
             onClick={() => setBillingCycle("monthly")}
             className="text-sm px-4 py-1.5 rounded-full transition-all"
-            style={{ background: billingCycle === "monthly" ? "var(--signal)" : "transparent", color: billingCycle === "monthly" ? "var(--obsidian-0)" : "var(--text-tertiary)", fontWeight: billingCycle === "monthly" ? 600 : 400 }}
+            style={{ background: billingCycle === "monthly" ? "linear-gradient(135deg, #8b5cf6 0%, #f97316 100%)" : "transparent", color: billingCycle === "monthly" ? "#fff" : "rgba(255,255,255,0.5)", fontWeight: billingCycle === "monthly" ? 600 : 400 }}
           >
             Monthly
           </button>
           <button
             onClick={() => setBillingCycle("yearly")}
             className="text-sm px-4 py-1.5 rounded-full transition-all inline-flex items-center gap-2"
-            style={{ background: billingCycle === "yearly" ? "var(--signal)" : "transparent", color: billingCycle === "yearly" ? "var(--obsidian-0)" : "var(--text-tertiary)", fontWeight: billingCycle === "yearly" ? 600 : 400 }}
+            style={{ background: billingCycle === "yearly" ? "linear-gradient(135deg, #8b5cf6 0%, #f97316 100%)" : "transparent", color: billingCycle === "yearly" ? "#fff" : "rgba(255,255,255,0.5)", fontWeight: billingCycle === "yearly" ? 600 : 400 }}
           >
             Yearly
-            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: billingCycle === "yearly" ? "var(--obsidian-0)" : "rgba(52,211,153,0.12)", color: billingCycle === "yearly" ? "var(--signal)" : "var(--color-success)" }}>-20%</span>
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-full"             style={{ background: billingCycle === "yearly" ? "#151030" : "rgba(139, 92, 246, 0.12)", color: billingCycle === "yearly" ? "#f97316" : "#8b5cf6" }}>-20%</span>
           </button>
         </div>
       </div>
@@ -179,15 +179,15 @@ export default function PricingPage() {
                 )}
 
                 <div className="mb-4">
-                  <h3 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>{plan.name}</h3>
-                  <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>{plan.description}</p>
+                  <h3 className="text-lg font-bold" style={{ color: "#fff" }}>{plan.name}</h3>
+                  <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>{plan.description}</p>
                 </div>
 
                 <div className="mb-6 flex items-baseline gap-1">
-                  <span className="text-4xl font-bold font-mono" style={{ color: "var(--text-primary)" }}>{displayPrice}</span>
-                  {displayPeriod && <span className="text-sm" style={{ color: "var(--text-tertiary)" }}>{displayPeriod}</span>}
+                  <span className="text-4xl font-bold font-mono" style={{ color: "#fff" }}>{displayPrice}</span>
+                  {displayPeriod && <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{displayPeriod}</span>}
                   {hasNumericPrice && billingCycle === "yearly" && (
-                    <span className="font-mono text-[10px] ml-1.5 px-1.5 py-0.5 rounded" style={{ background: "var(--color-success-soft)", color: "var(--color-success)" }}>billed yearly</span>
+                    <span className="font-mono text-[10px] ml-1.5 px-1.5 py-0.5 rounded" style={{ background: "rgba(139, 92, 246, 0.12)", color: "#8b5cf6" }}>billed yearly</span>
                   )}
                 </div>
 
@@ -202,14 +202,14 @@ export default function PricingPage() {
                 <div className="space-y-3">
                   {plan.features.map((feature) => (
                     <div key={feature} className="flex items-start gap-2.5">
-                      <Check size={15} style={{ color: "var(--signal-amber)", flexShrink: 0, marginTop: 2 }} />
-                      <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{feature}</span>
+                      <Check size={15} style={{ color: "#f97316", flexShrink: 0, marginTop: 2 }} />
+                      <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{feature}</span>
                     </div>
                   ))}
                   {plan.notIncluded.map((feature) => (
                     <div key={feature} className="flex items-start gap-2.5 opacity-45">
                       <X size={15} style={{ color: "var(--text-quaternary)", flexShrink: 0, marginTop: 2 }} />
-                      <span className="text-sm line-through" style={{ color: "var(--text-quaternary)" }}>{feature}</span>
+                      <span className="text-sm line-through" style={{ color: "rgba(255,255,255,0.4)" }}>{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -220,18 +220,18 @@ export default function PricingPage() {
         </div>
       </div>
 
-      <div className="py-16 px-4 sm:px-6 border-t border-void-3 bg-void-0 bg-texture relative z-10">
+      <div className="py-16 px-4 sm:px-6 border-t border-void-3 relative z-10">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-10" style={{ color: "var(--text-primary)" }}>Feature Comparison</h2>
+          <h2 className="text-2xl font-bold text-center mb-10" style={{ color: "#fff" }}>Feature Comparison</h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-void-3">
-                  <th className="text-left py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Feature</th>
-                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Starter</th>
-                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--signal-amber)" }}>Pro</th>
-                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Team</th>
-                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "var(--text-tertiary)" }}>Enterprise</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "rgba(255,255,255,0.5)" }}>Feature</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "rgba(255,255,255,0.5)" }}>Starter</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "#f97316" }}>Pro</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "rgba(255,255,255,0.5)" }}>Team</th>
+                  <th className="text-center py-3 px-4 text-xs font-medium tracking-[0.12em] uppercase" style={{ color: "rgba(255,255,255,0.5)" }}>Enterprise</th>
                 </tr>
               </thead>
               <tbody>
@@ -248,13 +248,13 @@ export default function PricingPage() {
                   { feature: "API access", starter: false, pro: false, team: true, enterprise: true },
                 ].map((row) => (
                   <tr key={row.feature} className="border-b border-void-3">
-                    <td className="py-3 px-4 text-sm" style={{ color: "var(--text-secondary)" }}>{row.feature}</td>
+                    <td className="py-3 px-4 text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>{row.feature}</td>
                     {(["starter", "pro", "team", "enterprise"] as const).map((tier) => (
                       <td key={tier} className="py-3 px-4 text-center">
                         {typeof row[tier] === "boolean" ? (
-                          row[tier] ? <Check size={16} style={{ color: tier === "pro" ? "var(--signal-amber)" : "var(--color-success)", margin: "0 auto" }} /> : <X size={16} style={{ color: "var(--text-quaternary)", margin: "0 auto" }} />
+                          row[tier] ? <Check size={16} style={{ color: tier === "pro" ? "#f97316" : "#8b5cf6", margin: "0 auto" }} /> : <X size={16} style={{ color: "rgba(255,255,255,0.4)", margin: "0 auto" }} />
                         ) : (
-                          <span className="text-sm font-medium font-mono" style={{ color: tier === "pro" ? "var(--signal-amber)" : "var(--text-secondary)" }}>{row[tier]}</span>
+                          <span className="text-sm font-medium font-mono" style={{ color: tier === "pro" ? "#f97316" : "rgba(255,255,255,0.6)" }}>{row[tier]}</span>
                         )}
                       </td>
                     ))}
@@ -268,7 +268,7 @@ export default function PricingPage() {
 
       <div className="py-16 px-4 sm:px-6 relative z-10">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-10" style={{ color: "var(--text-primary)" }}>Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold text-center mb-10" style={{ color: "#fff" }}>Frequently Asked Questions</h2>
           <div className="space-y-3">
             {faqs.map((faq, i) => (
               <motion.div
@@ -278,15 +278,15 @@ export default function PricingPage() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
                 className="glass overflow-hidden"
-                style={{ borderColor: openFaq === i ? "var(--signal-amber)" : "var(--void-3)" }}
+                style={{ background: "rgba(20, 18, 40, 0.5)", backdropFilter: "blur(12px)", border: `1px solid ${openFaq === i ? "rgba(249, 115, 22, 0.12)" : "rgba(139, 92, 246, 0.12)"}` }}
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full flex items-center justify-between gap-4 p-4 text-left"
                 >
-                  <span className="font-medium" style={{ color: "var(--text-primary)" }}>{faq.question}</span>
+                  <span className="font-medium" style={{ color: "#fff" }}>{faq.question}</span>
                   <motion.span animate={{ rotate: openFaq === i ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex-shrink-0">
-                    <ChevronDown size={17} style={{ color: openFaq === i ? "var(--signal-amber)" : "var(--text-tertiary)" }} />
+                    <ChevronDown size={17} style={{ color: openFaq === i ? "#f97316" : "rgba(255,255,255,0.5)" }} />
                   </motion.span>
                 </button>
                 <AnimatePresence>
@@ -298,7 +298,7 @@ export default function PricingPage() {
                       className="overflow-hidden"
                     >
                       <div className="px-4 pb-4">
-                        <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{faq.answer}</p>
+                        <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>{faq.answer}</p>
                       </div>
                     </motion.div>
                   )}
@@ -309,11 +309,11 @@ export default function PricingPage() {
         </div>
       </div>
 
-      <div className="py-20 px-4 sm:px-6 text-center border-t border-void-3 relative overflow-hidden glass">
+      <div className="py-20 px-4 sm:px-6 text-center border-t border-void-3 relative overflow-hidden glass" style={{ background: "rgba(20, 18, 40, 0.5)", backdropFilter: "blur(12px)" }}>
         <div className="relative z-10">
           <div className="flex justify-center mb-5"><LogoMark size={40} animated /></div>
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>Still charting your launch?</h2>
-          <p className="text-lg mb-8 max-w-xl mx-auto" style={{ color: "var(--text-secondary)" }}>Tell us what you're building and we'll help you find the right altitude.</p>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4" style={{ color: "#fff" }}>Still charting your launch?</h2>
+          <p className="text-lg mb-8 max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.6)" }}>Tell us what you're building and we'll help you find the right altitude.</p>
           <ObsidianButton
             variant="primary"
             size="lg"
